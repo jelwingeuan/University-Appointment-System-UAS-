@@ -12,9 +12,9 @@ Key Features:
 >Secure authentication and access control mechanisms to protect user privacy and system integrity.
 
 Technologies Used:
-Frontend> HTML, CSS, JavaScript, React (or Angular/Vue.js)
-Backend> Python, Flask framework
-Database> PostgreSQL (or MySQL/MongoDB)
-Version Control> Git, GitHub
-CI/CD> GitHub Actions (or Jenkins)
+>Frontend HTML, CSS, JavaScript, React (or Angular/Vue.js)
+>Backend Python, Flask framework
+>Database PostgreSQL (or MySQL/MongoDB)
+>Version Control Git, GitHub
+>CI/CD GitHub Actions (or Jenkins)
 
