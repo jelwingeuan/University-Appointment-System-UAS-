@@ -19,13 +19,13 @@ Key Features:
 
 
 Technologies Used:
->Frontend HTML, CSS, JavaScript
+>Frontend: HTML, CSS, JavaScript
 
->Backend Python, Flask framework
+>Backend: Python, Flask framework
 
->Database PostgreSQL (or MySQL/MongoDB)
+>Database: PostgreSQL (or MySQL/MongoDB)
 
->Version Control Git, GitHub
+>Version: Control Git, GitHub
 
->CI/CD GitHub Actions (or Jenkins)
+>CI/CD: GitHub Actions (or Jenkins)
 
