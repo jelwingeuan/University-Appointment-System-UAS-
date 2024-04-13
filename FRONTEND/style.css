@@ -1,0 +1,251 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Montserrat';
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: white;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    min-width: 100vh;
+    overflow: hidden;
+  
+}
+
+nav {
+    background-color: #fff;
+    height: 10vh;
+
+}
+
+nav ul{
+    width: 100%;
+    list-style: none;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-right: 10px;
+    padding-top: 10px;
+
+}
+
+nav li{
+    height: 50px;
+    cursor: pointer;
+    padding-right: 20px;
+}
+
+nav a{
+    align-items: center;
+    text-decoration: none;
+    display: flex;
+    height: 100%;
+    padding: 0 10px;
+    color:black;
+
+}
+nav a:hover {
+    text-decoration: underline;
+    transition: transform 0.3s ease;
+    transform: scale(1.1);
+}
+
+.wrapper {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background: white;
+    border: 1px solid grey;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3); /* Soft shadow */
+}
+
+
+.wrapper h1{
+    text-align: left;
+    padding: 10px 0 20px 0;
+    border-bottom: 1px solid black;
+    padding-left: 40px;
+
+}
+
+.wrapper form{
+    padding: 0 40px;
+    box-sizing: border-box;
+    
+
+}
+
+form .input_box{
+    position: relative;
+    border-bottom: 1px solid black;
+    margin: 30px 0;
+
+}
+
+.input_box input{
+    width: 100%;
+    padding: 0 5px;
+    height: 40px;
+    border: none;
+    outline: none;
+}
+
+.input_box label{
+    position: absolute;
+    top:50%;
+    left: 5px;
+    pointer-events: none;
+    transform: translateY(-50%);
+    transition: .2s;
+
+}
+
+.input_box span::before{
+    content: '';
+    position:absolute;
+    top:30px;
+    left: 0;
+    transition: .2s;
+    width: 100%;
+    height: 2px;
+
+}
+
+.input_box input:focus ~ label,
+.input_box input:valid ~ label{
+    top: -5px;
+
+}
+
+input[type="submit"]{
+    width: 100%;
+    height: 50px;
+    border: 1px solid;
+    cursor: pointer;
+    outline: none;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+
+input[type="submit"]:hover{
+    transition: .2s;
+}
+
+.signup_link{
+    margin:30px 0;
+    text-align: center;
+
+}
+
+.signup_link a{
+    color: blue;
+   text-decoration: none;
+
+}
+
+.signup_link a:hover{
+    text-decoration: underline;
+    
+
+}
+
+.showpassword{
+    padding: 10px;
+}
+
+.showpassword input[type="checkbox"] {
+    position: flex;
+    cursor: pointer;
+    
+  }
+
+.showpassword label{
+    text-decoration: none;
+}
+  
+.showpassword label.checkbox_label {
+    position: flex;
+    cursor: pointer;
+    font-size: 16px;
+    user-select: none;
+  }
+  
+
+.showpassword input[type="checkbox"]:checked + label.checkbox_label::after {
+    content: '\2714'; /* Unicode for checkmark */
+    position: absolute;
+    color: #2196F3; /* Color of the checkmark */
+}
+
+.footer {
+    background-color: #24262b;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: row;
+    bottom: 0;
+    width: 100%;
+    position:absolute;
+}   
+
+
+
+.footer-col h4 {
+    font-size: 18px;
+    color: #ffffff;
+    text-transform: capitalize;
+    margin-bottom: 35px;
+    padding-left: 40px;
+    font-weight: 500;
+    position: relative;
+    display: inline-flex;
+}
+
+.footer-col h4::before {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    background-color: #e91e63;
+    height: 2px;
+    box-sizing: border-box;
+    width: 50px;
+}
+
+
+
+.footer-col ul li a {
+    font-size: 16px;
+    text-transform: capitalize;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 300;
+    color: #bbbbbb;
+    transition: all 0.3s ease;
+}
+
+.footer-col ul{
+    display: flex;
+    list-style: none;
+    
+}
+.footer li{
+    padding-right: 20px;
+}
+
+.footer-col ul li a:hover {
+    color: #ffffff;
+    padding-left: 8px;
+}
+
+
+
+
