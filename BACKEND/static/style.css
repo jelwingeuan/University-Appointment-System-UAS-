@@ -7,6 +7,7 @@
     font-family: 'Montserrat';
 }
 
+/*basic set up for body*/
 body {
     font-family: 'Montserrat', sans-serif;
     background-color: white;
@@ -19,12 +20,14 @@ body {
   
 }
 
+/*nav bar column set up*/
 nav {
     background-color: #fff;
     height: 10vh;
 
 }
 
+/*nav bar 'list' positioning*/
 nav ul{
     width: 100%;
     list-style: none;
@@ -36,6 +39,7 @@ nav ul{
 
 }
 
+/*nav bar list content set up*/
 nav li{
     height: 50px;
     cursor: pointer;
@@ -51,12 +55,15 @@ nav a{
     color:black;
 
 }
+
+/*nav bar animation set up*/
 nav a:hover {
     text-decoration: underline;
     transition: transform 0.3s ease;
     transform: scale(1.1);
 }
 
+/*form positioning*/
 .wrapper {
     position: absolute;
     top: 45%;
@@ -68,7 +75,7 @@ nav a:hover {
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3); /* Soft shadow */
 }
 
-
+/*form text positioning*/
 .wrapper h1{
     text-align: left;
     padding: 10px 0 20px 0;
@@ -83,14 +90,14 @@ nav a:hover {
     
 
 }
-
+/*form input positioning and design*/
 form .input_box{
     position: relative;
     border-bottom: 1px solid black;
     margin: 30px 0;
 
 }
-
+/*input content design*/
 .input_box input{
     width: 100%;
     padding: 0 5px;
@@ -98,7 +105,7 @@ form .input_box{
     border: none;
     outline: none;
 }
-
+/*input label design*/
 .input_box label{
     position: absolute;
     top:50%;
