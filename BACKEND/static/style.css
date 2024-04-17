@@ -115,7 +115,7 @@ form .input_box{
     transition: .2s;
 
 }
-
+/*desgin the input box*/
 .input_box span::before{
     content: '';
     position:absolute;
