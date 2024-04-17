@@ -1,27 +1,27 @@
-from flask import Flask, render_template, request, redirect
-from flask_sqlalchemy import SQLAlchemy
-from views import auth  # Assuming your auth blueprint is defined in views.py
+from flask import Flask, render_template
+from models import db, create_dummy_accounts
 
 app = Flask(__name__)
 
-# Configuring the database connection
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disable modification tracking (optional but recommended)
-db = SQLAlchemy(app)
+# Import routes after initializing Flask app to avoid circular import issues
+from routes import auth
 
-# Registers the 'auth' blueprint with the application
+# Register blueprints
 app.register_blueprint(auth)
 
 
-
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('home.html')
+    return render_template("home.html")
 
-@app.route('/login')
+
+@app.route("/login")
 def login():
-    return render_template('login.html')
+    return render_template("login.html")
 
 
 if __name__ == "__main__":
+    # Run the application
     app.run(debug=True, port=5000)
+
+    
