@@ -6,6 +6,8 @@ db = SQLAlchemy()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
+    phone_number = db.Column(db.String(20), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
 
 
 class Credential(db.Model):
@@ -17,8 +19,7 @@ class Credential(db.Model):
 
 
 def create_dummy_accounts():
-    from app import db
-    from models import User, Credential
+    from models import User, Credential  # Importing models from the same file
 
     # Dummy user data
     users_data = [
@@ -29,9 +30,12 @@ def create_dummy_accounts():
     for user_data in users_data:
         user = User(email=user_data["email"])
         db.session.add(user)
-        db.session.commit()
 
         # Dummy credential data
-        credential = Credential(user_id=user.id, password_hash=user_data["password"])
+        credential = Credential(
+            user=user, password_hash=user_data["password"]
+        )  # Using the relationship directly
         db.session.add(credential)
-        db.session.commit()
+
+    # Commit all changes at once
+    db.session.commit()

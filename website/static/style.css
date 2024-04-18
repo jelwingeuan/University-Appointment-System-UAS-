@@ -22,7 +22,7 @@ body {
 
 /*nav bar column set up*/
 nav {
-    background-color: #fff;
+    background-color: transparent;
     height: 10vh;
 
 }
@@ -205,36 +205,20 @@ input[type="submit"]:hover{
 }   
 
 
-
 .footer-col h4 {
     font-size: 18px;
     color: #ffffff;
-    text-transform: capitalize;
-    margin-bottom: 35px;
-    padding-left: 40px;
+    margin-bottom: 10px;
     font-weight: 500;
     position: relative;
-    display: inline-flex;
+    display: flex;
+    text-decoration: underline;
 }
-
-.footer-col h4::before {
-    content: '';
-    position: absolute;
-    bottom: -10px;
-    background-color: #e91e63;
-    height: 2px;
-    box-sizing: border-box;
-    width: 50px;
-}
-
-
 
 .footer-col ul li a {
     font-size: 16px;
-    text-transform: capitalize;
     color: #ffffff;
     text-decoration: none;
-    font-weight: 300;
     color: #bbbbbb;
     transition: all 0.3s ease;
 }
@@ -242,10 +226,11 @@ input[type="submit"]:hover{
 .footer-col ul{
     display: flex;
     list-style: none;
+    text-align: center;
     
 }
 .footer li{
-    padding-right: 20px;
+    padding-left: 20px;
 }
 
 .footer-col ul li a:hover {
