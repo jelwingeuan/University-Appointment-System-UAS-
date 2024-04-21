@@ -33,7 +33,7 @@ def create_dummy_accounts():
 
         # Dummy credential data
         credential = Credential(
-            user=user, password_hash=user_data["password"]
+            user=user, password=user_data["password"]
         )  # Using the relationship directly
         db.session.add(credential)
 

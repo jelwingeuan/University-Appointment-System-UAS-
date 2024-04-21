@@ -16,7 +16,7 @@ body {
     margin: 0;
     padding: 0;
     min-width: 100vh;
-    overflow: hidden;
+
   
 }
 
@@ -24,6 +24,7 @@ body {
 nav {
     background-color: transparent;
     height: 10vh;
+    position: relative;
 
 }
 
@@ -63,6 +64,142 @@ nav a:hover {
     transform: scale(1.1);
 }
 
+.homecontent-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+}
+
+.homecontent1 {
+    
+    background-image: url('https://coopershill.design/wp-content/themes/coopershilldesign/slides/02-1Hotel_Landing.jpg');
+    background-repeat: none ;
+    background-size: cover;
+    width: 100%;
+    height: 400px;
+    text-align: center;
+    position: relative;
+}
+
+.homecontent1 form {
+    
+    transform: translateX(-50%);
+    background-color: rgba(255, 255, 255, 0.8); /* White color with 80% transparency */
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Soft shadow effect */
+    bottom: 20px;
+    position:absolute;
+    left: 50%;
+    padding: 10px;
+    
+    
+}
+
+.homecontent1 h4 {
+    margin-top: 0;
+    text-align: left;
+    padding-left: 10px;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.homecontent1 input[type="search"],
+.homecontent1 input[type="date"],
+.homecontent1 input[type="time"],
+.homecontent1 button {
+    margin: 5px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.homecontent1 button {
+    background-color: #007bff; /* Blue color for the button */
+    color: #fff; /* White text color */
+    cursor: pointer;
+}
+
+.homecontent1 button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+.homecontent2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin: 50px;
+    margin-left: 50px;
+    margin-right: 50px;
+    
+    
+}
+
+.homecontent21 {
+    flex: 1;
+    padding: 20px;
+    
+}
+
+.homecontent21 h2{
+    font-weight: 500;
+}
+
+.homecontent21 p{
+    padding-top: 10px;
+}
+
+.homecontent22 {
+    flex: 1;
+    padding: 20px;
+}
+
+.homecontent2 img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.homecontent21 button {
+    background: none;
+    border: 2px solid #000;
+    text-transform: uppercase;
+    padding: 12px 20px;
+    min-width: 200px;
+    margin: 10px;
+    position: relative; /* Added position relative to the button */
+}
+
+.homecontent21 button:hover {
+    color: #fff;
+}
+
+.homecontent21 button::before {
+    content: "";
+    position: absolute; /* corrected position */
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: #000;
+    z-index: -1;
+    transition: width 0.5s; /* Changed transform to width */
+    transition-timing-function: cubic-bezier(0.5, 1.6, 0.4, 0.7);
+}
+
+.homecontent21 button:hover::before {
+    width: 100%; /* Changed scaleX to width */
+}
+
+
+
+
+
+
+
 /*form positioning*/
 .wrapper {
     position: absolute;
@@ -77,10 +214,10 @@ nav a:hover {
 
 /*form text positioning*/
 .wrapper h1{
-    text-align: left;
-    padding: 10px 0 20px 0;
+    text-align: center;
+    padding: 10px 0 10px 0;
     border-bottom: 1px solid black;
-    padding-left: 40px;
+   
 
 }
 
@@ -110,7 +247,6 @@ form .input_box{
     position: absolute;
     top:50%;
     left: 5px;
-    pointer-events: none;
     transform: translateY(-50%);
     transition: .2s;
 
@@ -201,7 +337,7 @@ input[type="submit"]:hover{
     align-items: row;
     bottom: 0;
     width: 100%;
-    position:absolute;
+    position:relative;
 }   
 
 
@@ -212,7 +348,7 @@ input[type="submit"]:hover{
     font-weight: 500;
     position: relative;
     display: flex;
-    text-decoration: underline;
+
 }
 
 .footer-col ul li a {
