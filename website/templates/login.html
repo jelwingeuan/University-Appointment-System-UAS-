@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="../static/style.css">
-    <script src="myscripts.js"></script>
+    <script src="../static/myscripts.js"></script>
 </head>
 <body>
     <nav>
         <ul>
-            <li><a href="home.html" class="active">Home</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="ma_appointment.html">Make your appointment</a></li>
-            <li><a href="login.html">Login</a></li>
-            <li><a href="signup.html">Sign Up</a></li>
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/appointment">Make An Appointment</a></li>
+            <li><a href="/login">Login</a></li>
+            <li><a href="/signup">Sign Up</a></li>
         </ul>
     </nav>
 
     <div class="wrapper">
         <h1>Login</h1>
-        <form method="post">
+        <form action="/login" method="post">
             <div class="input_box">
                 <input type="email"  required>
                 <span></span>
@@ -38,18 +38,18 @@
             <input type="submit" value="Login">
         </form>
         <div class="signup_link">
-            Not a member? <a href="signup.html">SignUp</a>
+            Not a member? <a href="/signup">SignUp</a>
         </div>
     </div>
 
     <div class="footer-wrapper">
         <footer class="footer">
                 <div class="footer-col">
-                    <h4>company</h4>
+                    <h4>Universal Appointment Booking System</h4>
                         <ul>
-                            <li><a href="#">about us</a></li>
+                            <li><a href="/about">about us</a></li>
                             <li><a href="#">our services</a></li>
-                            <li><a href="#">book now</a></li>
+                            <li><a href="/appointment">book now</a></li>
                         </ul>
                 </div>
         </footer>

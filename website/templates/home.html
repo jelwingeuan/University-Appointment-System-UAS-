@@ -3,31 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Home</title>
     <link rel="stylesheet" href="../static/style.css">
-    <script src="myscripts.js"></script>
+    <script src="../static/myscripts.js"></script>
 </head>
 <body>
     <nav>
         <ul>
-            <li><a href="/" class="active">Home</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="ma_appointment.html">Make An Appointment</a></li>
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/appointment">Make An Appointment</a></li>
             <li><a href="/login">Login</a></li>
-            <li><a href="signup.html">Sign Up</a></li>
+            <li><a href="/signup">Sign Up</a></li>
         </ul>
     </nav>
-    n
+    <div class="homecontent-wrapper">
+        <div class="homecontent1">
+            <form action="/search" method="get">
+                <h4>Book directly for the best reservation at </h4>
+                <input type="search">
+                <input type="date">
+                <input type="time">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+    
+        <div class="homecontent2">
+            <div class="homecontent21">
+                <h2>Join us today</h2>
+                <p>Whether you’re here for a bite or a string of nights, join as a member to enjoy exclusive benefits and a seamless digital experience.</p>
+                <button>Join Now</button>
+            </div>
+            <div class="homecontent22">
+                <img src="https://www.unstudio.com/image/2023/7/3/unstudio_render_06.jpg%28mediaclass-list-image.fcd54d3441375085a87028277be316313cf123a5%29.jpg">
+            </div>
+        </div>
+    </div>
+
     <div class="footer-wrapper">
         <footer class="footer">
-                <div class="footer-col">
-                    <h4>company</h4>
-                        <ul>
-                            <li><a href="#">about us</a></li>
-                            <li><a href="#">our services</a></li>
-                            <li><a href="#">book now</a></li>
-                        </ul>
-                </div>
+            <div class="footer-col">
+                <h4>Universal Appointment Booking System</h4>
+                <ul>
+                    <li><a href="/about">About Us</a></li>
+                    <li><a href="#">Our Services</a></li>
+                    <li><a href="/appointment">Book Now</a></li>
+                </ul>
+            </div>
         </footer>
     </div>
 

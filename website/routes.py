@@ -1,10 +1,10 @@
 from flask import Blueprint, request, redirect, render_template
-from models import db, User
+from models import db, User,create_dummy_accounts, Credential
 
 auth = Blueprint("auth", __name__, url_prefix="/auth")
 
 
-@auth.route("/signup", methods=["POST"])
+@auth.route("/signup", methods=['GET','POST'])
 def signup():
     email = request.form.get("email")
     phone_number = request.form.get("phone_number")
@@ -27,18 +27,21 @@ def signup():
     return redirect("/login")
 
 
-@auth.route("/login", methods=["POST"])
+@auth.route("/login", methods=['POST'])
 def login():
     email = request.form.get("email")
     password = request.form.get("password")
 
-    if not email or not password:
-        return "Missing email or password", 400
+    # Dummy user data
+    dummy_users_data = [
+        {"email": "joebiden@gmail.com", "password": "Potus_4646"},
+        {"email": "donaldtrump@gmail.com", "password": "Potus_4545"},
+    ]
 
-    user = User.query.filter_by(email=email).first()
+    # Check if the entered email and password match any dummy account
+    for user_data in dummy_users_data:
+        if email == user_data["email"] and password == user_data["password"]:
+            return redirect('/')  # Redirect to the home page
 
-    if not user or user.password != password:
-        return "Invalid email or password", 401
-
-    # Redirect to the home page after successful login
-    return redirect("/")
+    return redirect('/login')  # Redirect to the login page
+    

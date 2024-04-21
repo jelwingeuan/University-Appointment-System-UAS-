@@ -18,24 +18,24 @@ def home():
     return render_template("home.html")
 
 
-@app.route("/about", methods=["GET"])
+@app.route("/about", methods=['GET'])
 def about():
     return render_template("about.html")
 
 
-@app.route("/login", methods=["GET"])
+@app.route("/login", methods=['GET'])
 def render_login_form():
     return render_template("login.html")
 
 
-@app.route("/signup", methods=["GET"])
+@app.route("/signup", methods=['GET'])
 def render_signup_form():
     return render_template("signup.html")
 
 
-@app.route("/appointment", methods=["GET"])
+@app.route("/appointment", methods=['GET'])
 def appointment():
-    return render_template("ma_appointment.html")
+    return render_template("appointment.html")
 
 
 if __name__ == "__main__":
