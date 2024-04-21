@@ -77,10 +77,10 @@ nav a:hover {
 
 /*form text positioning*/
 .wrapper h1{
-    text-align: left;
-    padding: 10px 0 20px 0;
+    text-align: center;
+    padding: 10px 0 10px 0;
     border-bottom: 1px solid black;
-    padding-left: 40px;
+   
 
 }
 
@@ -110,7 +110,6 @@ form .input_box{
     position: absolute;
     top:50%;
     left: 5px;
-    pointer-events: none;
     transform: translateY(-50%);
     transition: .2s;
 
