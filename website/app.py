@@ -25,7 +25,7 @@ def about():
 
 @app.route("/login", methods=['GET','POST'])
 def render_login_form():
-    return render_template('/login')  # Redirect to the login page
+    return render_template('login.html')  # Redirect to the login page
     
 
 
