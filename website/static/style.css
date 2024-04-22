@@ -1,5 +1,7 @@
+/* Google Fonts import */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 
+/* Global styles */
 * {
     margin: 0;
     padding: 0;
@@ -7,7 +9,7 @@
     font-family: 'Montserrat';
 }
 
-/*basic set up for body*/
+/* Basic setup for body */
 body {
     font-family: 'Montserrat', sans-serif;
     background-color: white;
@@ -16,21 +18,17 @@ body {
     margin: 0;
     padding: 0;
     min-width: 100vh;
-    
-
-  
 }
 
-/*nav bar column set up*/
+/* Navbar */
 nav {
     background-color: transparent;
     height: 10vh;
     position: relative;
-
 }
 
-/*nav bar 'list' positioning*/
-nav ul{
+/* Navbar list */
+nav ul {
     width: 100%;
     list-style: none;
     display: flex;
@@ -38,49 +36,43 @@ nav ul{
     align-items: center;
     padding-right: 10px;
     padding-top: 10px;
-
 }
 
-/*nav bar list content set up*/
-nav li{
+/* Navbar list items */
+nav li {
     height: 50px;
     cursor: pointer;
     padding-right: 20px;
 }
 
-nav a{
+/* Navbar links */
+nav a {
     align-items: center;
     text-decoration: none;
     display: flex;
     height: 100%;
     padding: 0 10px;
     color:black;
-
 }
 
-/*nav bar animation set up*/
+/* Navbar link hover effect */
 nav a:hover {
     text-decoration: underline;
     transition: transform 0.3s ease;
     transform: scale(1.1);
 }
 
+/* Home content wrapper */
 .homecontent-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    
-
-    
 }
 
-
-
-
+/* Home content section 1 */
 .homecontent1 {
-    
     background-image: url('https://coopershill.design/wp-content/themes/coopershilldesign/slides/02-1Hotel_Landing.jpg');
-    background-repeat: none ;
+    background-repeat: none;
     background-size: cover;
     width: 100%;
     height: 400px;
@@ -88,20 +80,19 @@ nav a:hover {
     position: relative;
 }
 
+/* Home content section 1 form */
 .homecontent1 form {
-    
     transform: translateX(-50%);
-    background-color: rgba(255, 255, 255, 0.8); /* White color with 80% transparency */
+    background-color: rgba(255, 255, 255, 0.8);
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Soft shadow effect */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     bottom: 20px;
     position:absolute;
     left: 50%;
     padding: 10px;
-    
-    
 }
 
+/* Home content section 1 form heading */
 .homecontent1 h4 {
     margin-top: 0;
     text-align: left;
@@ -110,6 +101,7 @@ nav a:hover {
     font-weight: 500;
 }
 
+/* Home content section 1 form inputs and button */
 .homecontent1 input[type="search"],
 .homecontent1 input[type="date"],
 .homecontent1 input[type="time"],
@@ -120,16 +112,19 @@ nav a:hover {
     border-radius: 5px;
 }
 
+/* Home content section 1 button */
 .homecontent1 button {
-    background-color: #007bff; /* Blue color for the button */
-    color: #fff; /* White text color */
+    background-color: #007bff;
+    color: #fff;
     cursor: pointer;
 }
 
+/* Home content section 1 button hover effect */
 .homecontent1 button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
+    background-color: #0056b3;
 }
 
+/* Home content section 2 */
 .homecontent2 {
     display: flex;
     justify-content: center;
@@ -138,32 +133,32 @@ nav a:hover {
     margin: 50px;
     margin-left: 50px;
     margin-right: 50px;
-    
-    
 }
 
+/* Home content section 2 column 1 */
 .homecontent21 {
     flex: 1;
     padding: 20px;
-    text-align: left,;
-    
-    
+    text-align: left;
 }
 
-.homecontent21 h2{
+/* Home content section 2 column 1 headings */
+.homecontent21 h2 {
     font-weight: 500;
 }
 
-.homecontent21 p{
+/* Home content section 2 column 1 paragraphs */
+.homecontent21 p {
     padding-top: 10px;
-    
 }
 
+/* Home content section 2 column 2 */
 .homecontent22 {
     flex: 1;
     padding: 20px;
 }
 
+/* Home content section 2 image */
 .homecontent2 img {
     max-width: 100%;
     height: auto;
@@ -172,6 +167,7 @@ nav a:hover {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
+/* Home content section 2 button */
 .homecontent21 button {
     background: none;
     border: 2px solid #000;
@@ -179,42 +175,101 @@ nav a:hover {
     padding: 12px 20px;
     min-width: 200px;
     margin: 10px;
-    position: relative; /* Added position relative to the button */
+    position: relative;
 }
 
+/* Home content section 2 button hover effect */
 .homecontent21 button:hover {
     color: #fff;
 }
 
+/* Home content section 2 button pseudo-element */
 .homecontent21 button::before {
     content: "";
-    position: absolute; /* corrected position */
+    position: absolute;
     top: 0;
     left: 0;
     width: 0;
     height: 100%;
     background: #000;
     z-index: -1;
-    transition: width 0.5s; /* Changed transform to width */
+    transition: width 0.5s;
     transition-timing-function: cubic-bezier(0.5, 1.6, 0.4, 0.7);
 }
 
+/* Home content section 2 button hover pseudo-element */
 .homecontent21 button:hover::before {
-    width: 100%; /* Changed scaleX to width */
+    width: 100%;
 }
 
-.title{
+/* Title section */
+.title {
     text-align: center;
     padding: 10px;
 }
 
-.title h1{
+/* Title section heading */
+.title h1 {
     font-weight: 500;
 }
-.title p{
+
+/* Title section paragraph */
+.title p {
     padding-top: 10px;
 }
-/*form positioning*/
+
+/* About content wrapper */
+.aboutcontentwrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* About profile section */
+.aboutprofile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-left: 200px;
+    margin-right: 200px;
+}
+
+/* About profile picture */
+.aboutpic {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    box-shadow: 0 0 10px rgba(99, 97, 97, 0.5);
+}
+
+/* About description section */
+.aboutdes {
+    padding: 20px;
+    text-align: justify;
+}
+
+/* About description section headings */
+.aboutdes h1 {
+    font-weight: 700;
+}
+
+.aboutdes h2 {
+    font-weight: 500;
+}
+
+.aboutdes h3 {
+    font-weight: 400;
+}
+
+/* About description section paragraphs */
+.about p {
+    margin: 0 20px 0 20px;
+    font-weight: 200;
+}
+
+/* Form wrapper */
 .wrapper {
     justify-content: center;
     align-items: center;
@@ -222,70 +277,69 @@ nav a:hover {
     width: 400px;
     background: white;
     border: 1px solid grey;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3); /* Soft shadow */
-    margin: auto; /* Center the wrapper horizontally */
-    margin-top: 70px; /* Adjust as needed */
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    margin: auto;
+    margin-top: 70px;
     bottom: 50px;
 }
 
-/*form text positioning*/
-.wrapper h1{
+/* Form heading */
+.wrapper h1 {
     text-align: center;
     padding: 10px 0 10px 0;
     border-bottom: 1px solid black;
-   
-
 }
 
-.wrapper form{
+/* Form */
+.wrapper form {
     padding: 0 40px;
     box-sizing: border-box;
-    
-
 }
-/*form input positioning and design*/
-form .input_box{
+
+/* Form input box */
+form .input_box {
     position: relative;
     border-bottom: 1px solid black;
     margin: 30px 0;
-
 }
-/*input content design*/
-.input_box input{
+
+/* Form input */
+.input_box input {
     width: 100%;
     padding: 0 5px;
     height: 40px;
     border: none;
     outline: none;
 }
-/*input label design*/
-.input_box label{
+
+/* Form input label */
+.input_box label {
     position: absolute;
-    top:50%;
+    top: 50%;
     left: 5px;
     transform: translateY(-50%);
     transition: .2s;
-
 }
-/*desgin the input box*/
-.input_box span::before{
+
+/* Form input box span */
+.input_box span::before {
     content: '';
-    position:absolute;
-    top:30px;
+    position: absolute;
+    top: 30px;
     left: 0;
     transition: .2s;
     width: 100%;
     height: 2px;
-
 }
 
+/* Form input focus label */
 .input_box input:focus ~ label,
-.input_box input:valid ~ label{
+.input_box input:valid ~ label {
     top: -5px;
-
 }
 
-input[type="submit"]{
+/* Form submit button */
+input[type="submit"] {
     width: 100%;
     height: 50px;
     border: 1px solid;
@@ -295,56 +349,60 @@ input[type="submit"]{
     margin-bottom: 10px;
 }
 
-input[type="submit"]:hover{
+/* Form submit button hover effect */
+input[type="submit"]:hover {
     transition: .2s;
 }
 
-.signup_link{
-    margin:30px 0;
+/* Signup link */
+.signup_link {
+    margin: 30px 0;
     text-align: center;
-
 }
 
-.signup_link a{
+/* Signup link anchor */
+.signup_link a {
     color: blue;
-   text-decoration: none;
-
+    text-decoration: none;
 }
 
-.signup_link a:hover{
+/* Signup link anchor hover effect */
+.signup_link a:hover {
     text-decoration: underline;
-    
-
 }
 
-.showpassword{
+/* Show password section */
+.showpassword {
     padding: 10px;
 }
 
+/* Show password checkbox */
 .showpassword input[type="checkbox"] {
     position: flex;
     cursor: pointer;
-    
-  }
+}
 
-.showpassword label{
+/* Show password label */
+.showpassword label {
     text-decoration: none;
 }
-  
+
+/* Show password checkbox label */
 .showpassword label.checkbox_label {
     position: flex;
     cursor: pointer;
     font-size: 16px;
     user-select: none;
-  }
-  
-
-.showpassword input[type="checkbox"]:checked + label.checkbox_label::after {
-    content: '\2714'; /* Unicode for checkmark */
-    position: absolute;
-    color: #2196F3; /* Color of the checkmark */
 }
 
+/* Show password checkbox checked label pseudo-element */
+.showpassword input[type="checkbox"]:checked + label.checkbox_label::after {
+    content: '\2714'; 
+    position: absolute;
+    color: #2196F3; 
+}
+
+/* Footer */
 .footer {
     background-color: #24262b;
     padding: 20px;
@@ -352,12 +410,11 @@ input[type="submit"]:hover{
     justify-content: center;
     align-items: row;
     width: 100%;
-    position: fixed; /* Fixed positioning */
-    bottom: 0; /* Stick to the bottom */
-    
-}   
+    position: relative;
+    bottom: 0;
+}
 
-
+/* Footer column headings */
 .footer-col h4 {
     font-size: 18px;
     color: #ffffff;
@@ -365,9 +422,9 @@ input[type="submit"]:hover{
     font-weight: 500;
     position: relative;
     display: flex;
-
 }
 
+/* Footer column list items */
 .footer-col ul li a {
     font-size: 16px;
     color: #ffffff;
@@ -376,21 +433,97 @@ input[type="submit"]:hover{
     transition: all 0.3s ease;
 }
 
-.footer-col ul{
+/* Footer column list */
+.footer-col ul {
     display: flex;
     list-style: none;
     text-align: center;
-    
 }
-.footer li{
+
+/* Footer list items */
+.footer li {
     padding-left: 20px;
 }
 
+/* Footer list items hover effect */
 .footer-col ul li a:hover {
     color: #ffffff;
     padding-left: 8px;
 }
 
+/* Admin header */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+}
 
+/* Admin sidebar */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 250px;
+    background-color: #f0f0f0;
+    padding: 20px;
+    overflow-y: auto;
+}
 
+/* Admin sidebar list */
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
 
+/* Admin sidebar list items */
+.sidebar ul li {
+    margin-bottom: 10px;
+}
+
+/* Admin sidebar links */
+.sidebar ul li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}
+
+/* Admin container */
+.admincontainer {
+    display: flex;
+    position: relative;
+    left: 30%;
+    margin-top: 10px;
+}
+
+/* Admin sub-container */
+.subadmincontainer {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 0 20px 40px 40px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Admin sub-container heading */
+.subadmincontainer h2 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+/* Admin sub-container sub-heading */
+.subadmincontainer h4 {
+    margin: 0;
+    font-size: 18px;
+}
+
+/* Admin sub-container icon */
+.subadmincontainer i {
+    font-size: 48px;
+    color: #007bff;
+}
