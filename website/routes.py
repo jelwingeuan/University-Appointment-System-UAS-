@@ -27,7 +27,7 @@ def signup():
     return redirect("/login")
 
 
-@auth.route("/login", methods=['POST'])
+@auth.route("/login", methods=['GET','POST'])
 def login():
     email = request.form.get("email")
     password = request.form.get("password")
@@ -42,6 +42,5 @@ def login():
     for user_data in dummy_users_data:
         if email == user_data["email"] and password == user_data["password"]:
             return redirect('/')  # Redirect to the home page
-
-    return redirect('/login')  # Redirect to the login page
+    return render_template('/login')  # Redirect to the login page
     
