@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, render_template
+from flask import Flask, Blueprint, render_template, request,redirect
 from models import User, create_dummy_accounts
 from flask_sqlalchemy import SQLAlchemy
 
@@ -23,9 +23,10 @@ def about():
     return render_template("about.html")
 
 
-@app.route("/login", methods=['GET'])
+@app.route("/login", methods=['GET','POST'])
 def render_login_form():
-    return render_template("login.html")
+    return render_template('/login')  # Redirect to the login page
+    
 
 
 @app.route("/signup", methods=['GET'])
