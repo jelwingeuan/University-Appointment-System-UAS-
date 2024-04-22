@@ -16,6 +16,7 @@ body {
     margin: 0;
     padding: 0;
     min-width: 100vh;
+    
 
   
 }
@@ -69,7 +70,12 @@ nav a:hover {
     flex-direction: column;
     align-items: center;
     
+
+    
 }
+
+
+
 
 .homecontent1 {
     
@@ -139,6 +145,8 @@ nav a:hover {
 .homecontent21 {
     flex: 1;
     padding: 20px;
+    text-align: left,;
+    
     
 }
 
@@ -148,6 +156,7 @@ nav a:hover {
 
 .homecontent21 p{
     padding-top: 10px;
+    
 }
 
 .homecontent22 {
@@ -194,22 +203,29 @@ nav a:hover {
     width: 100%; /* Changed scaleX to width */
 }
 
+.title{
+    text-align: center;
+    padding: 10px;
+}
 
-
-
-
-
-
+.title h1{
+    font-weight: 500;
+}
+.title p{
+    padding-top: 10px;
+}
 /*form positioning*/
 .wrapper {
-    position: absolute;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    justify-content: center;
+    align-items: center;
+    position: relative;
     width: 400px;
     background: white;
     border: 1px solid grey;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3); /* Soft shadow */
+    margin: auto; /* Center the wrapper horizontally */
+    margin-top: 70px; /* Adjust as needed */
+    bottom: 50px;
 }
 
 /*form text positioning*/
@@ -335,9 +351,10 @@ input[type="submit"]:hover{
     display: flex;
     justify-content: center;
     align-items: row;
-    bottom: 0;
     width: 100%;
-    position:relative;
+    position: fixed; /* Fixed positioning */
+    bottom: 0; /* Stick to the bottom */
+    
 }   
 
 
