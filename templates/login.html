@@ -22,12 +22,12 @@
         <h1>Login</h1>
         <form action="/login" method="post">
             <div class="input_box">
-                <input type="email"  required>
+                <input type="email" name="email" required> <!-- Added name attribute -->
                 <span></span>
                 <label>Email</label>
             </div>
             <div class="input_box">
-                <input type="password" id="passwordField" required>
+                <input type="password" name="password" id="passwordField" required> <!-- Added name attribute -->
                 <span></span>
                 <label for="passwordField">Password</label>
             </div>
