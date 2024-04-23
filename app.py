@@ -1,6 +1,7 @@
-from flask import Flask, Blueprint, render_template, request,redirect
+from flask import Flask, Blueprint, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
-
+from views import auth
+from user_authentication import User
 db = SQLAlchemy()
 
 app = Flask(__name__)
@@ -9,18 +10,28 @@ app = Flask(__name__)
 def home():
     return render_template("home.html")
 
-
 @app.route("/about", methods=['GET'])
 def about():
     return render_template("about.html")
 
+@app.route("/signup", methods=['GET','POST'])
+def render_signup_form():
+    return render_template("signup.html")
 
 @app.route("/login", methods=['GET','POST'])
+def render_login_form():  
+    return render_template("login.html")
+
+''''
+@auth.route("/login", methods=["GET", "POST"])
 def login():
-    return render_template('login.html')  # Redirect to the login page
+    email = request.form.get("email")
+    password = request.form.get("password")
+
+    return render_template('/login')  # Redirect to the login page and homepage to be fix
 
 
-@app.route("/signup", methods=["GET", "POST"])
+@auth.route("/signup", methods=["GET", "POST"])
 def signup():
     email = request.form.get("email")
     phone_number = request.form.get("phone_number")
@@ -41,12 +52,14 @@ def signup():
     db.session.commit()
 
     return redirect("/login")
-
-
+'''
 @app.route("/appointment", methods=['GET'])
 def appointment():
     return render_template("appointment.html")
 
+@app.route("/admin", methods=['GET'])
+def admin():
+    return render_template("admin.html")
 
 if __name__ == "__main__":
     # Run the application
