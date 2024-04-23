@@ -6,13 +6,13 @@ app.config["SQLALCHEMY_DATABASE_URI"] = (
     "mysql://root:MySQLYyY050904@127.0.0.1:3306/user_authentication"
 )
 
-# Create SQLAlchemy obj
+# create SQLAlchemy obj
 db = SQLAlchemy()
 
-# Initialize SQLAlchemy with the Flask app
+# initialize SQLAlchemy with the Flask app
 db.init_app(app)
 
-# Import models after initializing SQLAlchemy
+# import models after initializing SQLAlchemy
 from user_authentication import User
 
 
@@ -39,13 +39,13 @@ def render_login_form():
         user = User.query.filter_by(email=email).first()
 
         if user and user.check_password(password):
-            # Redirect to the home page upon successful login
+            # redirect to the home page upon successful login
             return redirect(url_for("home"))
 
-        # If email/password is invalid, render login page with a message
+        # if email/password is invalid, render login page will show a message below
         return render_template("login.html", message="Invalid email or password")
 
-    # If request method is GET, render the login page
+    # if request method is GET, render the login page
     return render_template("login.html")
 
 
