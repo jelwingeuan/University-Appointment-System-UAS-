@@ -221,57 +221,89 @@ nav a:hover {
 
 /* About content wrapper */
 .aboutcontentwrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     position: relative;
 }
-.aboutcontentwrapper h1{
-    margin-bottom: 50px;
-}
-/* About profile section */
-.aboutprofile {
+
+.aboutcontent{
     display: flex;
-    justify-content: center;
-    align-items: center;
+    margin: 40px;
+    height: 100%;
     position: relative;
-    margin-left: 200px;
-    margin-right: 200px;
-    margin-bottom: 40px ;
+    left: 40px;
+    
 }
 
-/* About profile picture */
-.aboutpic {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    box-shadow: 0 0 10px rgba(99, 97, 97, 0.5);
+.aboutprofile{
+    text-align: center;
+    position: relative;
+    left: 20px;
 }
 
-/* About description section */
-.aboutdes {
-    padding: 40px;
-    text-align: justify;
+.aboutprofile h1{
+    font-weight: 600;
 }
 
-/* About description section headings */
-.aboutdes h2 {
-    font-weight: 700;
-}
-
-.aboutdes h3 {
-    font-weight: 500;
-}
-
-.aboutdes h4 {
+.aboutprofile h4{
     font-weight: 400;
 }
 
-/* About description section paragraphs */
-.about p {
-    margin: 0 20px 0 20px;
-    font-weight: 200;
+.aboutdes,
+.aboutphoto,
+.aboutprofiledes {
+    flex: 1;
+    margin: 0; /* Reset margin */
+    padding: 0; /* Reset padding */
 }
+
+.aboutdes {
+    line-height: 1.5; /* Adjust the value to increase or decrease the spacing left*/
+    left: 60px;
+    position: relative;
+}
+
+.aboutphoto {
+    display: flex;
+    align-items: flex-start; /* Align items at the top */
+    justify-content: center; /* Center items horizontally */
+    width: fit-content;
+   
+}
+
+.aboutphoto img {
+    border-radius: 100px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5)
+    
+}
+
+.aboutprofiledes {
+    line-height: 1.5;
+    position: relative;
+    right: 20px;
+}
+.aboutprofiledes h2{
+    margin-bottom: 20px;
+    font-weight: 400;
+}
+
+.aboutprofiledes h3{
+    font-weight: 600;
+}
+
+.aboutprofiledes h3,
+.aboutprofiledes p {
+    margin-bottom: 5px;
+}
+
+.aboutprofiledes i {
+    margin-right: 10px;
+}
+
+/* Additional styling for icons */
+.bx {
+    font-size: 24px;
+    color: #333;
+}
+
 
 /* Form wrapper */
 .wrapper {
@@ -414,7 +446,7 @@ input[type="submit"]:hover {
     justify-content: center;
     align-items: row;
     width: 100%;
-    position: relative;
+    position: fixed;
     bottom: 0;
 }
 
@@ -463,6 +495,9 @@ header {
     padding: 10px;
     background-color: #ffffff;
     border-bottom: 1px solid #ccc;
+    position: absolute;
+    top: 0;
+    width: 100%;
 }
 
 /* Title styles */
@@ -505,18 +540,17 @@ header h4 {
     font-size: 16px;
 }
 
-
-
 /* Admin sidebar */
 .sidebar {
-    position: fixed;
-    top: 0;
+    position: absolute;
     left: 0;
-    height: 100%;
-    width: 250px;
+    top:8.5%;
+    height: 100%; 
+    width: 20%; /* Adjust width as a percentage of the viewport */
     background-color: #f0f0f0;
     padding: 20px;
-    overflow-y: auto;
+    overflow-y: auto; /* Add vertical scrollbar if content exceed*/
+    
 }
 
 /* Admin sidebar list */
@@ -541,8 +575,9 @@ header h4 {
 /* Admin container */
 .admincontainer {
     display: flex;
-    position: relative;
+    position:absolute;
     left: 25%;
+    top: 10%;
     margin-top: 20px;
     flex-direction: row;
 }
@@ -574,4 +609,10 @@ header h4 {
 .subadmincontainer i {
     font-size: 48px;
     color: #007bff;
+}
+.graph {
+    width: 500px;
+    position: absolute ;
+    left: 2%;
+    top: 35%;
 }
