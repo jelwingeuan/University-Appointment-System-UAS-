@@ -221,57 +221,89 @@ nav a:hover {
 
 /* About content wrapper */
 .aboutcontentwrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     position: relative;
 }
-.aboutcontentwrapper h1{
-    margin-bottom: 50px;
-}
-/* About profile section */
-.aboutprofile {
+
+.aboutcontent{
     display: flex;
-    justify-content: center;
-    align-items: center;
+    margin: 40px;
+    height: 100%;
     position: relative;
-    margin-left: 200px;
-    margin-right: 200px;
-    margin-bottom: 40px ;
+    left: 40px;
+    
 }
 
-/* About profile picture */
-.aboutpic {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    box-shadow: 0 0 10px rgba(99, 97, 97, 0.5);
+.aboutprofile{
+    text-align: center;
+    position: relative;
+    left: 20px;
 }
 
-/* About description section */
-.aboutdes {
-    padding: 40px;
-    text-align: justify;
+.aboutprofile h1{
+    font-weight: 600;
 }
 
-/* About description section headings */
-.aboutdes h2 {
-    font-weight: 700;
-}
-
-.aboutdes h3 {
-    font-weight: 500;
-}
-
-.aboutdes h4 {
+.aboutprofile h4{
     font-weight: 400;
 }
 
-/* About description section paragraphs */
-.about p {
-    margin: 0 20px 0 20px;
-    font-weight: 200;
+.aboutdes,
+.aboutphoto,
+.aboutprofiledes {
+    flex: 1;
+    margin: 0; /* Reset margin */
+    padding: 0; /* Reset padding */
 }
+
+.aboutdes {
+    line-height: 1.5; /* Adjust the value to increase or decrease the spacing left*/
+    left: 60px;
+    position: relative;
+}
+
+.aboutphoto {
+    display: flex;
+    align-items: flex-start; /* Align items at the top */
+    justify-content: center; /* Center items horizontally */
+    width: fit-content;
+   
+}
+
+.aboutphoto img {
+    border-radius: 100px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5)
+    
+}
+
+.aboutprofiledes {
+    line-height: 1.5;
+    position: relative;
+    right: 20px;
+}
+.aboutprofiledes h2{
+    margin-bottom: 20px;
+    font-weight: 400;
+}
+
+.aboutprofiledes h3{
+    font-weight: 600;
+}
+
+.aboutprofiledes h3,
+.aboutprofiledes p {
+    margin-bottom: 5px;
+}
+
+.aboutprofiledes i {
+    margin-right: 10px;
+}
+
+/* Additional styling for icons */
+.bx {
+    font-size: 24px;
+    color: #333;
+}
+
 
 /* Form wrapper */
 .wrapper {
@@ -414,7 +446,7 @@ input[type="submit"]:hover {
     justify-content: center;
     align-items: row;
     width: 100%;
-    position: relative;
+    position: fixed;
     bottom: 0;
 }
 
@@ -463,6 +495,9 @@ header {
     padding: 10px;
     background-color: #ffffff;
     border-bottom: 1px solid #ccc;
+    position: absolute;
+    top: 0;
+    width: 100%;
 }
 
 /* Title styles */
@@ -505,18 +540,17 @@ header h4 {
     font-size: 16px;
 }
 
-
-
 /* Admin sidebar */
 .sidebar {
-    position: fixed;
-    top: 0;
+    position: absolute;
     left: 0;
-    height: 100%;
-    width: 250px;
+    top:8.5%;
+    height: 100%; 
+    width: 20%; /* Adjust width as a percentage of the viewport */
     background-color: #f0f0f0;
     padding: 20px;
-    overflow-y: auto;
+    overflow-y: auto; /* Add vertical scrollbar if content exceed*/
+    
 }
 
 /* Admin sidebar list */
@@ -541,8 +575,9 @@ header h4 {
 /* Admin container */
 .admincontainer {
     display: flex;
-    position: relative;
+    position:absolute;
     left: 25%;
+    top: 10%;
     margin-top: 20px;
     flex-direction: row;
 }
@@ -556,7 +591,8 @@ header h4 {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: row;
-}
+   
+} 
 
 /* Admin sub-container heading */
 .subadmincontainer h2 {
@@ -575,3 +611,253 @@ header h4 {
     font-size: 48px;
     color: #007bff;
 }
+.graph {
+    
+    display: flex;
+    flex-direction: row; 
+    position: absolute;
+    top: 30%; /* Adjust top position as needed */
+    left: 24%;
+}
+
+/* Individual graph styles */
+.graph1,
+.graph2 {
+    width: 500px;
+    margin: 0 10px; 
+}   
+
+.table-container {
+    margin-top: 20px;
+    position:absolute;
+    top: 70%;
+    left: 24%;
+    align-items: center;
+    justify-content: center;
+}
+
+#real-time-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 .4rem .8rem #0005;
+    border-radius: .8rem;
+
+}
+
+/*test*/
+main.table {
+    width: 82vw;
+    height: 90vh;
+    background-color: #fff5;
+
+    backdrop-filter: blur(7px);
+    box-shadow: 0 .4rem .8rem #0005;
+    border-radius: .8rem;
+
+    overflow: hidden;
+}
+
+.table__header {
+    width: 100%;
+    height: 10%;
+    background-color: #fff4;
+    padding: .8rem 1rem;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table__header .input-group {
+    width: 35%;
+    height: 100%;
+    background-color: #fff5;
+    padding: 0 .8rem;
+    border-radius: 2rem;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    transition: .2s;
+}
+
+.table__header .input-group:hover {
+    width: 45%;
+    background-color: #fff8;
+    box-shadow: 0 .1rem .4rem #0002;
+}
+
+.table__header .input-group img {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.table__header .input-group input {
+    width: 100%;
+    padding: 0 .5rem 0 .3rem;
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+
+.table__body {
+    width: 95%;
+    max-height: calc(89% - 1.6rem);
+    background-color: #fffb;
+
+    margin: .8rem auto;
+    border-radius: .6rem;
+
+    overflow: auto;
+    overflow: overlay;
+}
+
+
+.table__body::-webkit-scrollbar{
+    width: 0.5rem;
+    height: 0.5rem;
+}
+
+.table__body::-webkit-scrollbar-thumb{
+    border-radius: .5rem;
+    background-color: #0004;
+    visibility: hidden;
+}
+
+.table__body:hover::-webkit-scrollbar-thumb{ 
+    visibility: visible;
+}
+
+
+table {
+    width: 100%;
+}
+
+td img {
+    width: 36px;
+    height: 36px;
+    margin-right: .5rem;
+    border-radius: 50%;
+
+    vertical-align: middle;
+}
+
+table, th, td {
+    border-collapse: collapse;
+    padding: 1rem;
+    text-align: left;
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+    left: 0;
+    background-color: #d5d1defe;
+    cursor: pointer;
+    text-transform: capitalize;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #0000000b;
+}
+
+tbody tr {
+    --delay: .1s;
+    transition: .5s ease-in-out var(--delay), background-color 0s;
+}
+
+tbody tr.hide {
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+tbody tr:hover {
+    background-color: #fff6 !important;
+}
+
+tbody tr td,
+tbody tr td p,
+tbody tr td img {
+    transition: .2s ease-in-out;
+}
+
+tbody tr.hide td,
+tbody tr.hide td p {
+    padding: 0;
+    font: 0 / 0 sans-serif;
+    transition: .2s ease-in-out .5s;
+}
+
+tbody tr.hide td img {
+    width: 0;
+    height: 0;
+    transition: .2s ease-in-out .5s;
+}
+
+.status {
+    padding: .4rem 0;
+    border-radius: 2rem;
+    text-align: center;
+}
+
+.status.delivered {
+    background-color: #86e49d;
+    color: #006b21;
+}
+
+.status.cancelled {
+    background-color: #d893a3;
+    color: #b30021;
+}
+
+.status.pending {
+    background-color: #ebc474;
+}
+
+.status.shipped {
+    background-color: #6fcaea;
+}
+
+
+@media (max-width: 1000px) {
+    td:not(:first-of-type) {
+        min-width: 12.1rem;
+    }
+}
+
+thead th span.icon-arrow {
+    display: inline-block;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    border: 1.4px solid transparent;
+    
+    text-align: center;
+    font-size: 1rem;
+    
+    margin-left: .5rem;
+    transition: .2s ease-in-out;
+}
+
+thead th:hover span.icon-arrow{
+    border: 1.4px solid #6c00bd;
+}
+
+thead th:hover {
+    color: #6c00bd;
+}
+
+thead th.active span.icon-arrow{
+    background-color: #6c00bd;
+    color: #fff;
+}
+
+thead th.asc span.icon-arrow{
+    transform: rotate(180deg);
+}
+
+thead th.active,tbody td.active {
+    color: #6c00bd;
+}
+
