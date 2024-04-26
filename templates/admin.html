@@ -6,6 +6,7 @@
     <title>Admin</title>
     <link rel="stylesheet" href="../static/style.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css'rel='stylesheet'>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../static/myscripts.js"></script>
 </head>
 <body>
@@ -63,6 +64,62 @@
             </div>
         </div>
     </div>
+    <div class="graph">
+        <div class="graph1">
+            <canvas id="dashboardChart" ></canvas>
+        </div>
+        <div class="graph2">
+            <canvas id="appointmentChart" ></canvas>
+        </div>
+    </div>
+    <div class="table-container">
+        <table id="real-time-table">
+            <thead>
+                <tr>
+                    <th>Appointment ID</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Lecture Name</th>
+                    <th>Student Name</th>
+                    <th>Purpose of Visiting</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>2024-04-25</td>
+                    <td>10:00 AM</td>
+                    <td>Willie Poh</td>
+                    <td>Kim Hong Zhang</td>
+                    <td>Discuss assignment</td>
+                    <td>Pending</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>2024-04-26</td>
+                    <td>11:00 AM</td>
+                    <td>Willie Poh</td>
+                    <td>Jelwin Geuan</td>
+                    <td>Project consultation</td>
+                    <td>Confirmed</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>2024-04-27</td>
+                    <td>12:00 PM</td>
+                    <td>Willie Poh</td>
+                    <td>Yap Yang Yi</td>
+                    <td>Exam preparation</td>
+                    <td>Cancelled</td>
+                </tr>
+                <!-- Add more rows with fake data as needed -->
+            </tbody>
+        </table>
+    </div>
+    
+    
+    
 
 </body>
 </html>

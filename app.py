@@ -30,7 +30,6 @@ def about():
 def render_signup_form():
     return render_template("signup.html")
 
-
 @app.route("/login", methods=["GET", "POST"])
 def render_login_form():
     if request.method == "POST":
@@ -39,13 +38,13 @@ def render_login_form():
         user = User.query.filter_by(email=email).first()
 
         if user and user.check_password(password):
-            # redirect to the home page upon successful login
+            # Redirect to the home page upon successful login
             return redirect(url_for("home"))
 
-        # if email/password is invalid, render login page will show a message below
+        # If email/password is invalid, render login page with a message
         return render_template("login.html", message="Invalid email or password")
 
-    # if request method is GET, render the login page
+    # If request method is GET, render the login page
     return render_template("login.html")
 
 
