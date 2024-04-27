@@ -221,7 +221,8 @@ nav a:hover {
 
 /* About content wrapper */
 .aboutcontentwrapper {
-    position: relative;
+    position: absolute;
+    
 }
 
 .aboutcontent{
@@ -229,14 +230,14 @@ nav a:hover {
     margin: 40px;
     height: 100%;
     position: relative;
-    left: 40px;
+    
     
 }
 
 .aboutprofile{
     text-align: center;
     position: relative;
-    left: 20px;
+    
 }
 
 .aboutprofile h1{
@@ -303,6 +304,205 @@ nav a:hover {
     font-size: 24px;
     color: #333;
 }
+.card-container{
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto auto auto;
+    justify-content: center;
+    grid-gap: 30px;
+    top: 500px;
+    position: relative;
+}
+.card {
+    position: relative;
+    width: 300px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    margin:  56px 24px;
+
+}
+
+.card-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 15px 35px -15px rgba(0, 0, 0, 0.5),
+    0 5px 20px 0 rgba(0, 0, 0, 0.1);
+}
+
+.card-image img {
+    width: 100%;
+    transform: scale(1.2);
+}
+
+.card p {
+    line-height: 24px;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.name {
+    margin-top: 80px;
+    font-size: 1.4em;
+    color: #333;
+    font-weight: bold;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+}
+
+.socials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card button {
+    margin: 12px 8px;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: opacity 0.4s;
+    background-color: #000;
+}
+
+.card button:hover {
+    opacity: 0.8;
+}
+
+.card button i {
+    color: #fff;
+    font-size: 1.4em;
+}
+.appointmentcontainer {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: url("https://mldvwwasb8tu.i.optimole.com/cb:esbD~6200b/w:1100/h:733/q:90/ig:avif/f:best/http://travelaway.me/wp-content/uploads/2018/06/sacromonte-landscape-hotel.jpg");
+    background-size: cover; /* Cover the entire container without affecting the image resolution */
+    background-position: center; /* Center the background image */
+    background-repeat: no-repeat; /* Prevent the background image from repeating */
+}
+
+
+.appointmentcontainer button {
+    background-color: rgba(245, 245, 245,0.8);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(4px);
+    border: 2px solid #000;
+    text-transform: uppercase;
+    padding: 30px 40px; /* Increased padding for larger size */
+    font-size: 15px;
+    font-weight: 500;
+    margin: 10px;
+    position: absolute;
+}
+
+
+/* Appointment container button hover effect */
+.appointmentcontainer button:hover {
+    color: #fff;
+}
+
+/* Appointment container button pseudo-element */
+.appointmentcontainer button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: #000;
+    z-index: -1;
+    transition: width 0.5s;
+    transition-timing-function: cubic-bezier(0.5, 1.6, 0.4, 0.7);
+}
+
+/* Appointment container button hover pseudo-element */
+.appointmentcontainer button:hover::before {
+    width: 100%;
+}
+
+.appointmentwrapper{
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    flex-direction: column;
+    
+    
+
+}
+
+.contactinfo{
+    margin: 20px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.contactinfo label{
+    margin: 10px;
+}
+.datepicker {
+    text-align: center;
+    margin: 40px auto; /* Center the datepicker horizontally */
+    width: 100%; /* Set the width to 100% */
+    width: 1000px; /* Set the maximum width */
+    height: auto; /* Remove fixed height */
+    padding: 20px; /* Increase padding for better spacing */
+    border-radius: 5px; /* Rounded border corners */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Add a subtle shadow */
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(4px);
+}
+
+/* Apply styles to the date input within the .datepicker container */
+.datepicker input[type="date"] {
+    width: 200px;
+    height: 40px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 20px;
+  }
+ 
+  
+.weel-grid {
+    padding-top: 10px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-gap: 20px;
+    margin-bottom: 20px; /* Add margin bottom for spacing */
+}
+
+.time-grid {
+    display: grid;
+    grid-template-columns: repeat(5,1fr); /* Adjust the number of columns and their width */
+    grid-gap: 20px;
+    
+}
+.time-grid button {
+    /* Apply desired styles to each grid item */
+    padding: 15px; /* Example padding */
+    text-align: center; /* Center text */
+    font-size: 10px;
+    background-color: whitesmoke;
+    border: gray;
+
+}
+
 
 
 /* Form wrapper */
@@ -495,7 +695,7 @@ header {
     padding: 10px;
     background-color: #ffffff;
     border-bottom: 1px solid #ccc;
-    position: absolute;
+    position: relative;
     top: 0;
     width: 100%;
 }
@@ -540,45 +740,10 @@ header h4 {
     font-size: 16px;
 }
 
-/* Admin sidebar */
-.sidebar {
-    position: absolute;
-    left: 0;
-    top:8.5%;
-    height: 100%; 
-    width: 20%; /* Adjust width as a percentage of the viewport */
-    background-color: #f0f0f0;
-    padding: 20px;
-    overflow-y: auto; /* Add vertical scrollbar if content exceed*/
-    
-}
-
-/* Admin sidebar list */
-.sidebar ul {
-    list-style-type: none;
-    padding-top: 60px;
-    margin: 0;
-}
-
-/* Admin sidebar list items */
-.sidebar ul li {
-    margin-bottom: 10px;
-}
-
-/* Admin sidebar links */
-.sidebar ul li a {
-    text-decoration: none;
-    color: #333;
-    font-weight: bold;
-}
-
 /* Admin container */
 .admincontainer {
     display: flex;
-    position:absolute;
-    left: 25%;
-    top: 10%;
-    margin-top: 20px;
+    position:relative;
     flex-direction: row;
 }
 
@@ -616,8 +781,7 @@ header h4 {
     display: flex;
     flex-direction: row; 
     position: absolute;
-    top: 30%; /* Adjust top position as needed */
-    left: 24%;
+
 }
 
 /* Individual graph styles */
@@ -629,9 +793,8 @@ header h4 {
 
 .table-container {
     margin-top: 20px;
-    position:absolute;
+    position:relative;
     top: 70%;
-    left: 24%;
     align-items: center;
     justify-content: center;
 }
@@ -645,24 +808,26 @@ header h4 {
 }
 
 /*test*/
+main {
+    position: relative;
+    top: 70%;
+    width: 100%;
+}
+
 main.table {
-    width: 82vw;
-    height: 90vh;
+    width: 100%;
+    height: 100%;
     background-color: #fff5;
-
-    backdrop-filter: blur(7px);
-    box-shadow: 0 .4rem .8rem #0005;
-    border-radius: .8rem;
-
-    overflow: hidden;
+    box-shadow: 6.4px 12.8px #0005;
+    border-radius: 12.8px;
+    position: absolute;
 }
 
 .table__header {
     width: 100%;
     height: 10%;
     background-color: #fff4;
-    padding: .8rem 1rem;
-
+    padding: 12.8px 16px; /* Converted from .8rem 1rem */
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -672,30 +837,28 @@ main.table {
     width: 35%;
     height: 100%;
     background-color: #fff5;
-    padding: 0 .8rem;
-    border-radius: 2rem;
-
+    padding: 12.8px; /* Converted from .8rem */
+    border-radius: 32px; /* Converted from 2rem */
     display: flex;
     justify-content: center;
     align-items: center;
-
     transition: .2s;
 }
 
 .table__header .input-group:hover {
     width: 45%;
     background-color: #fff8;
-    box-shadow: 0 .1rem .4rem #0002;
+    box-shadow: 0 1.6px 6.4px #0002; /* Converted from 0 .1rem .4rem */
 }
 
 .table__header .input-group img {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 19.2px; /* Converted from 1.2rem */
+    height: 19.2px; /* Converted from 1.2rem */
 }
 
 .table__header .input-group input {
     width: 100%;
-    padding: 0 .5rem 0 .3rem;
+    padding: 0 8px 0 4.8px; /* Converted from 0 .5rem 0 .3rem */
     background-color: transparent;
     border: none;
     outline: none;
@@ -703,32 +866,13 @@ main.table {
 
 .table__body {
     width: 95%;
-    max-height: calc(89% - 1.6rem);
+    max-height: calc(89vh - 16px); /* Converted from calc(89% - 1.6rem) */
     background-color: #fffb;
-
-    margin: .8rem auto;
-    border-radius: .6rem;
-
+    margin: 12.8px auto; /* Converted from .8rem */
+    border-radius: 9.6px; /* Converted from .6rem */
     overflow: auto;
     overflow: overlay;
 }
-
-
-.table__body::-webkit-scrollbar{
-    width: 0.5rem;
-    height: 0.5rem;
-}
-
-.table__body::-webkit-scrollbar-thumb{
-    border-radius: .5rem;
-    background-color: #0004;
-    visibility: hidden;
-}
-
-.table__body:hover::-webkit-scrollbar-thumb{ 
-    visibility: visible;
-}
-
 
 table {
     width: 100%;
@@ -737,15 +881,17 @@ table {
 td img {
     width: 36px;
     height: 36px;
-    margin-right: .5rem;
+    margin-right: 6.4px; /* Converted from .5rem */
     border-radius: 50%;
 
     vertical-align: middle;
 }
 
-table, th, td {
+table,
+th,
+td {
     border-collapse: collapse;
-    padding: 1rem;
+    padding: 16px; /* Converted from 1rem */
     text-align: left;
 }
 
@@ -796,8 +942,8 @@ tbody tr.hide td img {
 }
 
 .status {
-    padding: .4rem 0;
-    border-radius: 2rem;
+    padding: 6.4px 0; /* Converted from .4rem */
+    border-radius: 32px; /* Converted from 2rem */
     text-align: center;
 }
 
@@ -819,28 +965,19 @@ tbody tr.hide td img {
     background-color: #6fcaea;
 }
 
-
-@media (max-width: 1000px) {
-    td:not(:first-of-type) {
-        min-width: 12.1rem;
-    }
-}
-
 thead th span.icon-arrow {
     display: inline-block;
-    width: 1.3rem;
-    height: 1.3rem;
+    width: 20.8px; /* Converted from 1.3rem */
+    height: 20.8px; /* Converted from 1.3rem */
     border-radius: 50%;
     border: 1.4px solid transparent;
-    
     text-align: center;
-    font-size: 1rem;
-    
-    margin-left: .5rem;
+    font-size: 16px; /* Assumed base font size is 16px */
+    margin-left: 8px; /* Converted from .5rem */
     transition: .2s ease-in-out;
 }
 
-thead th:hover span.icon-arrow{
+thead th:hover span.icon-arrow {
     border: 1.4px solid #6c00bd;
 }
 
@@ -848,16 +985,17 @@ thead th:hover {
     color: #6c00bd;
 }
 
-thead th.active span.icon-arrow{
+thead th.active span.icon-arrow {
     background-color: #6c00bd;
     color: #fff;
 }
 
-thead th.asc span.icon-arrow{
+thead th.asc span.icon-arrow {
     transform: rotate(180deg);
 }
 
-thead th.active,tbody td.active {
+thead th.active,
+tbody td.active {
     color: #6c00bd;
 }
 
