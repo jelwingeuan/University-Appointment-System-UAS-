@@ -10,10 +10,11 @@ cur.execute(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
-        phone_number INT NOT NULL UNIQUE
+        phone_number TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
         )"""
 )
 
 # Commit changes to db
 con.commit()
-con.close()
+con.close
