@@ -3,26 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice</title>
+    <title>Login</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src="../static/myscripts.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="invoice">
-                <nav>
-                    <ul>
-                        <li><a href="/">Home</a></li>
-                        <li><a href="/about">About</a></li>
-                        <li><a href="/appointment">Make An Appointment</a></li>
-                        <li><a href="/login">Login</a></li>
-                        <li><a href="/signup">Sign Up</a></li>
-                    </ul>
-                </nav>
-            <h2>Booking Invoice</h2>
-            <p><strong>Booking ID:</strong> {{ booking_id }}</p>
-            <!-- Add more details here as needed -->
-        </div>
-        <div class="footer">
-            <p>Thank you for booking with us!</p>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/appointment">Make An Appointment</a></li>
+            <li><a href="/login">Login</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            <li><a href="/profile">Profile</a></li>
+        </ul>
+    </nav>
+    <div class = "invoice-wrapper" id = "print-area">
+        <div class = "invoice">
+            <div class = "invoice-container">
+                <div class = "invoice-head">
+                    <div class = "invoice-head-top">
+                        <div class = "invoice-head-top-right text-end">
+                            <h3>Booking Details</h3>
+                        </div>
+                    </div>
+                    <div class = "hr"></div>
+                    <div class = "invoice-head-middle">
+                        <div class = "invoice-head-middle-left text-start">
+                            <p><span class = "text-bold">Date</span>: 30/4/2024</p>
+                        </div>
+                        <div class = "invoice-head-middle-right text-end">
+                            <p><spanf class = "text-bold">Booking ID:</span>050323</p>
+                        </div>
+                    </div>
+                    <div class = "hr"></div>
+                    <div class = "invoice-head-bottom">
+                        <div class = "invoice-head-bottom-left">
+                            <ul>
+                                <li>Kim Hong Zhang</li>
+                                <li>1221106260</li>
+                                <li>Faculty of Computing and Informatic</li>
+                                <li>Multimedia University Cyberjaya</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class = "overflow-view">
+                    <div class = "invoice-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <td class = "text-bold">Date</td>
+                                    <td class = "text-bold">Booking Time</td>
+                                    <td class = "text-bold">Appointment Time</td>
+                                    <td class = "text-bold">Lecturer</td>
+                                    <td class = "text-bold">Faculty</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>28 April 2024</td>
+                                    <td>09:00</td>
+                                    <td>18:00</td>
+                                    <td>Willie Poh Kaw Lik</td>
+                                    <td>FCI</td>
+                                </tr>
+                            </tbody>
+                        </table> 
+                    </div>
+                    <div class="rules">
+                        <h4>important Notes</h4>
+                        <ul>
+                            <li><b>Before Your Appointment: </b>
+                            <ul>
+                            <li>Gather relevant documents related to your reason for consultation.</li>
+                            <li>Write down your questions and prioritize the most important ones.</li>
+                            <li>Consider your goals for the consultation.</li>
+                            <li>(Optional) Research the professional's background and expertise.</li>
+                            <li>(Optional) Prepare for fees by calling the office beforehand.</li>
+                            </ul>
+                            </li>
+                            <li><b>During Your Appointment:</b>
+                            <ul>
+                            <li>Arrive early to allow for parking, check-in, and delays.</li>
+                            <li>Be clear and concise when explaining your situation.</li>
+                            <li>Be open and honest, providing all relevant information.</li>
+                            <li>Take notes on key points, recommendations, and next steps.</li>
+                            <li>Ask clarifying questions if anything is unclear.</li>
+                            <li>Discuss fees (if not done beforehand) to understand the cost structure.</li>
+                            </ul>
+                            </li>
+                            <li><b>After Your Appointment:</b>
+                            <ul>
+                            <li>Review your notes to organize the information gathered.</li>
+                            <li>Follow up on any next steps or tasks assigned to you.</li>
+                            <li>(Optional) Consider seeking a second opinion for reassurance.</li>
+                            </ul>
+                            </li>
+                            <li><b>Additional Tips:</b>
+                            <ul>
+                            <li>Dress professionally to make a good first impression.</li>
+                            <li>Be respectful of the professional's time by sticking to the appointment time.</li>
+                            <li>Be polite and courteous to everyone you interact with during your visit.</li>
+                            </ul>
+                            </li>
+                            </ul>
+                    </div>                    
+                </div>
+                <div class = "invoice-foot text-center">
+                    <p><span class = "text-bold text-center">NOTE:&nbsp;</span>This is computer generated receipt and does not require physical signature.</p>
+
+                    <div class = "invoice-btns">
+                        <button type = "button" class = "invoice-btn" onclick="printInvoice()">
+                            <span>
+                                <i class='bx bx-printer'></i>
+                            </span>
+                            <span>Print</span>
+                        </button>
+                        <button type = "button" class = "invoice-btn">
+                            <span>
+                                <i class='bx bxs-download' ></i>    
+                            </span>
+                            <span>Download</span>
+                        </button>
+                    </div>
+                    <div class="qrcode">
+                        <img src="https://media.nbcbayarea.com/2020/10/qr-code-huge.png?resize=906,1024" width="100px" height="100px">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>
