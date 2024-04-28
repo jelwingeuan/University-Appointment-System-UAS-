@@ -454,6 +454,8 @@ nav a:hover {
     text-align: center;
     flex-direction: column;
     position: relative;
+    height: 120vh;
+    margin: auto;
     
 }
 
@@ -602,6 +604,110 @@ nav a:hover {
 .checkout button:hover::before {
     width: 100%;
 }
+
+.invoice-wrapper{
+    min-height: 100vh;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    background-color: rgba(128, 128, 128,0.1);
+}
+
+.invoice {
+    width: 900px;
+    margin-right: auto;
+    margin-left: auto;
+    background-color: white;
+    padding: 70px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add box shadow */
+}
+   
+    
+.invoice-head-bottom-left ul li{
+    list-style: none;
+    line-height: 1.5;
+}
+
+.invoice-head-top-right h3{
+    font-weight: 500;
+    font-size: 27px;
+   
+    
+}
+.invoice-head-middle, .invoice-head-bottom{
+    padding: 10px 0;
+}
+
+.invoice-body{
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    
+}
+
+.invoice-body table{
+    border-collapse: collapse;
+    border-radius: 5px;
+    border:1px solid #000;
+    width: 100%;
+    text-align: center;
+}
+
+.invoice-body table td, .invoice-body table th{
+    padding: 15px;
+    text-align: center;
+
+}
+
+.invoice-body table tr{
+    border-bottom: 1px solid black;
+    text-align: center;
+}
+
+.invoice-btns {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.invoice-btn {
+    padding: 3px 9px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    transition: gray 0.3s; 
+    margin-right: 5px;
+    border-radius: 2px;
+}
+
+.invoice-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1); /* Change background color on hover */
+}
+
+
+.rules {
+    margin-top: 20px;
+}
+
+.rules li {
+    margin-bottom: 10px; 
+    list-style-type: decimal; 
+    margin-left: 20px; 
+    line-height: 1.5; 
+    text-align: justify;
+}
+
+.rules h4{
+    text-align: center;
+    text-decoration: underline;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+.qrcode {
+    display: flex;
+    justify-content: center;
+    margin: 10px;;
+}
+
 
 
 /* Form wrapper */
