@@ -1,8 +1,7 @@
+import random
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-from user_authentication import (
-    User,
-)  # assuming User model is defined in user_authentication module
+from user_authentication import User
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = (
@@ -13,13 +12,14 @@ db = SQLAlchemy()
 db.init_app(app)
 
 
-# Def of Booking model
+# Define Booking model
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    # Add more fields such as date, time, service, etc.........
 
 
-@app.route("/book", methods=["GET", "POST"])
+@app.route("/appointment", methods=["GET", "POST"]) 
 def book_appointment():
     if request.method == "POST":
         # Assuming the user is logged in, might need to implement user authentication
@@ -40,8 +40,23 @@ def book_appointment():
         db.session.add(new_booking)
         db.session.commit()
 
-        return redirect(url_for("home"))  # Redirect to home page after booking
+        # Generate a unique booking ID
+        booking_id = generate_booking_id()
+
+        # Redirect to the invoice page with the booking ID
+        return redirect(url_for("invoice", booking_id=booking_id))
 
     # Render the booking form
     return render_template("home.html")
 
+
+def generate_booking_id():
+    # Generate a random booking ID here
+
+    return random.randint(100000, 999999)
+
+
+@app.route("/invoice/<int:booking_id>")
+def invoice(booking_id):
+    # Render the invoice page with the booking ID
+    return render_template("invoice.html", booking_id=booking_id)

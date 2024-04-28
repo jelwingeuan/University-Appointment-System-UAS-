@@ -12,10 +12,7 @@ db = SQLAlchemy()
 # initialize SQLAlchemy with the Flask app
 db.init_app(app)
 
-# import models after initializing SQLAlchemy
-from user_authentication import User
-
-
+# nav---------------------------------------------------------------------------------------------------------
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -29,6 +26,7 @@ def about():
 @app.route("/signup", methods=["GET", "POST"])
 def render_signup_form():
     return render_template("signup.html")
+
 
 @app.route("/login", methods=["GET", "POST"])
 def render_login_form():
@@ -56,6 +54,16 @@ def appointment():
 @app.route("/admin", methods=["GET"])
 def admin():
     return render_template("admin.html")
+
+# nav----------------------------------------------------------------------------------------------
+# @app.route("/directory", methods=["GET"])
+# def admin():
+#     return render_template("directory.html")
+
+
+# @app.route("/profile", methods=["GET"])
+# def admin():
+#     return render_template("profile.html")
 
 
 if __name__ == "__main__":
