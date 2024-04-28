@@ -304,13 +304,26 @@ nav a:hover {
     font-size: 24px;
     color: #333;
 }
+
+.dir{
+    margin-bottom: 50px;
+    display: flex;
+    justify-content: center;
+
+}
+.dir h1{
+    font-weight: 500;
+    margin-bottom: 10px;
+
+}
+
 .card-container{
     display: grid;
     grid-template-columns: auto auto auto;
     grid-template-rows: auto auto auto;
     justify-content: center;
     grid-gap: 30px;
-    top: 500px;
+    margin-top: 20px;
     position: relative;
 }
 .card {
@@ -407,7 +420,7 @@ nav a:hover {
     font-size: 15px;
     font-weight: 500;
     margin: 10px;
-    position: absolute;
+   
 }
 
 
@@ -440,10 +453,24 @@ nav a:hover {
     justify-content: center;
     text-align: center;
     flex-direction: column;
+    position: relative;
     
-    
+}
+
+.bordered-select {
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 5px;
+    width: 200px;
 
 }
+  
+.bordered-select:focus {
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    border-color: #007bff;
+}
+  
+
 
 .contactinfo{
     margin: 20px;
@@ -452,9 +479,6 @@ nav a:hover {
     justify-content: center;
 }
 
-.contactinfo label{
-    margin: 10px;
-}
 .datepicker {
     text-align: center;
     margin: 40px auto; /* Center the datepicker horizontally */
@@ -497,12 +521,87 @@ nav a:hover {
     /* Apply desired styles to each grid item */
     padding: 15px; /* Example padding */
     text-align: center; /* Center text */
-    font-size: 10px;
+    font-size: 15px;
+    font-weight: 600;
     background-color: whitesmoke;
     border: gray;
-
+    transition: background-color 0.3s ease; /* Add transition for smooth effect */
 }
 
+.time-grid .unavailable {
+    padding: 15px; /* Example padding */
+    text-align: center; /* Center text */
+    font-size: 15px;
+    font-weight: 600;
+    background-color: red;
+    border: gray;
+    transition: background-color 0.3s ease; 
+}
+
+.time-grid .choose {
+    padding: 15px; /* Example padding */
+    text-align: center; /* Center text */
+    font-size: 15px;
+    font-weight: 600;
+    background-color: rgb(12, 255, 52);
+    border: gray;
+    transition: background-color 0.3s ease; 
+}
+
+.time-grid .unavailable:hover,
+.time-grid .choose:hover {
+    background-color: inherit; /* Make the background color inherit from its parent */
+}
+
+
+
+.time-grid button:hover {
+    background-color: lightgray; /* Change background color on hover */
+}
+
+.checkout{
+    display: block;
+    justify-content: center;
+    position: relative;
+    
+}
+.checkout button {
+    background-color: rgba(245, 245, 245, 0.8);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(4px);
+    border: 2px solid #000;
+    text-transform: uppercase;
+    padding: 20px 30px; /* Increased padding for larger size */
+    font-size: 15px;
+    font-weight: 500;
+    margin: 10px;
+    position: absolute;
+    right: 45%;
+}
+
+/* Checkout button hover effect */
+.checkout button:hover {
+    color: #fff;
+}
+
+/* Checkout button pseudo-element */
+.checkout button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: black;
+    z-index: -1;
+    transition: width 0.5s;
+    transition-timing-function: cubic-bezier(0.5, 1.6, 0.4, 0.7);
+}
+
+/* Checkout button hover pseudo-element */
+.checkout button:hover::before {
+    width: 100%;
+}
 
 
 /* Form wrapper */
@@ -646,7 +745,6 @@ input[type="submit"]:hover {
     justify-content: center;
     align-items: row;
     width: 100%;
-    position: fixed;
     bottom: 0;
 }
 

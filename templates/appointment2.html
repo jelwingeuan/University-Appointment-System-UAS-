@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Appointment</title>
+    <title>Pick Your Slot</title>
     <link rel="stylesheet" href="../static/style.css">
     <script src="../static/myscripts.js"></script>
 </head>
@@ -17,79 +17,71 @@
             <li><a href="/signup">Sign Up</a></li>
         </ul>
     </nav>
+
     <div class="appointmentwrapper">
         <h1>Pick Your Slot</h1>
         <div class="contactinfo">
-            <input type="text" placeholder="Name" ><label>Name</label>
-            <input type="search" placeholder="Lecturer"><label>Lecturer</label>
+            <select class="bordered-select">
+                <option value="option1">--None--</option>
+                <option value="option2">Eric</option>
+                <option value="option3">Jax</option>
+                <option value="option4">Calvin</option>
+            </select>              
         </div>
         <div class="datepicker">
             <input type="date">
-            <div class="weel-grid">
-                <div>MON</div>
-                <div>TUES</div>
-                <div>WED</div>
-                <div>THURS</div>
-                <div>FRIDAY</div>
-            </div>
             <div class="time-grid">
+                <!-- Buttons for time slots -->
                 <button>8:00 AM</button>
                 <button>9:00 AM</button>
-                <button>10:00 AM</button>
+                <button class="unavailable">10:00 AM</button>
                 <button>11:00 AM</button>
                 <button>12:00 PM</button>
                 <button>1:00 PM</button>
-                <button>2:00 PM</button>
+                <button class="choose">2:00 PM</button>
                 <button>3:00 PM</button>
                 <button>4:00 PM</button>
                 <button>5:00 PM</button>
                 <button>8:00 AM</button>
                 <button>9:00 AM</button>
-                <button>10:00 AM</button>
+                <button class="unavailable">10:00 AM</button>
                 <button>11:00 AM</button>
                 <button>12:00 PM</button>
                 <button>1:00 PM</button>
-                <button>2:00 PM</button>
+                <button class="choose">2:00 PM</button>
                 <button>3:00 PM</button>
                 <button>4:00 PM</button>
                 <button>5:00 PM</button>
                 <button>8:00 AM</button>
                 <button>9:00 AM</button>
-                <button>10:00 AM</button>
+                <button class="unavailable">10:00 AM</button>
                 <button>11:00 AM</button>
                 <button>12:00 PM</button>
                 <button>1:00 PM</button>
-                <button>2:00 PM</button>
+                <button class="choose">2:00 PM</button>
                 <button>3:00 PM</button>
                 <button>4:00 PM</button>
                 <button>5:00 PM</button>
-                <button>8:00 AM</button>
-                <button>9:00 AM</button>
-                <button>10:00 AM</button>
-                <button>11:00 AM</button>
-                <button>12:00 PM</button>
-                <button>1:00 PM</button>
-                <button>2:00 PM</button>
-                <button>3:00 PM</button>
-                <button>4:00 PM</button>
-                <button>5:00 PM</button>
-                    <!-- Repeat the buttons as needed -->
+                <!-- Repeat buttons as needed -->
             </div>
-                
-            </div>
-    </div>
-    <div class="footer-wrapper">
-        <footer class="footer">
-                <div class="footer-col">
-                    <h4>Universal Appointment Booking System</h4>
-                        <ul>
-                            <li><a href="/about">about us</a></li>
-                            <li><a href="#">our services</a></li>
-                            <li><a href="/appointment">book now</a></li>
-                        </ul>
-                </div>
-        </footer>
+        </div>
     </div>
 
+    <div class="checkout">
+        <a href="#"><button>checkout</button></a>
+    </div>
+
+    <div class="footer-wrapper">
+        <footer class="footer" style="position:sticky; ">
+            <div class="footer-col">
+                <h4>Universal Appointment Booking System</h4>
+                <ul>
+                    <li><a href="/about">about us</a></li>
+                    <li><a href="#">our services</a></li>
+                    <li><a href="/appointment">book now</a></li>
+                </ul>
+            </div>
+        </footer>
+    </div>
 </body>
 </html>
