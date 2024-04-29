@@ -17,4 +17,4 @@ cur.execute(
 
 # Commit changes to db
 con.commit()
-con.close
+con.close()

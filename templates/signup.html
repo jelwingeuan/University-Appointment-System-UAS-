@@ -20,35 +20,36 @@
 
         <div class="wrapper">
             <h1>Sign Up</h1>
-            <form method="post">
+            <form method="post" action="/signup">
                 <div class="input_box">
-                    <input type="text" required>
+                    <input type="text" name="username" required>
                     <span></span>
                     <label>Full Name</label>
                 </div>
                 <div class="input_box">
-                    <input type="email" required>
+                    <input type="email" name="email" required>
                     <span></span>
                     <label>Email</label>
                 </div>
                 <div class="input_box">
-                    <input type="tel" required>
+                    <input type="tel" name="phone_number" required>
                     <span></span>
                     <label>Phone Number</label>
                 </div>
                 <div class="input_box">
-                    <input type="password" id="passwordField" minlength="8" required>
+                    <input type="password" name="password" id="passwordField" minlength="8" required>
                     <span></span>
                     <label for="passwordField">Password</label>
                 </div>
                 <div class="input_box">
-                    <input type="password" id="passwordField" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" required>
+                    <input type="password" name="confirm_password" id="confirmPasswordField" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" required>
                     <span></span>
-                    <label for="passwordField">Confirm your password</label>
+                    <label for="confirmPasswordField">Confirm your password</label>
                 </div>
                 
                 <input type="submit" value="Sign Up">
             </form>
+
         </div>
 
 

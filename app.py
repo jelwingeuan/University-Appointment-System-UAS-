@@ -7,7 +7,9 @@ from db_functions import get_db_connection, signup, login, hash_password
 
 app = Flask(__name__)
 
+# Initialize the database connection
 get_db_connection()
+
 
 @app.route("/")
 def home():
@@ -21,14 +23,18 @@ def about():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup_route():
-    hash_password()
-    signup()
+    if request.method == "POST":
+        # call da signup function from db_functions and pass the request object
+        return signup(request)
+    return render_template("signup.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login_route():
-    hash_password()
-    login()
+    if request.method == "POST":
+        # call da login function from db_functions
+        return login(request.form["email"], request.form["password"])
+    return render_template("login.html")
 
 
 @app.route("/appointment")
@@ -51,7 +57,7 @@ def create_booking():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            " ",
+            "INSERT INTO bookings (email, booking_id) VALUES (?, ?)",
             (email, booking_id),
         )
         conn.commit()
@@ -66,7 +72,7 @@ def invoice(booking_id):
     # Retrieve the booking details from the database using the booking ID
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(" ", (booking_id,))
+    cursor.execute("SELECT * FROM bookings WHERE booking_id = ?", (booking_id,))
     booking = cursor.fetchone()
     conn.close()
 
@@ -75,7 +81,7 @@ def invoice(booking_id):
         return render_template("invoice.html", booking=booking)
     else:
         # If booking not found, render an error page or redirect to another page
-        return render_template("error.html", message="Booking Not Found u bitch")
+        return render_template("error.html", message="Booking Not Found")
 
 
 if __name__ == "__main__":
