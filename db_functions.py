@@ -20,31 +20,30 @@ def hash_password(password):
 
 
 # function for "sign up"
-def signup():
+def signup(request):
     if request.method == "POST":
         username = request.form.get("username")
         email = request.form.get("email")
         password = request.form.get("password")
-        
+
         hashed_password = hash_password(password)
-        
+
         con = get_db_connection()
         cur = con.cursor()
-        
+
         # check if email already exists
-        cur.execute(
-            "SELECT * FROM users WHERE email = ?",
-            (email,)
-        )
+        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cur.fetchone()
-        
+
         if user:
             con.close()
-            return render_template("signup.html", message="User with this email already exists")
+            return render_template(
+                "signup.html", message="User with this email already exists"
+            )
         else:
             cur.execute(
                 "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-                (username, email, hashed_password)
+                (username, email, hashed_password),
             )
             con.commit()
             con.close()
@@ -53,7 +52,7 @@ def signup():
         return render_template("signup.html")
 
 
-# function for "log in"       
+# function for "log in"
 def login():
     if request.method == "POST":
         email = request.form.get("email")
