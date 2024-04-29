@@ -70,25 +70,41 @@ def login():
         email = request.form.get("email")
         password = request.form.get("password")
 
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user = cur.fetchone()
-
-        if user and bcrypt.checkpw(
-            password.encode("utf-8"), user["password"].encode("utf-8")
-        ):
-            # Redirect to the home page upon successful login
-            return redirect(url_for("home"))
+        if email == "admin@example.com" and password == "123":
+            return redirect('/admin')
         else:
-            return render_template("login.html", message="Invalid email or password")
+            # If not admin, proceed with regular user login logic
+            con = get_db_connection()
+            cur = con.cursor()
+            cur.execute("SELECT * FROM users WHERE email = ?", (email,))
+            user = cur.fetchone()
+
+            if user and bcrypt.checkpw(
+                password.encode("utf-8"), user["password"].encode("utf-8")
+            ):
+                # Redirect to the home page upon successful login for regular users
+                return redirect('/flash')
+            else:
+                return render_template("login.html", message="Invalid email or password")
     else:
         return render_template("login.html")
 
 
+@app.route("/flash")
+def flash():
+    return render_template("messageflashing.html")
+
 @app.route("/appointment")
 def appointment():
     return render_template("appointment.html")
+
+@app.route("/appointment2")
+def appointment2():
+    return render_template("appointment2.html")
+
+@app.route("/invoice")
+def render_template_invoice():
+    return render_template("invoice.html")
 
 
 @app.route("/admin")
