@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import bcrypt
+import random
+
 
 
 app = Flask(__name__)
