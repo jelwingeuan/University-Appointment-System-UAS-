@@ -1,3 +1,4 @@
+
 import sqlite3
 
 # Connect with db
@@ -10,7 +11,7 @@ cur.execute(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         email TEXT NOT NULL UNIQUE,
-        phone_number TEXT NOT NULL UNIQUE,
+        phone_number INT NOT NULL UNIQUE,
         password TEXT NOT NULL
         )"""
 )
@@ -18,3 +19,4 @@ cur.execute(
 # Commit changes to db
 con.commit()
 con.close()
+
