@@ -20,13 +20,14 @@ def hash_password(password):
 
 
 # function for "sign up"
-def signup(request):
+def signup():
     if request.method == "POST":
         username = request.form.get("username")
         email = request.form.get("email")
+        phone_number = request.form.get("phone_number")
         password = request.form.get("password")
 
-        hashed_password = hash_password(password)
+        hashed_password = hash_password()
 
         con = get_db_connection()
         cur = con.cursor()
@@ -42,8 +43,8 @@ def signup(request):
             )
         else:
             cur.execute(
-                "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
-                (username, email, hashed_password),
+                "INSERT INTO users (username, email, phone_number, password) VALUES (?, ?, ?, ?)",
+                (username, email, phone_number, hashed_password),
             )
             con.commit()
             con.close()
@@ -68,10 +69,11 @@ def login():
         
         # check if the password provided by user is the same as the hashed pw in db
         if user and bcrypt.checkpw(password.encode("utf-8"), user['password'].encode("utf-8")):
-            con.close()
+            
             return redirect(url_for("home"))
         else:
-            con.close()
+            
             return render_template("login.html", message="Invalid email or password")
     else:
         return render_template("login.html")
+    
