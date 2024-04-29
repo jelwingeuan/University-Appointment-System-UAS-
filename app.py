@@ -2,7 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import random
 import os
-from db_functions import get_db_connection, signup, login
+import bcrypt
+from db_functions import get_db_connection, signup, login, hash_password
 
 app = Flask(__name__)
 
@@ -20,11 +21,13 @@ def about():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup_route():
+    hash_password()
     signup()
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login_route():
+    hash_password()
     login()
 
 
