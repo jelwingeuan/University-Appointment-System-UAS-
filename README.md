@@ -23,7 +23,7 @@ Technologies Used:
 
 >Backend: Python, Flask framework
 
->Database: PostgreSQL (or MySQL/MongoDB)
+>Database: SQLite & SQLite3
 
 >Version: Control Git, GitHub
 
