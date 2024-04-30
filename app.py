@@ -58,7 +58,7 @@ def signup():
             )
             con.commit()
             con.close()
-            return redirect(url_for("login"))
+            return redirect('/signinflash')
     else:
         return render_template("signup.html")
 
@@ -110,6 +110,18 @@ def render_template_invoice():
 @app.route("/admin")
 def admin():
     return render_template("admin.html")
+
+@app.route("/signoutflash")
+def signoutflash():
+    return render_template("signoutflash.html")
+
+@app.route("/signoutflash2")
+def signoutflash2():
+    return render_template("signoutflash2.html")
+
+@app.route("/signinflash")
+def signinflash():
+    return render_template("signinflash.html")
 
 
 @app.route("/create_booking", methods=["POST"])
