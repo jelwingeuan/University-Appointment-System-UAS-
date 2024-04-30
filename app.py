@@ -146,9 +146,9 @@ def invoice(booking_id):
         return render_template("invoice.html", booking=booking)
     else:
         # If booking not found, render an error page or redirect to another page
-        return render_template("error.html", message="Booking Not Found u bitch")
+        return render_template("error.html", message="Booking Not Found")
 
 
 if __name__ == "__main__":
     # Run the application
-    app.run(debug=True, port=8000)
+    app.run(debug=True, port=6969)
