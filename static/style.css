@@ -278,7 +278,8 @@ nav a:hover {
 
 /* About content wrapper */
 .aboutcontentwrapper {
-    position: absolute;
+    position: relative;
+    margin-bottom: 50px;
     
 }
 
