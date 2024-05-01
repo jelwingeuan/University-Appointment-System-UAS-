@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import bcrypt
 import random
-
+from flask import request, jsonify
 
 
 app = Flask(__name__)
@@ -13,7 +13,6 @@ def get_db_connection():
     con = sqlite3.connect("database.db")
     con.row_factory = sqlite3.Row
     return con
-
 
 @app.route("/")
 def home():
@@ -110,6 +109,28 @@ def render_template_invoice():
 @app.route("/admin")
 def admin():
     return render_template("admin.html")
+
+@app.route("/create_faculty_hub", methods=["POST"])
+def create_faculty_hub():
+    if request.method == "POST":
+        # Extract data from the request
+        faculty_name = request.form.get("faculty_name")
+        faculty_location = request.form.get("faculty_location")
+
+        # Validate the data (you can add more validation if needed)
+        if not faculty_name or not faculty_location:
+            return jsonify({"error": "Missing required fields"}), 400
+
+        # Here you can insert the faculty hub into your database
+        # For example:
+        # conn = get_db_connection()
+        # cursor = conn.cursor()
+        # cursor.execute("INSERT INTO faculty_hubs (name, location) VALUES (?, ?)", (faculty_name, faculty_location))
+        # conn.commit()
+        # conn.close()
+
+        return jsonify({"message": "Faculty hub created successfully"}), 201
+
 
 @app.route("/signoutflash")
 def signoutflash():
