@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import bcrypt
 import random
-from flask import request, jsonify
 
 
 app = Flask(__name__)
@@ -110,26 +109,41 @@ def render_template_invoice():
 def admin():
     return render_template("admin.html")
 
-@app.route("/create_faculty_hub", methods=["POST"])
+
+@app.route("/create_faculty_hub", methods=["GET", "POST"])
 def create_faculty_hub():
     if request.method == "POST":
-        # Extract data from the request
+        # Extract data from the form submission
         faculty_name = request.form.get("faculty_name")
         faculty_location = request.form.get("faculty_location")
 
         # Validate the data (you can add more validation if needed)
         if not faculty_name or not faculty_location:
-            return jsonify({"error": "Missing required fields"}), 400
+            return render_template(
+                "create_faculty_hub.html", message="Missing required fields"
+            )
 
-        # Here you can insert the faculty hub into your database
-        # For example:
-        # conn = get_db_connection()
-        # cursor = conn.cursor()
-        # cursor.execute("INSERT INTO faculty_hubs (name, location) VALUES (?, ?)", (faculty_name, faculty_location))
-        # conn.commit()
-        # conn.close()
+        try:
+            # Insert the faculty hub into the database
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO faculty_hubs (name, location) VALUES (?, ?)",
+                (faculty_name, faculty_location),
+            )
+            conn.commit()
+            conn.close()
+            return redirect(
+                url_for("admin")
+            )  # Redirect to admin page after successful insertion
+        except Exception as e:
+            return render_template(
+                "create_faculty_hub.html",
+                message="An error occurred while creating faculty hub",
+            )
 
-        return jsonify({"message": "Faculty hub created successfully"}), 201
+    # If it's a GET request, simply render the create faculty hub page
+    return render_template("create_faculty_hub.html")
 
 
 @app.route("/signoutflash")
