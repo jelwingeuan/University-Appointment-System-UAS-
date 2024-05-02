@@ -73,6 +73,21 @@
             <canvas id="lineChart" ></canvas>
         </div>
     </div>
+    <div class="create-faculty-hub">
+        <h2>Create Faculty Hub</h2>
+        <form id="createFacultyHubForm">
+            <div class="form-group">
+                <label for="facultyName">Faculty Name:</label>
+                <input type="text" id="facultyName" name="faculty_name" required>
+            </div>
+            <div class="form-group">
+                <label for="facultyLocation">Location:</label>
+                <input type="text" id="facultyLocation" name="faculty_location" required>
+            </div>
+            <button type="submit">Create Faculty Hub</button>
+        </form>
+        <div id="createFacultyHubMessage"></div>
+    </div>
     <div class="table" id="customers_table">
         <div class="table__header">
             <h1>Appointments List</h1>
