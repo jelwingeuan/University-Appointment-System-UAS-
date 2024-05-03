@@ -1218,3 +1218,211 @@ tbody td.active {
     color: #6c00bd;
 }
 
+.profilecontainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    
+}
+
+.profilewrapper{
+    display: flex;
+    flex-direction: column;
+
+}
+
+.profilesubwrapper{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    width: 1000px;
+    height: 700px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    margin: 10px;
+    padding: 10px;
+    border-radius: 10px;
+
+}
+
+.profilesidebar{
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    border: 1px black;
+    
+}
+
+.profilesidebar a{
+    text-decoration: none;
+    font-weight: 300;
+    color: #000;
+    margin-top: 50px;
+
+}
+
+.profilesidebar img{
+    border-radius: 100px;
+    width: 100px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    display: flex;
+    margin-bottom: 10px;
+    
+}
+
+.profilemain{
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    height: 100%;
+    width: 700px;
+    border-radius: 10px;
+}
+
+.profilemain h1{
+    font-weight: 600;
+    margin-left: 40px;
+    margin-bottom: 20px;
+    margin-top: 10px;
+    font-size: 24px;
+}
+
+
+.subprofileinput {
+    display: block;
+
+}
+  
+.profilemain label {
+    display: block;
+    margin-left: 20px;
+    font-weight: 550;
+    font-size: 18px;
+    
+}
+  
+  
+.subprofileinput input[type="text"],input[type="number"]{
+    padding: 10px;
+    border-radius: 5px;
+    width: 200px;
+    border: none;
+}
+
+.subprofileinput input[type="email"] {
+    padding: 10px;
+    border-radius: 5px;
+    width: 300px;
+    border: none;   
+}
+  
+
+.profileinput {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px; 
+    
+}
+  
+.profileinputdetails {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin: 20px;
+  }
+  
+.profileinput select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 150px;
+   
+}
+
+.profileinput ::placeholder{
+    color: black;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.profileinput h2 {
+    font-weight: 500;
+    font-size: 18px;
+    margin-left: 20px;
+}
+
+.bio {
+    width: 100%;
+    margin: 0 10px
+}
+
+.bio textarea {
+    display: block;
+    width: 650px;
+    height: 100%;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: vertical; 
+    overflow-y: auto; 
+}
+
+.bio label {
+    display: block;
+    font-weight: 600;
+    
+}
+
+.changecontainer{
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 700px;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    flex-direction: column;
+    
+
+}
+
+.changesub{
+    padding: 10px;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    flex-direction: column;
+    text-align: start;
+    margin-top: 100px;
+
+}
+
+  
+.changesub h2{
+    font-weight: 400;
+    margin-bottom: 50px;
+    
+
+}
+
+.changesub input[type="password"], label{
+    font-size: 18px;
+    text-align: left;
+}
+
+.changesub input[type="password"]{
+    padding: 5px;
+    margin: 5px;
+}
+
+.changesub button {
+    margin-top: 20px;
+    background-color: blue; 
+    color: #ffffff; 
+    padding: 10px 20px; 
+    border: none; 
+    border-radius: 5px; 
+  }
+  
+.changesub button:hover {
+    background-color: #0056b3; 
+  }
+
