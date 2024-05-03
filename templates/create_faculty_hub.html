@@ -1,0 +1,109 @@
+<!-- create_faculty_hub.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Faculty Hub</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <style>
+        .center-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .sidebar {
+            background-color: #333;
+            color: #fff;
+            width: 200px;
+            height: 100vh;
+            padding-top: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .sidebar ul li {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .sidebar ul li a {
+            color: #fff;
+            text-decoration: none;
+        }
+        .create-faculty-hub {
+            width: 400px; /* Adjust width as needed */
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+        button[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2>Create Faculty Hub</h2>
+        <div class="profile-container">
+            <img src="https://scontent.fkul16-4.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p320x320&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=3roSzPxS-N0Ab58mfNR&_nc_ht=scontent.fkul16-4.fna&oh=00_AfDVQyRsWjBjOiwuFkSgNSTAYj98gOwqrjaiYsLGGEFRVw&oe=662BE62C" class="profile-photo">
+            <h4>Admin</h4>
+        </div>
+    </header>
+    <div class="sidebar">
+        <ul>
+            <li><i class='bx bx-laptop'></i><a href="/admin">Dashboard</a></li>
+            <li><i class='bx bx-user'></i><a href="/usercontrol">User Control</a></li>
+            <li><i class='bx bx-cart'></i><a href="/bookingcontrol">Booking Control</a></li>
+            <li><i class='bx bx-plus'></i><a href="/create_faculty_hub">Create Faculty Hub</a></li>
+            <li><i class='bx bx-cog'></i><a href="/signoutflash">Signout</a></li>
+        </ul>
+    </div>
+    <div class="center-container">
+        <div class="create-faculty-hub">
+            <h2>Create Faculty Hub</h2>
+            <form id="createFacultyHubForm" action="/create_faculty_hub" method="POST">
+                <div class="form-group">
+                    <label for="facultyName">Faculty Name:</label>
+                    <input type="text" id="facultyName" name="faculty_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="facultyLocation">Location:</label>
+                    <input type="text" id="facultyLocation" name="faculty_location" required>
+                </div>
+                <button type="submit">Create Faculty Hub</button>
+                <!-- Display error message if any -->
+                {% if message %}
+                <p class="error">{{ message }}</p>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</body>
+</html>
