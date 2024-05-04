@@ -1,31 +1,65 @@
-# University-Appointment-Booking-System-UABS-
+University Appointment System (UAS)
 
-This repository hosts the source code for the Universal Appointment Booking System (UABS), a comprehensive web-based platform for managing appointments and bookings. UASB allows users to schedule appointments for various services while providing administrators with tools for managing bookings and user data.
+The University Appointment System (UAS) is a web application built with Flask, designed to manage appointments within a university setting. It allows students, faculty, and staff to schedule and manage appointments efficiently.
 
-Key Features:
->User-friendly interface for creating, managing, and canceling appointments.
+## Features
 
->Separate user and admin interfaces with tailored functionalities.
+- **User Authentication**: Users can sign up for accounts and log in securely using bcrypt for password hashing.
+- **Appointment Booking**: Students can book appointments with faculty or staff members for various purposes such as academic advising, office hours, or consultations.
+- **Faculty Hub Creation**: Faculty members can create hubs for managing their appointments, specifying their availability and location.
+- **Admin Panel**: Administrators have access to an admin panel where they can manage user accounts, faculty hubs, and other system settings.
+- **Database Integration**: UAS integrates with SQLite for data storage, ensuring reliable and efficient data management.
 
->Integration with a backend server built using Flask framework for robust data management.
+## Installation
 
->Customizable appointment scheduling and availability management.
+1. Clone the repository:
 
->Seamless communication between users and administrators through status updates and notifications.
+    ```bash
+    git clone https://github.com/your_username/uas.git
+    ```
 
->Comprehensive admin dashboard for overseeing bookings, managing user data, and updating information.
+2. Navigate to the project directory:
 
->Secure authentication and access control mechanisms to protect user privacy and system integrity.
+    ```bash
+    cd uas
+    ```
 
+3. Install dependencies:
 
-Technologies Used:
->Frontend: HTML, CSS, JavaScript
+    ```bash
+    pip install -r requirements.txt
+    ```
 
->Backend: Python, Flask framework
+4. Initialize the database:
 
->Database: SQLite & SQLite3
+    ```bash
+    python initialize_database.py
+    ```
 
->Version: Control Git, GitHub
+5. Run the application:
 
->CI/CD: GitHub Actions (or Jenkins)
+    ```bash
+    python app.py
+    ```
 
+6. Access the application in your web browser at `http://localhost:6969`.
+
+## Usage
+
+- Visit the home page to get started.
+- Sign up for an account or log in if you already have one.
+- Book appointments with faculty or staff members.
+- Faculty members can create hubs to manage their availability and appointments.
+- Administrators can access the admin panel for advanced management options, including user accounts and system settings.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+Feel free to adjust any parts of the README to better fit your project's specifics or additional functionalities.
