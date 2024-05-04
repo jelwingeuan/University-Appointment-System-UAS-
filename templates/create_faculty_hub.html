@@ -1,0 +1,123 @@
+<!-- create_faculty_hub.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Faculty Hub</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <style>
+        .center-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .sidebar {
+            background-color: #333;
+            color: #fff;
+            width: 200px;
+            height: 100vh;
+            padding-top: 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .sidebar ul li {
+            padding: 10px;
+            cursor: pointer;
+        }
+        .sidebar ul li a {
+            color: #fff;
+            text-decoration: none;
+        }
+        .create-faculty-hub {
+            margin-left: 220px; /* Adjust margin-left to accommodate sidebar */
+            width: 400px; /* Adjust width as needed */
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+        button[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: red;
+        }
+        .faculty-hubs {
+            margin-top: 20px;
+        }
+        .faculty-hub-item {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2>Create Faculty Hub</h2>
+        <!-- Add admin profile or navigation if needed -->
+    </header>
+    <div class="sidebar">
+        <ul>
+            <li><a href="/admin">Dashboard</a></li>
+            <li><a href="/usercontrol">User Control</a></li>
+            <li><a href="/bookingcontrol">Booking Control</a></li>
+            <li><a href="/create_faculty_hub">Create Faculty Hub</a></li>
+            <li><a href="/signoutflash">Signout</a></li>
+            <!-- Add other sidebar links if needed -->
+        </ul>
+    </div>
+    <div class="center-container">
+        <div class="create-faculty-hub">
+            <h2>Create Faculty Hub</h2>
+            <form id="createFacultyHubForm" action="/create_faculty_hub" method="POST">
+                <div class="form-group">
+                    <label for="facultyName">Faculty Name:</label>
+                    <input type="text" id="facultyName" name="faculty_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="facultyLocation">Location:</label>
+                    <input type="text" id="facultyLocation" name="faculty_location" required>
+                </div>
+                <button type="submit">Create Faculty Hub</button>
+                <!-- Display error message if any -->
+                {% if message %}
+                <p class="error">{{ message }}</p>
+                {% endif %}
+            </form>
+        </div>
+        <!-- Display existing faculty hubs -->
+        <div class="faculty-hubs">
+            <h2>Existing Faculty Hubs</h2>
+            <ul>
+                {% for hub in faculty_hubs %}
+                <li class="faculty-hub-item">{{ hub.name }} - {{ hub.location }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
