@@ -21,6 +21,15 @@
         <div class="wrapper">
             <h1>Sign Up</h1>
             <form method="post" action="/signup">
+                <div class="role">
+                    <label>Choose your role</label>
+                    <div class="role-options">
+                        <input type="radio" name="role" value="student">
+                        <label for="student">Student</label>
+                        <input type="radio" name="role" value="teacher">
+                        <label for="teacher">Teacher</label>
+                      </div>
+                </div>
                 <div class="input_box">
                     <input type="text" name="username" required>
                     <span></span>

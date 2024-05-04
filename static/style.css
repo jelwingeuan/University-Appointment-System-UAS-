@@ -364,6 +364,7 @@ nav a:hover {
 }
 
 .dir{
+    margin-top:20px;
     margin-bottom: 50px;
     display: flex;
     justify-content: center;
@@ -374,6 +375,24 @@ nav a:hover {
     margin-bottom: 10px;
 
 }
+
+.dir a {
+    background-color: #1fb8ef;
+    color: black;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    position: absolute;
+    text-decoration: none;
+    right: 15%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    
+  }
+  
+.dir a:hover {
+    background-color: #1592bf;
+  }
 
 .card-container{
     display: grid;
@@ -799,7 +818,8 @@ nav a:hover {
 form .input_box {
     position: relative;
     border-bottom: 1px solid black;
-    margin: 30px 0;
+    margin-top: 15px;
+    margin-bottom: 20px;
 }
 
 /* Form input */
@@ -1420,9 +1440,88 @@ tbody td.active {
     padding: 10px 20px; 
     border: none; 
     border-radius: 5px; 
-  }
+}
   
 .changesub button:hover {
     background-color: #0056b3; 
-  }
+}
 
+.facultydirectory {
+    margin-left: 100px;
+}
+
+.role {
+    margin-top: 20px;
+
+}
+
+.role-options {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 20px;
+
+}
+  
+.role-options input[type="radio"] {
+    margin: 10px;
+
+}
+  
+.role-options input[type="radio"]:checked + label {
+    color: #337ab7;
+
+}
+
+.add-main {
+    margin-left: 400px;
+    margin-top: 30px;
+}
+
+.add-box{
+    width: 800px;
+    height: 700px   ;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 8px rgba(0, 0, 1); 
+
+}
+
+.add-header{
+    margin: 20px;
+
+}
+
+.add-header h2{
+    font-weight: 500;
+
+}
+
+.faculty-info-update{
+    display: flex;
+    margin:20px;
+    flex-direction: row;
+
+}
+
+.faculty-info-update input{
+    margin-left: 20px;
+}
+
+.add-footer{
+    text-align: right;
+    margin-right: 10px;
+
+}
+
+.add-footer a {
+    margin: 10px;
+    text-decoration: none;
+    padding: 5px 10px;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2); 
+    color: #000;    
+}
+
+.add-footer a:hover {
+    background-color: #1fb8ef;
+}
