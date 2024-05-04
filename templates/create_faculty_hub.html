@@ -37,6 +37,7 @@
             text-decoration: none;
         }
         .create-faculty-hub {
+            margin-left: 220px; /* Adjust margin-left to accommodate sidebar */
             width: 400px; /* Adjust width as needed */
             padding: 20px;
             border: 1px solid #ccc;
@@ -66,23 +67,27 @@
         .error {
             color: red;
         }
+        .faculty-hubs {
+            margin-top: 20px;
+        }
+        .faculty-hub-item {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <header>
         <h2>Create Faculty Hub</h2>
-        <div class="profile-container">
-            <img src="https://scontent.fkul16-4.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p320x320&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=3roSzPxS-N0Ab58mfNR&_nc_ht=scontent.fkul16-4.fna&oh=00_AfDVQyRsWjBjOiwuFkSgNSTAYj98gOwqrjaiYsLGGEFRVw&oe=662BE62C" class="profile-photo">
-            <h4>Admin</h4>
-        </div>
+        <!-- Add admin profile or navigation if needed -->
     </header>
     <div class="sidebar">
         <ul>
-            <li><i class='bx bx-laptop'></i><a href="/admin">Dashboard</a></li>
-            <li><i class='bx bx-user'></i><a href="/usercontrol">User Control</a></li>
-            <li><i class='bx bx-cart'></i><a href="/bookingcontrol">Booking Control</a></li>
-            <li><i class='bx bx-plus'></i><a href="/create_faculty_hub">Create Faculty Hub</a></li>
-            <li><i class='bx bx-cog'></i><a href="/signoutflash">Signout</a></li>
+            <li><a href="/admin">Dashboard</a></li>
+            <li><a href="/usercontrol">User Control</a></li>
+            <li><a href="/bookingcontrol">Booking Control</a></li>
+            <li><a href="/create_faculty_hub">Create Faculty Hub</a></li>
+            <li><a href="/signoutflash">Signout</a></li>
+            <!-- Add other sidebar links if needed -->
         </ul>
     </div>
     <div class="center-container">
@@ -103,6 +108,15 @@
                 <p class="error">{{ message }}</p>
                 {% endif %}
             </form>
+        </div>
+        <!-- Display existing faculty hubs -->
+        <div class="faculty-hubs">
+            <h2>Existing Faculty Hubs</h2>
+            <ul>
+                {% for hub in faculty_hubs %}
+                <li class="faculty-hub-item">{{ hub.name }} - {{ hub.location }}</li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
 </body>

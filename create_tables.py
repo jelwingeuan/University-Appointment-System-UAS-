@@ -1,4 +1,3 @@
-
 import sqlite3
 
 # Connect with db
@@ -16,7 +15,15 @@ cur.execute(
         )"""
 )
 
-# Commit changes to db
+# Create "faculty_hubs" table
+cur.execute(
+    """CREATE TABLE IF NOT EXISTS faculty_hubs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        location TEXT NOT NULL
+        )"""
+)
+
+
 con.commit()
 con.close()
-
