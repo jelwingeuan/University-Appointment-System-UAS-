@@ -7,6 +7,9 @@ import random
 
 app = Flask(__name__)
 
+UPLOAD_FOLDER = "uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
 
 # function to get database connection
 def get_db_connection():
@@ -111,38 +114,72 @@ def admin():
     return render_template("admin.html")
 
 
-@app.route("/create_faculty_hub", methods=["GET", "POST"])
+@app.route("/facultyhub/<int:hub_id>")
+def faculty_hub_page(hub_id):
+    # Retrieve faculty hub information from the database based on hub_id
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, image_path FROM facultyhub WHERE id = ?", (hub_id,))
+    faculty_hub = cursor.fetchone()
+    conn.close()
+
+    if faculty_hub:
+        # Render the faculty hub page with the relevant information
+        return render_template("facultyhub.html", faculty_hub=faculty_hub)
+    else:
+        # If faculty hub not found, render an error page or redirect to another page
+        return render_template("error.html", message="Faculty Hub Not Found")
+
+
+@app.route("/createfacultyhub", methods=["GET", "POST"])
 def create_faculty_hub():
     if request.method == "POST":
         faculty_name = request.form.get("faculty_name")
-        faculty_location = request.form.get("faculty_location")
+        faculty_image = request.files.get("faculty_image")
 
-        if not faculty_name or not faculty_location:
+        if not faculty_name or not faculty_image:
             return render_template(
-                "create_faculty_hub.html", message="Missing required fields"
+                "createfacultyhub.html", message="Missing required fields"
             )
 
         try:
+            # Save image to server
+            if not os.path.exists(app.config["UPLOAD_FOLDER"]):
+                os.makedirs(app.config["UPLOAD_FOLDER"])
+
+            image_path = os.path.join(
+                app.config["UPLOAD_FOLDER"], faculty_image.filename
+            )
+            print("Image Path:", image_path)  # Debugging print statement
+
+            faculty_image.save(image_path)
+
+            # Insert faculty hub info into database
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO faculty_hubs (name, location) VALUES (?, ?)",
-                (faculty_name, faculty_location),
+                "INSERT INTO facultyhub (faculty_name, faculty_image) VALUES (?, ?)",
+                (faculty_name, image_path),
             )
             conn.commit()
 
-            cursor.execute("SELECT name, location FROM faculty_hubs")
-            faculty_hubs = cursor.fetchall()
-
             conn.close()
-            return render_template("create_faculty_hub.html", faculty_hubs=faculty_hubs)
+            print("Faculty hub created successfully!")  # Debugging print statement
+            return redirect(url_for("create_faculty_hub"))
         except Exception as e:
+            print("Error occurred:", e)  # Debugging print statement
             return render_template(
-                "create_faculty_hub.html",
+                "createfacultyhub.html",
                 message="An error occurred while creating faculty hub",
             )
 
-    return render_template("create_faculty_hub.html")
+    else:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM facultyhub")
+        faculty_hubs = cursor.fetchall()
+        conn.close()
+        return render_template("createfacultyhub.html", faculty_hubs=faculty_hubs)
 
 
 @app.route("/signoutflash")
