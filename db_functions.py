@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 import sqlite3
 import bcrypt
 
@@ -77,3 +77,14 @@ def login():
     else:
         return render_template("login.html")
     
+    
+# function for updating student info
+def update_user_info(user_id, faculty, username, email, phone_number):
+        con = get_db_connection()
+        cur = con.cursor()
+        cur.execute("""UPDATE users SET faculty=?, username=?, email=?, phone_number=? WHERE id=?""",
+                    (faculty, username, email, phone_number, user_id))
+        con.commit()
+        con.close()
+        flash("User information updated successfully", "success")
+
