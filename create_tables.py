@@ -15,15 +15,36 @@ cur.execute(
         )"""
 )
 
-# Create "faculty_hubs" table
+# Create "facultyhub" table
 cur.execute(
-    """CREATE TABLE IF NOT EXISTS faculty_hubs (
+    """CREATE TABLE IF NOT EXISTS facultyhub (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        location TEXT NOT NULL
+        faculty_name TEXT NOT NULL,
+        faculty_image TEXT NOT NULL
         )"""
 )
 
+
+# I WANT THESE TO BE DELETED#++++++++++++++++++++++++++++++++++++++
+# # Create "faculty_hubs" table
+# cur.execute(
+#     """CREATE TABLE IF NOT EXISTS faculty_hubs (
+#         id INTEGER PRIMARY KEY AUTOINCREMENT,
+#         name TEXT NOT NULL,
+#         image_path TEXT
+#         )"""
+# )
+
+
+# # Create "faculty_hubs" table
+# cur.execute(
+#     """CREATE TABLE IF NOT EXISTS faculty_hubs (
+#         id INTEGER PRIMARY KEY AUTOINCREMENT,
+#         name TEXT NOT NULL,
+#         location TEXT NOT NULL
+#         )"""
+# )
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 con.commit()
 con.close()
