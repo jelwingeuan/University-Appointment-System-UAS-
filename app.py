@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask import session, flash
-from flask_login import LoginManager, UserMixin, login_required
+from flask_login import LoginManager, UserMixin, login_required, current_user
+from db_functions import update_user_info
 import sqlite3
 import bcrypt
 import random
@@ -13,15 +14,18 @@ app.secret_key = 'jelwin'
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+
 class User(UserMixin):
     def __init__(self, user_id):
         self.id = user_id
+
 
 # function to get database connection
 def get_db_connection():
     con = sqlite3.connect("database.db")
     con.row_factory = sqlite3.Row
     return con
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -45,15 +49,20 @@ def home():
 @app.route("/about")
 def about():
     return render_template("about.html")
+
+
 # function for hashed password
 def hash_password(password):
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     return hashed_password.decode("utf-8")
 
-# function for "sign up"
+
+# route for "sign up"
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
+        role = request.form.get("role")
+        faculty = request.form.get("faculty")
         username = request.form.get("username")
         email = request.form.get("email")
         phone_number = request.form.get("phone_number")
@@ -75,8 +84,8 @@ def signup():
             )
         else:
             cur.execute(
-                "INSERT INTO users (username, email, phone_number, password) VALUES (?, ?, ?, ?)",
-                (username, email, phone_number, hashed_password),
+                "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
+                (role, faculty, username, email, phone_number, hashed_password),
             )
             con.commit()
             con.close()
@@ -85,7 +94,7 @@ def signup():
         return render_template("signup.html")
 
 
-# function for "log in"
+# route for "log in"
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -112,6 +121,57 @@ def login():
                 return render_template("login.html", message="Invalid email or password")
     else:
         return render_template("login.html")
+
+
+# route for updating user information
+@app.route("/update_user_info", methods=["POST"])
+@login_required
+def update_user():
+    if request.method == "POST":
+        faculty = request.form.get("faculty")
+        username = request.form.get("username")
+        email = request.form.get("email")
+        phone_number = request.form.get("phone_number")
+
+        update_user_info(current_user.id, faculty, username, email, phone_number)
+
+        return redirect(url_for("profile"))
+
+
+# route for changing password
+@app.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    if request.method == "POST":
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        # Verify if new password and confirm password match
+        if new_password != confirm_password:
+            return render_template("profile.html", message= "New password and confirm password do not match")
+
+        # Verify if the current password is correct
+        con = get_db_connection()
+        cur = con.cursor()
+        cur.execute("SELECT password FROM users WHERE id = ?", (current_user.id,))
+        user_data = cur.fetchone()
+
+        if not user_data or not bcrypt.checkpw(current_password.encode("utf-8"), user_data["password"].encode("utf-8")):
+            return render_template("profile.html", message= "Incorrect current password")
+
+        # Update the password in the database
+        hashed_new_password = hash_password(new_password)
+        con = get_db_connection()
+        cur = con.cursor()
+        cur.execute("UPDATE users SET password = ? WHERE id = ?", (hashed_new_password, current_user.id))
+        con.commit()
+        con.close()
+
+        return render_template("profile.html", message= "Password updated successfully")
+
+    else:
+        return render_template("profile.html")
 
 
 @app.route("/flash")
@@ -237,7 +297,7 @@ def profile():
 def logout():
     session.pop('logged_in', None)
     return redirect('/signoutflash')
- 
+
 
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
