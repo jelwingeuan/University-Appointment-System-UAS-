@@ -13,10 +13,16 @@
             <li><a href="/">Home</a></li>
             <li><a href="/about">About</a></li>
             <li><a href="/appointment">Make An Appointment</a></li>
+            {% if session['logged_in'] == True %}
+            <li><a href="/logout">Logout </a></li>
+            <li><a href="/profile">Profile </a></li>
+            {% else %}
             <li><a href="/login">Login</a></li>
-            <li><a href="/signup">Sign Up</a></li>
-        </ul>
+            <li><a href="/signup">Sign Up</a></li> <!-- Sign-up link -->
+            {% endif %}
+        </ul>  
     </nav>
+    
     <div class="homecontent-wrapper">
         <div class="homecontent1">
             <form action="/search" method="get">

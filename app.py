@@ -1,21 +1,41 @@
 from flask import Flask, render_template, request, redirect, url_for
-from db_functions import get_db_connection, hash_password
+from flask import session, flash
+from flask_login import LoginManager, UserMixin, login_required
 import sqlite3
 import bcrypt
 import random
-
+import os 
 
 app = Flask(__name__)
-
+login_manager = LoginManager()
+login_manager.init_app(app)
+app.secret_key = 'jelwin'
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+class User(UserMixin):
+    def __init__(self, user_id):
+        self.id = user_id
 
 # function to get database connection
 def get_db_connection():
     con = sqlite3.connect("database.db")
     con.row_factory = sqlite3.Row
     return con
+
+@login_manager.user_loader
+def load_user(user_id):
+    # Load and return a user from the database based on user_id
+    con = get_db_connection()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user = cur.fetchone()
+    con.close()
+    if user:
+        return User(user['id'])
+    else:
+        return None
+
 
 @app.route("/")
 def home():
@@ -73,6 +93,7 @@ def login():
         password = request.form.get("password")
 
         if email == "admin@example.com" and password == "123":
+            session['logged_in'] = True
             return redirect('/admin')
         else:
             # If not admin, proceed with regular user login logic
@@ -85,6 +106,7 @@ def login():
                 password.encode("utf-8"), user["password"].encode("utf-8")
             ):
                 # Redirect to the home page upon successful login for regular users
+                session['logged_in'] = True
                 return redirect('/flash')
             else:
                 return render_template("login.html", message="Invalid email or password")
@@ -113,22 +135,35 @@ def render_template_invoice():
 def admin():
     return render_template("admin.html")
 
+@app.route("/faculty")
+def faculty():
+    return render_template("faculty.html")
 
-@app.route("/facultyhub/<int:hub_id>")
-def faculty_hub_page(hub_id):
-    # Retrieve faculty hub information from the database based on hub_id
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT name, image_path FROM facultyhub WHERE id = ?", (hub_id,))
-    faculty_hub = cursor.fetchone()
-    conn.close()
+@app.route("/facultyhub/<int:hub_id>", methods=["GET"])
+def faculty_hub_page(hub_id=None):
+    try:
+        if hub_id:
+            # Retrieve faculty hub information from the database based on hub_id
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT name, image_path FROM facultyhub WHERE id = ?", (hub_id,))
+            faculty_hub = cursor.fetchone()
+            conn.close()
 
-    if faculty_hub:
-        # Render the faculty hub page with the relevant information
-        return render_template("facultyhub.html", faculty_hub=faculty_hub)
-    else:
-        # If faculty hub not found, render an error page or redirect to another page
-        return render_template("error.html", message="Faculty Hub Not Found")
+            if faculty_hub:
+                # Render the faculty hub page with the relevant information
+                return render_template("facultyhub.html", faculty_hub=faculty_hub)
+            else:
+                # If faculty hub not found, render an error page or redirect to another page
+                return render_template("error.html", message="Faculty Hub Not Found")
+        else:
+            # Handle the case when hub_id is not provided
+            return render_template("error.html", message="Please provide a valid Faculty Hub ID")
+    except Exception as e:
+        print("Error in faculty_hub_page:", e)
+        return render_template("error.html", message="An error occurred while processing your request")
+
+
 
 
 @app.route("/createfacultyhub", methods=["GET", "POST"])
@@ -194,6 +229,15 @@ def signoutflash2():
 def signinflash():
     return render_template("signinflash.html")
 
+@app.route('/profile')
+def profile():
+    return render_template("profile.html")
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect('/signoutflash')
+ 
 
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
