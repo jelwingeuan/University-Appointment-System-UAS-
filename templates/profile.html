@@ -32,10 +32,10 @@
                 <div class="profilesidebar">
                     <img src="https://scontent.fkul16-4.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p200x200&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=NbRA2_HyWlwQ7kNvgFQ_0S5&_nc_ht=scontent.fkul16-4.fna&oh=00_AfA5zYbmS5JWc5mef-vcza6p-hrEkilc98uLgwIw6wjDeQ&oe=663A66AC" >
                     <h3>Kim Hong Zhang</h3> 
-                    <a class="listitem active" data-toogle="list" href="#">General</a>
-                    <a class="listitem" data-toogle="list" href="#">Change password</a>
+                    <a class="listitem active" data-toogle="list" href="/profile">General</a>
+                    <a class="listitem" data-toogle="list" href="/changepassword">Change password</a>
                     <a class="listitem" data-toogle="list" href="#">History</a>
-                    <a class="listitem" data-toogle="list" href="#">Log Out</a>
+                    <a class="listitem" data-toogle="list" href="/logout">Log Out</a>
                 </div>
                 <div class="profilemain">
                     <h1>Account Setting</h1>
@@ -45,13 +45,8 @@
                             <label>Email</label><input class="profileinputdetails" type="email" placeholder="kim.hong.zhang323@gmail.com">
                         </div>
                     <div class="profileinput">
-                        <label>Faculty</label><select class="profileinputdetails" placeholder="FCI">
-                            <option value="option1">--None--</option>
-                            <option value="option2">FCI</option>
-                            <option value="option3">FCM</option>
-                            <option value="option4">FOM</option>
-                        </select> 
-                        <label>Phone Number</label><input class="profileinputdetails" type="number" placeholder="+60 12-5751521">
+                        <h2>Faculty : FCI</h2>
+                        <label>Phone Number</label><input class="profileinputdetails" type="text" placeholder="+60 12-5751521">
                         <h2>Role : Student </h2>
                     </div>   
                     <div class="bio">
@@ -72,9 +67,9 @@
                 <div class="footer-col">
                     <h4>Universal Appointment Booking System</h4>
                         <ul>
-                            <li><a href="#">about us</a></li>
+                            <li><a href="/aboutus">about us</a></li>
                             <li><a href="#">our services</a></li>
-                            <li><a href="#">book now</a></li>
+                            <li><a href="/appointment">book now</a></li>
                         </ul>
                 </div>
         </footer>
