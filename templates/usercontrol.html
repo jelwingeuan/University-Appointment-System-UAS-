@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Control</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css'rel='stylesheet'>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../static/myscripts.js"></script>
+</head>
+<body>
+    <header>
+        <h2>Dashboard</h2>
+
+        <div class="profile-container">
+            <img src="https://scontent.fkul16-4.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p320x320&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=3roSzPxS-N0Ab58mfNR&_nc_ht=scontent.fkul16-4.fna&oh=00_AfDVQyRsWjBjOiwuFkSgNSTAYj98gOwqrjaiYsLGGEFRVw&oe=662BE62C" class="profile-photo">
+            <h4>Kim Hong Zhang</h4>
+        </div>
+    </header>
+    <div class="sidebar">
+        <ul>
+            <li><i class='bx bx-laptop'></i><a href="/admin">Dashboard</a></li>
+            <li><i class='bx bx-user'></i><a href="/usercontrol">User Control</a></li>
+            <li><i class='bx bx-cart'></i><a href="/appointmentcontrol">Booking Control</a></li>
+            <li><i class='bx bx-plus'></i><a href="/faculty">My Faculty</a></li>
+            <li><i class='bx bx-plus'></i><a href="/createfacultyhub">Create Faculty</a></li>
+            <li><i class='bx bx-plus'></i><a href="/facultyhub">Faculty Hub</a></li>
+            <li><i class='bx bx-cog' ></i><a href="/logout">Signout</a></li>
+        </ul>
+    </div>
+    <div class="user-main">
+        <div class="table" id="customers_table">
+            <div class="table__header">
+                <h1>User Control</h1>
+                <div class="input-group">
+                    <input type="search" placeholder="Search Data...">
+                    <i class='bx bx-search'></i>
+                </div>
+            </div>
+            <div class="table__body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th> No. </th>
+                            <th> Name </th>
+                            <th> Role </th>
+                            <th> Apppointment </th>
+                            <th> Phone Number </th>
+                            <th> Action </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td> 1 </td>
+                            <td>Willie Poh</td>
+                            <td> Lecturer </td>
+                            <td> 5 </td>
+                            <td> 012345678</td>
+                            <td> <button><i class='bx bx-user-minus'></i></button></td>
+                        </tr>    
+                        <tr>
+                            <td> 2 </td>
+                            <td>Willie Poh</td>
+                            <td> Lecturer </td>
+                            <td> 5 </td>
+                            <td> 012345678</td>
+                            <td> <button><i class='bx bx-user-minus'></i></button></td>
+                        </tr>    
+                        <tr>
+                            <td> 3 </td>
+                            <td>Willie Poh</td>
+                            <td> Lecturer </td>
+                            <td> 5 </td>
+                            <td> 012345678</td>
+                            <td> <button><i class='bx bx-user-minus'></i></button></td>
+                        </tr>    
+                        <tr>
+                            <td> 4 </td>
+                            <td>Willie Poh</td>
+                            <td> Lecturer </td>
+                            <td> 5 </td>
+                            <td> 012345678</td>
+                            <td> <button><i class='bx bx-user-minus'></i></button></td>
+                        </tr>                        
+                    </tbody>
+                </table>
+            </div>
+        </div> 
+    </div>
+</body>
+</html>

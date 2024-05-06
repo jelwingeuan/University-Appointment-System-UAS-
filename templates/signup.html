@@ -8,20 +8,20 @@
         <script src="myscripts.js"></script>
     </head>
     <body>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
-            <li><a href="/appointment">Make An Appointment</a></li>
-            {% if session['logged_in'] == True %}
-            <li><a href="/logout">Logout </a></li>
-            <li><a href="/profile">Profile </a></li>
-            {% else %}
-            <li><a href="/login">Login</a></li>
-            <li><a href="/signup">Sign Up</a></li> <!-- Sign-up link -->
-            {% endif %}
-        </ul>  
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/appointment">Make An Appointment</a></li>
+                {% if session['logged_in'] == True %}
+                <li><a href="/logout">Logout </a></li>
+                <li><a href="/profile">Profile </a></li>
+                {% else %}
+                <li><a href="/login">Login</a></li>
+                <li><a href="/signup">Sign Up</a></li> <!-- Sign-up link -->
+                {% endif %}
+            </ul>  
         </nav>
-
         <div class="wrapper">
             <h1>Sign Up</h1>
             <form method="post" action="/signup">
@@ -34,6 +34,16 @@
                         <label for="teacher">Teacher</label>
                       </div>
                 </div>
+                    <div class="profileinput">
+                        <label>Faculty</label><select class="profileinputdetails" name="faculty" required>
+                            <option value="FCI">FCI</option>
+                            <option value="FCM">FCM</option>
+                            <option value="FOM">FOM</option>
+                            <option value="FOM">FOE</option>
+                            <option value="FOM">FAC</option>
+                            <option value="FOM">FCA</option>
+                        </select>
+                    </div>
                 <div class="input_box">
                     <input type="text" name="username" required>
                     <span></span>

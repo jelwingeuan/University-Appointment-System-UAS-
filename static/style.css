@@ -1194,7 +1194,7 @@ th,
 td {
     border-collapse: collapse;
     padding: 16px; /* Converted from 1rem */
-    text-align: left;
+    text-align: center;
 }
 
 thead th {
@@ -1211,6 +1211,18 @@ tbody tr td img {
     transition: .2s ease-in-out;
 }
 
+.table__body button  {
+    background-color: transparent;
+    border: none;
+    color: black;
+    justify-content: center;
+}
+
+.table__body i  {
+    border: none;
+    color: black;
+    
+}
 
 .status {
     padding: 6.4px 0; /* Converted from .4rem */
@@ -1351,13 +1363,6 @@ tbody td.active {
     margin: 20px;
   }
   
-.profileinput select {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 150px;
-   
-}
 
 .profileinput ::placeholder{
     color: black;
@@ -1368,7 +1373,12 @@ tbody td.active {
 .profileinput h2 {
     font-weight: 500;
     font-size: 18px;
-    margin-left: 20px;
+    margin: 20px;
+}
+
+.profileinput input {
+  outline: none;
+  border: none;  
 }
 
 .bio {

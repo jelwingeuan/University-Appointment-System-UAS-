@@ -199,6 +199,18 @@ def admin():
 def faculty():
     return render_template("faculty.html")
 
+@app.route("/usercontrol")
+def usercontrol():
+    return render_template("usercontrol.html")
+
+@app.route("/appointmentcontrol")
+def appointmentcontrol():
+    return render_template("appointment_control.html")
+
+@app.route("/changepassword")
+def changepassword():
+    return render_template("changepassword.html")
+
 @app.route("/facultyhub/<int:hub_id>", methods=["GET"])
 def faculty_hub_page(hub_id=None):
     try:
