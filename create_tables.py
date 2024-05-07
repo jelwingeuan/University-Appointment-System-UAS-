@@ -18,8 +18,6 @@ cur.execute(
         )"""
 )
 
-con.commit()
-con.close()
 # Create "facultyhub" table
 cur.execute(
     """CREATE TABLE IF NOT EXISTS facultyhub (
