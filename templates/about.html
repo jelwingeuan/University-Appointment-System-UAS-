@@ -14,9 +14,14 @@
             <li><a href="/">Home</a></li>
             <li><a href="/about">About</a></li>
             <li><a href="/appointment">Make An Appointment</a></li>
+            {% if session['logged_in'] == True %}
+            <li><a href="/logout">Logout </a></li>
+            <li><a href="/profile">Profile </a></li>
+            {% else %}
             <li><a href="/login">Login</a></li>
-            <li><a href="/signup">Sign Up</a></li>
-        </ul>
+            <li><a href="/signup">Sign Up</a></li> <!-- Sign-up link -->
+            {% endif %}
+        </ul>  
     </nav>
 
     <div class="aboutcontentwrapper">
@@ -31,7 +36,7 @@
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum id nisi eget mauris efficitur fermentum nec vel ligula. Duis in nisi et ipsum mattis aliquet. Vestibulum id nisi eget mauris efficitur fermentum nec vel ligula. Duis in nisi et ipsum mattis aliquet.</p>
                 </div>
                 <div class="aboutphoto" id="aboutphoto">
-                    <img src="https://scontent.fkul8-3.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p200x200&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=0ZtLURl1NkUAb5s7pgd&_nc_ht=scontent.fkul8-3.fna&oh=00_AfDLnDUlOnE9tyu2l_g6jpCf3hmSBBGnQO87eJ8OFu7v7g&oe=662EC16C" >
+                    <img src="https://scontent.fkul15-1.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p200x200&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=jxgK-o95X-wQ7kNvgFSetlb&_nc_ht=scontent.fkul15-1.fna&oh=00_AfDtomrDyFoe3IlHfqfXCL3WjT5_vvVmwqC1fWdN8x0iyA&oe=6640556C" >
                 </div>
                 <div class="aboutprofiledes" id="aboutprofiledes">
                     <h2>Details</h2>

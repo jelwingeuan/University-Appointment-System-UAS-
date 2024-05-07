@@ -6,7 +6,6 @@
     <title>Login</title>
     <link rel="stylesheet" href="../static/style.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <script src="../static/myscripts.js"></script>
 </head>
 <body>
     <nav>
@@ -30,50 +29,47 @@
             </div>
             <div class="profilesubwrapper">
                 <div class="profilesidebar">
-                    <img src="https://scontent.fkul16-4.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p200x200&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=NbRA2_HyWlwQ7kNvgFQ_0S5&_nc_ht=scontent.fkul16-4.fna&oh=00_AfA5zYbmS5JWc5mef-vcza6p-hrEkilc98uLgwIw6wjDeQ&oe=663A66AC" >
+                    <img src="https://scontent.fkul15-1.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p200x200&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=jxgK-o95X-wQ7kNvgFSetlb&_nc_ht=scontent.fkul15-1.fna&oh=00_AfDtomrDyFoe3IlHfqfXCL3WjT5_vvVmwqC1fWdN8x0iyA&oe=6640556C" >
                     <h3>Kim Hong Zhang</h3> 
                     <a class="listitem active" data-toogle="list" href="/profile">General</a>
                     <a class="listitem" data-toogle="list" href="/changepassword">Change password</a>
-                    <a class="listitem" data-toogle="list" href="#">History</a>
+                    <a class="listitem" data-toogle="list" href="/history">History</a>
                     <a class="listitem" data-toogle="list" href="/logout">Log Out</a>
                 </div>
                 <div class="profilemain">
                     <h1>Account Setting</h1>
                     <div class="profileinput">
                         <div class="subprofileinput">
-                            <label>Name</label><input class="profileinputdetails" type="text" placeholder="Kim Hong Zhang">
-                            <label>Email</label><input class="profileinputdetails" type="email" placeholder="kim.hong.zhang323@gmail.com">
+                            <label>Name</label><input id="nameInput" class="profileinputdetails" type="text" placeholder="Kim Hong Zhang">
+                            <label>Email</label><input id="emailInput" class="profileinputdetails" type="email" placeholder="kim.hong.zhang323@gmail.com">
                         </div>
-                    <div class="profileinput">
-                        <h2>Faculty : FCI</h2>
-                        <label>Phone Number</label><input class="profileinputdetails" type="text" placeholder="+60 12-5751521">
-                        <h2>Role : Student </h2>
-                    </div>   
-                    <div class="bio">
-                        <label>Bio </label><textarea >Lorem ipsum is derived from the Latin “dolorem ipsum” roughly translated as “pain itself.” Lorem ipsum presents the sample font and orientation of writing on web pages and other software applications where content is not the main concern of the developer.></textarea>
-                    </div>
+                        <div class="profileinput">
+                            <h2>Faculty : FCI</h2>
+                            <label>Phone Number</label><input id="phoneInput" class="profileinputdetails" type="text" placeholder="+60 12-5751521">
+                            <h2>Role : Student </h2>
+                        </div>   
                     </div>                       
                 </div>
             </div>
             <div class="profilefooter">
-                <button>Update</button>
-                <button>Cancel</button>
+                <button id="updateButton">Update</button>
+                <button id="cancelButton">Cancel</button>
+                <button id="editButton">Edit</button>
             </div>
-        
         </div>
     </div>
     <div class="footer-wrapper">
-        <footer class="footer" style="position: fixedc;">
-                <div class="footer-col">
-                    <h4>Universal Appointment Booking System</h4>
-                        <ul>
-                            <li><a href="/aboutus">about us</a></li>
-                            <li><a href="#">our services</a></li>
-                            <li><a href="/appointment">book now</a></li>
-                        </ul>
-                </div>
+        <footer class="footer">
+            <div class="footer-col">
+                <h4>Universal Appointment Booking System</h4>
+                <ul>
+                    <li><a href="/aboutus">about us</a></li>
+                    <li><a href="#">our services</a></li>
+                    <li><a href="/appointment">book now</a></li>
+                </ul>
+            </div>
         </footer>
     </div>
-
+    <script src="../static/myscripts.js"></script>
 </body>
 </html>
