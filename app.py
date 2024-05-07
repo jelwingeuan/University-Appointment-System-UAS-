@@ -236,8 +236,6 @@ def faculty_hub_page(hub_id=None):
         return render_template("error.html", message="An error occurred while processing your request")
 
 
-
-
 @app.route("/createfacultyhub", methods=["GET", "POST"])
 def create_faculty_hub():
     if request.method == "POST":
@@ -287,6 +285,16 @@ def create_faculty_hub():
         faculty_hubs = cursor.fetchall()
         conn.close()
         return render_template("createfacultyhub.html", faculty_hubs=faculty_hubs)
+
+
+# @app.route("/Faculty")
+# def faculty():
+#     conn = get_db_connection()
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT * FROM facultyhub")
+#     faculty_hubs = cursor.fetchall()
+#     conn.close()
+#     return render_template("Faculty.html", faculty_hubs=faculty_hubs)
 
 
 @app.route("/signoutflash")
