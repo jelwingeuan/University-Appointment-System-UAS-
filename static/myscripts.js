@@ -117,3 +117,68 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    const nameInput = document.getElementById('nameInput');
+    const emailInput = document.getElementById('emailInput');
+    const phoneInput = document.getElementById('phoneInput');
+    const updateButton = document.getElementById('updateButton');
+    const cancelButton = document.getElementById('cancelButton');
+    const editButton = document.getElementById('editButton');
+
+    // Function to toggle edit mode
+    function toggleEditMode() {
+        nameInput.toggleAttribute('readonly');
+        emailInput.toggleAttribute('readonly');
+        phoneInput.toggleAttribute('readonly');
+    }
+
+    // Edit button click event listener
+    updateButton.addEventListener('click', function() {
+        toggleEditMode();
+    });
+
+    // Update button click event listener
+    editButton.addEventListener('click', function() {
+        toggleEditMode();
+
+        // Get updated data
+        const updatedData = {
+            name: nameInput.value,
+            email: emailInput.value,
+            phone: phoneInput.value
+        };
+
+        // Send updated data to Flask route using fetch API
+        fetch('/update-profile', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updatedData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update profile');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Handle response from Flask (if needed)
+            console.log('Profile updated successfully');
+        })
+        .catch(error => {
+            console.error('Error updating profile:', error.message);
+            // Revert changes or show error message to user
+        });
+    });
+
+    // Cancel button click event listener
+    cancelButton.addEventListener('click', function() {
+        toggleEditMode();
+        // Reset input values to original data (if needed)
+    });
+});
+
+
+
+

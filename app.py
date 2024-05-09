@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask import session, flash
 from flask_login import LoginManager, UserMixin, login_required, current_user
 from db_functions import update_user_info
@@ -13,6 +13,7 @@ login_manager.init_app(app)
 app.secret_key = 'jelwin'
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
 
 
 class User(UserMixin):
@@ -173,7 +174,6 @@ def change_password():
     else:
         return render_template("profile.html")
 
-
 @app.route("/flash")
 def flash():
     return render_template("messageflashing.html")
@@ -210,6 +210,10 @@ def appointmentcontrol():
 @app.route("/changepassword")
 def changepassword():
     return render_template("changepassword.html")
+
+@app.route("/history")
+def history():
+    return render_template("history.html")
 
 @app.route("/facultyhub/<int:hub_id>", methods=["GET"])
 def faculty_hub_page(hub_id=None):
