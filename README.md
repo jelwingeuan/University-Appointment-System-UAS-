@@ -15,7 +15,7 @@ The University Appointment System (UAS) is a web application built with Flask, d
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your_username/uas.git
+    git clone https://github.com/jelwingeuan/University-Appointment-System-UAS
     ```
 
 2. Navigate to the project directory:
