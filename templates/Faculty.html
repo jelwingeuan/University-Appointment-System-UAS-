@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin</title>
+    <title>Faculty</title>
     <link rel="stylesheet" href="../static/style.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css'rel='stylesheet'>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../static/myscripts.js"></script>
 </head>
@@ -14,7 +14,7 @@
         <h2>Dashboard</h2>
 
         <div class="profile-container">
-            <img src="https://scontent.fkul16-4.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p320x320&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=3roSzPxS-N0Ab58mfNR&_nc_ht=scontent.fkul16-4.fna&oh=00_AfDVQyRsWjBjOiwuFkSgNSTAYj98gOwqrjaiYsLGGEFRVw&oe=662BE62C" class="profile-photo">
+            <img src="{{ url_for('static', filename='profile.jpg') }}" class="profile-photo"> <!-- Replace 'profile.jpg' with your actual profile image filename -->
             <h4>Kim Hong Zhang</h4>
         </div>
     </header>
@@ -35,79 +35,15 @@
             <a href="/createfacultyhub">Add Faculty</a>
         </div>
         <div class="card-container"> 
+            {% for faculty in faculty_info %}
             <div class="card">
                 <div class="card-image">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZCBXmKFvWQ2mRWqFi037heQUDid55VyuN6GLO-ttTiA&s" alt="Profile image">
+                    <img src="{{ faculty['faculty_image'] }}" alt="Profile image">
                 </div>
-                <p class="name">FCI</p>
-                <p>Faculty of Computing and Informatic</p>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
+                <p class="name">{{ faculty['faculty_name'] }}</p>
             </div>
-            <div class="card">
-                <div class="card-image">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRVwHRMSl37buoVrrfH-Cw_lC4hhzlv4Khq46U5uQvA_Q&s" alt="Profile image">
-                </div>
-                <p class="name">FCM</p>
-                <p>Faculty of Creative Multimedia</p>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            </div>
-            <div class="card">
-                <div class="card-image">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZCBXmKFvWQ2mRWqFi037heQUDid55VyuN6GLO-ttTiA&s" alt="Profile image">
-                </div>
-                <p class="name">FCI</p>
-                <p>Faculty of Computing and Informatic</p>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            </div>
-            <div class="card">
-                <div class="card-image">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZCBXmKFvWQ2mRWqFi037heQUDid55VyuN6GLO-ttTiA&s" alt="Profile image">
-                </div>
-                <p class="name">FCI</p>
-                <p>Faculty of Computing and Informatic</p>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            </div>
-            <div class="card">
-                <div class="card-image">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZCBXmKFvWQ2mRWqFi037heQUDid55VyuN6GLO-ttTiA&s" alt="Profile image">
-                </div>
-                <p class="name">FCI</p>
-                <p>Faculty of Computing and Informatic</p>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            </div>
-            <div class="card">
-                <div class="card-image">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZCBXmKFvWQ2mRWqFi037heQUDid55VyuN6GLO-ttTiA&s" alt="Profile image">
-                </div>
-                <p class="name">FCI</p>
-                <p>Faculty of Computing and Informatic</p>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            </div>
-            <div class="card">
-                <div class="card-image">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZCBXmKFvWQ2mRWqFi037heQUDid55VyuN6GLO-ttTiA&s" alt="Profile image">
-                </div>
-                <p class="name">FCI</p>
-                <p>Faculty of Computing and Informatic</p>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            </div>
-            <div class="card">
-                <div class="card-image">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZCBXmKFvWQ2mRWqFi037heQUDid55VyuN6GLO-ttTiA&s" alt="Profile image">
-                </div>
-                <p class="name">FCI</p>
-                <p>Faculty of Computing and Informatic</p>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>           
-            </div>
-            <div class="card">
-                <div class="card-image">
-                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZCBXmKFvWQ2mRWqFi037heQUDid55VyuN6GLO-ttTiA&s" alt="Profile image">
-                </div>
-                <p class="name">FCI</p>
-                <p>Faculty of Computing and Informatic</p>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            </div>
-            
+            {% endfor %}
         </div> 
     </div>
-    
+</body>
+</html>
