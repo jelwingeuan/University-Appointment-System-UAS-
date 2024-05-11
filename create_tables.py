@@ -18,6 +18,21 @@ cur.execute(
         )"""
 )
 
+# Create "appointments" table
+cur.execute(
+    """CREATE TABLE IF NOT EXISTS appointments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student INTEGER NOT NULL,
+        lecturer INTEGER NOT NULL,
+        appointment_date TEXT NOT NULL,
+        appointment_time TEXT NOT NULL,
+        purpose TEXT NOT NULL,
+        status TEXT NOT NULL,
+        FOREIGN KEY (student) REFERENCES users (username),
+        FOREIGN KEY (lecturer) REFERENCES users (username)
+    )"""
+)
+
 # Create "facultyhub" table
 cur.execute(
     """CREATE TABLE IF NOT EXISTS facultyhub (

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask import session, flash
 from flask_login import LoginManager, UserMixin, login_required, current_user
-from db_functions import update_user_info
+from db_functions import update_user_info, create_appointment, get_appointments, update_appointment, delete_appointment
 import sqlite3
 import bcrypt
 import random
@@ -20,7 +20,7 @@ class User(UserMixin):
         self.id = user_id
 
 
-# function to get database connection
+# Function to get database connection
 def get_db_connection():
     con = sqlite3.connect("database.db")
     con.row_factory = sqlite3.Row
@@ -51,13 +51,13 @@ def about():
     return render_template("about.html")
 
 
-# function for hashed password
+# Function for hashed password
 def hash_password(password):
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     return hashed_password.decode("utf-8")
 
 
-# route for "sign up"
+# Route for "sign up"
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
@@ -94,7 +94,7 @@ def signup():
         return render_template("signup.html")
 
 
-# route for "log in"
+# Route for "log in"
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -123,7 +123,7 @@ def login():
         return render_template("login.html")
 
 
-# route for updating user information
+# Route for updating user information
 @app.route("/update_user_info", methods=["POST"])
 @login_required
 def update_user():
@@ -138,7 +138,7 @@ def update_user():
         return redirect(url_for("profile"))
 
 
-# route for changing password
+# Route for changing password
 @app.route("/change_password", methods=["GET", "POST"])
 @login_required
 def change_password():
@@ -174,17 +174,56 @@ def change_password():
         return render_template("profile.html")
 
 
-@app.route("/faculty")
-def faculty():
-    # Retrieve faculty information from the database
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
-    faculty_info = cursor.fetchall()
-    conn.close()
+# Function to create a new appointment
+@app.route("/make_appointment", methods=["POST"])
+def make_appointment():
+    if request.method == "POST":
+        student = request.form.get("student")
+        lecturer = request.form.get("lecturer")
+        appointment_date = request.form.get("appointment_date")
+        appointment_time = request.form.get("appointment_time")
+        purpose = request.form.get("purpose")
+        
+        if student and lecturer and appointment_date and appointment_time and purpose:
+            create_appointment(student, lecturer, appointment_date, appointment_time, purpose, status="Pending")
+            
+            return render_template("appointment.html", message= "Appointment created successfully")
+        else:
+            return render_template("appointment.html", message= "Missing required field(s)")
+    else:
+        return render_template("appointment.html")
 
-    # Render the faculty.html template with the faculty_info variable
-    return render_template("faculty.html", faculty_info=faculty_info)
+
+# Functionn to list a student's appointment(s)
+@app.route("/appointments", methods=["GET"])
+def list_appointments():
+    student = request.args.get("student")
+    if student:
+        appointments = get_appointments(student)
+        return render_template("appointments.html", appointments=appointments)
+    else:
+        return render_template("appointment.html", message="No student specified")
+
+
+@app.route("/update_appointment", methods=["POST"])
+def update_appointments(appointment_id):
+    if request.method == "POST":
+        new_date = request.form.get("new_date")
+        new_time = request.form.get("new_time")
+        new_purpose = request.form.get("new_purpose")
+        
+        update_appointment(appointment_id, new_date, new_time, new_purpose)
+        
+        return redirect(url_for("list_appointments"))
+
+
+@app.route("/delete_appointment", methods=["POST"])
+def delete_appointment(appointment_id):
+    if request.method == "POST":
+        
+        delete_appointment(appointment_id)
+        
+        return redirect(url_for("list_appointments"))
 
 
 @app.route("/flash")
@@ -223,6 +262,20 @@ def changepassword():
 @app.route("/history")
 def history():
     return render_template("history.html")
+
+
+@app.route("/faculty")
+def faculty():
+    # Retrieve faculty information from the database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
+    faculty_info = cursor.fetchall()
+    conn.close()
+
+    # Render the faculty.html template with the faculty_info variable
+    return render_template("faculty.html", faculty_info=faculty_info)
+
 
 @app.route("/facultyhub/<int:hub_id>", methods=["GET"])
 def faculty_hub_page(hub_id=None):

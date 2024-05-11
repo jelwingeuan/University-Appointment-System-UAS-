@@ -1,90 +1,76 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for
+from flask import session, flash
+from flask_login import LoginManager, UserMixin, login_required, current_user
 import sqlite3
 import bcrypt
+import random
+import os
 
 
 app = Flask(__name__)
 
-
-# function to get database connection
+# Function to get database connection
 def get_db_connection():
-    con = sqlite3.connect("database.db")
-    con.row_factory = sqlite3.Row
-    return con
+        con = sqlite3.connect("database.db")
+        con.row_factory = sqlite3.Row
+        return con
 
 
-# function for hashed password
-def hash_password(password):
-    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-    return hashed_password.decode("utf-8")
-
-
-# function for "sign up"
-def signup():
-    if request.method == "POST":
-        username = request.form.get("username")
-        email = request.form.get("email")
-        phone_number = request.form.get("phone_number")
-        password = request.form.get("password")
-
-        hashed_password = hash_password()
-
-        con = get_db_connection()
-        cur = con.cursor()
-
-        # check if email already exists
-        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user = cur.fetchone()
-
-        if user:
-            con.close()
-            return render_template(
-                "signup.html", message="User with this email already exists"
-            )
-        else:
-            cur.execute(
-                "INSERT INTO users (username, email, phone_number, password) VALUES (?, ?, ?, ?)",
-                (username, email, phone_number, hashed_password),
-            )
-            con.commit()
-            con.close()
-            return redirect(url_for("login"))
-    else:
-        return render_template("signup.html")
-
-
-# function for "log in"
-def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-        
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute(
-            "SELECT * FROM users WHERE email = ?",
-            (email,)
-        )
-        user = cur.fetchone()
-        
-        # check if the password provided by user is the same as the hashed pw in db
-        if user and bcrypt.checkpw(password.encode("utf-8"), user['password'].encode("utf-8")):
-            
-            return redirect(url_for("home"))
-        else:
-            
-            return render_template("login.html", message="Invalid email or password")
-    else:
-        return render_template("login.html")
-    
-    
-# function for updating student info
+# Function for updating student info
 def update_user_info(user_id, faculty, username, email, phone_number):
         con = get_db_connection()
         cur = con.cursor()
         cur.execute("""UPDATE users SET faculty=?, username=?, email=?, phone_number=? WHERE id=?""",
-                    (faculty, username, email, phone_number, user_id))
+                (faculty, username, email, phone_number, user_id))
         con.commit()
         con.close()
         flash("User information updated successfully", "success")
 
+
+# Function to create a new appointment 
+def create_appointment(student, lecturer, appointment_date, appointment_time, purpose, status="Pending"):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+        "INSERT INTO appointments (student_id, lecturer_id, appointment_date, appointment_time, purpose, status) VALUES (?, ?, ?, ?, ?, ?)",
+        (student, lecturer, appointment_date, appointment_time, purpose, status)
+        )
+        conn.commit()
+        conn.close()
+
+
+# Function to retrieve appointments for a student
+def get_appointments(student):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+        "SELECT * FROM appointments WHERE student= ?",
+        (student,)
+        )
+        appointments = cursor.fetchall()
+        conn.close()
+        return appointments
+
+
+# Function to update an existing appointment
+def update_appointment(appointment_id, new_date, new_time, new_purpose):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+        "UPDATE appointments SET appointment_date = ?, appointment_time = ?, purpose = ? WHERE id = ?",
+        (new_date, new_time, new_purpose, appointment_id)
+        )
+        conn.commit()
+        conn.close()
+
+
+# Function to delete an appointment
+def delete_appointment(appointment_id):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+        "DELETE FROM appointments WHERE id = ?",
+        (appointment_id,)
+        )
+        conn.commit()
+        conn.close()
