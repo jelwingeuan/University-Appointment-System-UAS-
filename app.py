@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for
 from flask import session, flash
 from flask_login import LoginManager, UserMixin, login_required, current_user
 from db_functions import update_user_info
@@ -13,7 +13,6 @@ login_manager.init_app(app)
 app.secret_key = 'jelwin'
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
 
 
 class User(UserMixin):
@@ -174,6 +173,20 @@ def change_password():
     else:
         return render_template("profile.html")
 
+
+@app.route("/faculty")
+def faculty():
+    # Retrieve faculty information from the database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
+    faculty_info = cursor.fetchall()
+    conn.close()
+
+    # Render the faculty.html template with the faculty_info variable
+    return render_template("faculty.html", faculty_info=faculty_info)
+
+
 @app.route("/flash")
 def flash():
     return render_template("messageflashing.html")
@@ -194,10 +207,6 @@ def render_template_invoice():
 @app.route("/admin")
 def admin():
     return render_template("admin.html")
-
-@app.route("/faculty")
-def faculty():
-    return render_template("faculty.html")
 
 @app.route("/usercontrol")
 def usercontrol():
@@ -289,16 +298,6 @@ def create_faculty_hub():
         faculty_hubs = cursor.fetchall()
         conn.close()
         return render_template("createfacultyhub.html", faculty_hubs=faculty_hubs)
-
-
-# @app.route("/Faculty")
-# def faculty():
-#     conn = get_db_connection()
-#     cursor = conn.cursor()
-#     cursor.execute("SELECT * FROM facultyhub")
-#     faculty_hubs = cursor.fetchall()
-#     conn.close()
-#     return render_template("Faculty.html", faculty_hubs=faculty_hubs)
 
 
 @app.route("/signoutflash")
