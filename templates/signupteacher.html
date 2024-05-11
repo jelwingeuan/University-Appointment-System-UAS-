@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Signup</title>
+</head>
+<body>
+    <h2>Teacher Signup</h2>
+    <form method="POST">
+        <label for="pin_number">Enter PIN Number:</label><br>
+        <input type="password" id="pin_number" name="pin_number" required><br>
+        <input type="hidden" name="next_page" value="{{ next_page }}"> <!-- Include hidden field for next page -->
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
