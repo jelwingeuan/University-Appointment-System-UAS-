@@ -226,6 +226,7 @@ def login():
             ):
                 # Redirect to the home page upon successful login for regular users
                 session['logged_in'] = True
+                session["id"] = user[0]
                 return redirect('/flash')
             else:
                 return render_template("login.html", message="Invalid email or password")
@@ -242,8 +243,7 @@ def update_user():
         username = request.form.get("username")
         email = request.form.get("email")
         phone_number = request.form.get("phone_number")
-
-        update_user_info(current_user.id, faculty, username, email, phone_number)
+        update_user_info(session["id"], faculty, username, email, phone_number)
 
         return redirect(url_for("profile"))
 
@@ -264,7 +264,7 @@ def change_password():
         # Verify if the current password is correct
         con = get_db_connection()
         cur = con.cursor()
-        cur.execute("SELECT password FROM users WHERE id = ?", (current_user.id,))
+        cur.execute("SELECT password FROM users WHERE id = ?", (session["id"],))
         user_data = cur.fetchone()
 
         if not user_data or not bcrypt.checkpw(current_password.encode("utf-8"), user_data["password"].encode("utf-8")):
@@ -274,7 +274,7 @@ def change_password():
         hashed_new_password = hash_password(new_password)
         con = get_db_connection()
         cur = con.cursor()
-        cur.execute("UPDATE users SET password = ? WHERE id = ?", (hashed_new_password, current_user.id))
+        cur.execute("UPDATE users SET password = ? WHERE id = ?", (hashed_new_password, session["id"]))
         con.commit()
         con.close()
 
@@ -338,21 +338,8 @@ def delete_appointment(appointment_id):
 
 @app.route("/flash")
 def flash():
-    username = None  # Default to None
 
-    if current_user.is_authenticated:
-        # If user is logged in, retrieve the username from the database based on the user's email
-        username = current_user.username
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute("SELECT username FROM users WHERE username = ?", (username,))
-        user_data = cur.fetchone()
-        con.close()
-
-        if user_data:
-            username = user_data['username']  # Get the username from the fetched data
-
-    return render_template("messageflashing.html", username=username)
+    return render_template("messageflashing.html")
 
 
 @app.route("/appointment")
@@ -492,11 +479,28 @@ def sigupflash():
 
 @app.route('/profile')
 def profile():
-    return render_template("profile.html")
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE id = ?', (session["id"],))
+    user_data = cursor.fetchone()
+    conn.close()
+
+    session["username"] = user_data[3]
+    session["role"] = user_data[1]
+    session["faculty"] = user_data[2]
+
+
+    return render_template('profile.html',
+                           username=user_data['username'], 
+                           email=user_data['email'], 
+                           faculty=user_data['faculty'], 
+                           phonenumber=user_data['phone_number'], 
+                           role=user_data['role'])
+    
 
 @app.route('/logout')
 def logout():
-    session.pop('logged_in', None)
+    session.clear()
     return redirect('/signoutflash')
 
 
