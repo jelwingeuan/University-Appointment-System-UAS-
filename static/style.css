@@ -1,6 +1,20 @@
 /* Google Fonts import */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: white;
+    }
+    
+    .invoice {
+        width: 100%; /* Make the invoice width 100% for full width */
+        margin-left: -200px; /* Manually adjust left margin to move content towards the left */
+        box-shadow: none; /* Remove box shadow for printing */
+    }
+}
+
 /* Global styles */
 * {
     margin: 0;
@@ -21,10 +35,20 @@ body {
 }
 
 /* Navbar */
+/* Navbar */
 nav {
     background-color: transparent;
     height: 10vh;
-    position: relative;
+    position: sticky;
+    top: 0;
+    transition: background-color 0.3s; /* Add transition for smoother color change */
+    z-index: 1000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0,0.1); 
+}
+
+/* Navbar hover effect */
+nav:hover {
+    background-color: white; /* Change background color to white when hovered over */
 }
 
 /* Navbar list */
@@ -57,10 +81,25 @@ nav a {
 
 /* Navbar link hover effect */
 nav a:hover {
-    text-decoration: underline;
     transition: transform 0.3s ease;
     transform: scale(1.1);
 }
+
+/* Dropdown icon rotation */
+nav .dropbtn i {
+    transition: transform 0.3s;
+}
+
+nav .dropbtn:hover i {
+    transform: rotate(180deg);
+}
+
+nav .dropbtn:not(:hover) i {
+    transform: rotate(0deg);
+}
+
+
+
 
 .messagecontainer{
     width: 100%;
@@ -886,6 +925,7 @@ nav a:hover {
     padding-top: 20px;
     padding-bottom: 20px;
     background-color: rgba(128, 128, 128,0.1);
+
 }
 
 .invoice {
@@ -908,9 +948,9 @@ nav a:hover {
 .invoice-head-top-right h3{
     font-weight: 500;
     font-size: 27px;
-   
-    
+       
 }
+
 .invoice-head-middle, .invoice-head-bottom{
     padding: 10px 0;
 }
@@ -1846,3 +1886,36 @@ tbody td.active {
 .profilefooter button:where(:hover, :focus) {
     color: #fff;
   }
+
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 120px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  
+}
+
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+.dropdown-content a:hover {
+  background-color: #f1f1f1;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+    
