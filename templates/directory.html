@@ -13,11 +13,31 @@
     <nav>
         <ul>
             <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">About<i class='bx bx-chevron-down'></i></a>
+                <div class="dropdown-content">
+                    <a href="/about">About Us</a>
+                    <a href="/about">Faculty</a>
+                    <a href="/about">History</a>
+                </div>
+            </li>
+            
             <li><a href="/appointment">Make An Appointment</a></li>
+            {% if session['logged_in'] == True %}
+            <li class="dropdown">
+                <a href="/profile" class="dropbtn">Profile<i class='bx bx-chevron-down'></i></a>
+                <div class="dropdown-content">
+                    <a href="/profile">View Profile</a>
+                    <a href="/changepassword">Change Password</a>
+                    <a href="/history">Booking History</a>
+                </div>
+            </li>
+            <li><a href="/logout">Logout</a></li>
+            {% else %}
             <li><a href="/login">Login</a></li>
             <li><a href="/signup">Sign Up</a></li>
-        </ul>
+            {% endif %}
+        </ul>  
     </nav>
     <div class="dir">
         <h1>Directory</h1>
