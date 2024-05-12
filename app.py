@@ -104,8 +104,6 @@ def signup():
 
 
 # Route for signupteacher
-
-# Route for signupteacjer
 @app.route("/signupteacher", methods=["GET", "POST"])
 def signupteacher():
     if request.method == "POST":
@@ -113,7 +111,7 @@ def signupteacher():
 
         # Check if the entered PIN number is correct
         if pin_number != "006942000":
-            return render_template("signinteacher.html", message="Incorrect PIN number")
+            return render_template("signupteacher.html", message="Incorrect PIN number")
 
         # PIN is correct, proceed with saving teacher details
         faculty = request.form.get("faculty")
@@ -122,7 +120,10 @@ def signupteacher():
         phone_number = request.form.get("phone_number")
         password = request.form.get("password")
 
-        hashed_password = hash_password(password)
+        if not password:  # Check if password is provided
+            return render_template("signupteacher.html", message="PIN is required")
+
+        hashed_password = generate_password_hash(password)
 
         con = get_db_connection()
         cur = con.cursor()
@@ -132,21 +133,34 @@ def signupteacher():
             cur.execute("SELECT * FROM users WHERE email = ?", (email,))
             user = cur.fetchone()
 
-        if user:
-            con.close()
-            return render_template(
-                "signup.html", message="User with this email already exists"
-            )
-        else:
-            cur.execute(
-                "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
-                ("teacher", faculty, username, email, phone_number, hashed_password),
-            )
-            con.commit()
-            con.close()
-            return redirect(
-                "/signupflash"
-            )  # Redirect to signup flash page upon successful signup
+            if user:
+                con.close()
+                return render_template(
+                    "signup.html", message="User with this email already exists"
+                )
+            else:
+                cur.execute(
+                    "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
+                    (
+                        "teacher",
+                        faculty,
+                        username,
+                        email,
+                        phone_number,
+                        hashed_password,
+                    ),
+                )
+                con.commit()
+                con.close()
+                return redirect(
+                    "/signupflash"
+                )  # Redirect to signup flash page upon successful signup
+
+        except Exception as e:
+            # Handle exceptions here, if necessary
+            print(e)
+            return render_template("error.html", message="An error occurred.")
+
     else:
         return render_template("signupteacher.html")
 
