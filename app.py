@@ -274,7 +274,7 @@ def change_password():
         hashed_new_password = hash_password(new_password)
         con = get_db_connection()
         cur = con.cursor()
-        cur.execute("UPDATE users SET password = ? WHERE id = ?", (hashed_new_password, session["id"]))
+        cur.execute("UPDATE users SET password = ? WHERE id = ?", (hashed_new_password, session["id"] ))
         con.commit()
         con.close()
 
@@ -481,13 +481,13 @@ def sigupflash():
 def profile():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE id = ?', (session["id"],))
-    user_data = cursor.fetchone()
-    conn.close()
+    cursor.execute('SELECT * FROM users WHERE id = ?', (session["id"], ))
+    user_data = cursor.fetchone() 
+    conn.close() 
 
-    session["username"] = user_data[3]
-    session["role"] = user_data[1]
-    session["faculty"] = user_data[2]
+    session["username"] = user_data[3] 
+    session["role"] = user_data[1] 
+    session["faculty"] = user_data[2]  
 
 
     return render_template('profile.html',
@@ -500,7 +500,7 @@ def profile():
 
 @app.route('/logout')
 def logout():
-    session.clear()
+    session.clear() 
     return redirect('/signoutflash')
 
 
