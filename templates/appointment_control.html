@@ -51,40 +51,19 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for appointment in appointments %}
                         <tr>
-                            <td> 1 </td>
-                            <td>5201314</td>
-                            <td> Jax </td>
-                            <td> Kim </td>
-                            <td> Would you want to have a date</td>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ appointment.id }}</td>
+                            <td>{{ appointment.lecturer }}</td>
+                            <td>{{ appointment.student }}</td>
+                            <td>{{ appointment.title }}</td>
                             <td> <button><i class='bx bx-user-minus'></i></button></td>
-                        </tr>    
-                        <tr>
-                            <td> 2 </td>
-                            <td>5201314</td>
-                            <td> Jax </td>
-                            <td> Kim </td>
-                            <td> Would you want to have a date</td>
-                            <td> <button><i class='bx bx-user-minus'></i></button></td>
-                        </tr>    
-                        <tr>
-                            <td> 3 </td>
-                            <td>5201314</td>
-                            <td> Jax </td>
-                            <td> Kim </td>
-                            <td> Would you want to have a date</td>
-                            <td> <button><i class='bx bx-user-minus'></i></button></td>
-                        </tr>    
-                        <tr>
-                            <td> 4 </td>
-                            <td>5201314</td>
-                            <td> Jax </td>
-                            <td> Kim </td>
-                            <td> Would you want to have a date</td>
-                            <td> <button><i class='bx bx-user-minus'></i></button></td>
-                        </tr>                        
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
+                
             </div>
         </div> 
     </div>

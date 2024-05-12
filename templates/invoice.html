@@ -12,66 +12,80 @@
     <nav>
         <ul>
             <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">About<i class='bx bx-chevron-down'></i></a>
+                <div class="dropdown-content">
+                    <a href="/about">About Us</a>
+                    <a href="/about">Faculty</a>
+                    <a href="/about">History</a>
+                </div>
+            </li>
+            
             <li><a href="/appointment">Make An Appointment</a></li>
             {% if session['logged_in'] == True %}
+            <li class="dropdown">
+                <a href="/profile" class="dropbtn">Profile<i class='bx bx-chevron-down'></i></a>
+                <div class="dropdown-content">
+                    <a href="/profile">View Profile</a>
+                    <a href="/changepassword">Change Password</a>
+                    <a href="/history">Booking History</a>
+                </div>
+            </li>
             <li><a href="/logout">Logout</a></li>
-            <li><a href="/profile">Profile </a></li>
             {% else %}
             <li><a href="/login">Login</a></li>
-            <li><a href="/signup">Sign Up</a></li> <!-- Sign-up link -->
+            <li><a href="/signup">Sign Up</a></li>
             {% endif %}
         </ul>  
     </nav>
-    <div class = "invoice-wrapper" id = "print-area">
-        <div class = "invoice">
-            <div class = "invoice-container">
-                <div class = "invoice-head">
-                    <div class = "invoice-head-top">
-                        <div class = "invoice-head-top-right text-end">
+   <div class="invoice-wrapper" id="print-area">
+        <div class="invoice">
+            <div class="invoice-container">
+                <div class="invoice-head">
+                    <div class="invoice-head-top">
+                        <div class="invoice-head-top-right text-end">
                             <h3>Booking Details</h3>
                         </div>
                     </div>
-                    <div class = "hr"></div>
-                    <div class = "invoice-head-middle">
-                        <div class = "invoice-head-middle-left text-start">
-                            <p><span class = "text-bold">Date</span>: 30/4/2024</p>
+                    <div class="hr"></div>
+                    <div class="invoice-head-middle">
+                        <div class="invoice-head-middle-left text-start">
+                            <p><span class="text-bold">Date</span>: {{ booking_date }}</p>
                         </div>
-                        <div class = "invoice-head-middle-right text-end">
-                            <p><spanf class = "text-bold">Booking ID:</span>050323</p>
+                        <div class="invoice-head-middle-right text-end">
+                            <p><span class="text-bold">Booking ID:</span> {{ booking_id }}</p>
                         </div>
                     </div>
-                    <div class = "hr"></div>
-                    <div class = "invoice-head-bottom">
-                        <div class = "invoice-head-bottom-left">
+                    <div class="hr"></div>
+                    <div class="invoice-head-bottom">
+                        <div class="invoice-head-bottom-left">
                             <ul>
-                                <li>Kim Hong Zhang</li>
-                                <li>1221106260</li>
-                                <li>Faculty of Computing and Informatic</li>
-                                <li>Multimedia University Cyberjaya</li>
+                                <li>{{ username }}</li>
+                                <li>{{ faculty }}</li>
+                                <li>{{ university }}</li>
                             </ul>
                         </div>
                     </div>
                 </div>
-                <div class = "overflow-view">
-                    <div class = "invoice-body">
+                <div class="overflow-view">
+                    <div class="invoice-body">
                         <table>
                             <thead>
                                 <tr>
-                                    <td class = "text-bold">Date</td>
-                                    <td class = "text-bold">Booking Time</td>
-                                    <td class = "text-bold">Appointment Time</td>
-                                    <td class = "text-bold">Lecturer</td>
-                                    <td class = "text-bold">Faculty</td>
+                                    <td class="text-bold">Date</td>
+                                    <td class="text-bold">Booking Time</td>
+                                    <td class="text-bold">Appointment Time</td>
+                                    <td class="text-bold">Lecturer</td>
+                                    <td class="text-bold">Faculty</td>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>28 April 2024</td>
-                                    <td>09:00</td>
-                                    <td>18:00</td>
-                                    <td>Willie Poh Kaw Lik</td>
-                                    <td>FCI</td>
+                                    <td>{{ appointment_date }}</td>
+                                    <td>{{ booking_time }}</td>
+                                    <td>{{ appointment_time }}</td>
+                                    <td>{{ lecturer }}</td>
+                                    <td>{{ faculty }}</td>
                                 </tr>
                             </tbody>
                         </table> 

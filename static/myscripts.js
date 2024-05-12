@@ -11,9 +11,15 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-function printInvoice(){
-    window.print();
+function printInvoice() {
+    var printContent = document.getElementById("print-area").innerHTML; // Get the HTML content of the print area
+    var originalContents = document.body.innerHTML; // Store the original HTML content of the body
+    document.body.innerHTML = printContent; // Replace the body content with the print area content
+    window.print(); // Print the document
+    document.body.innerHTML = originalContents; // Restore the original body content
 }
+
+
 
 document.addEventListener("DOMContentLoaded", function() {
   setTimeout(function() {
@@ -176,6 +182,32 @@ document.addEventListener('DOMContentLoaded', function() {
     cancelButton.addEventListener('click', function() {
         toggleEditMode();
         // Reset input values to original data (if needed)
+    });
+});
+
+window.onclick = function(event) {
+    if (!event.target.matches('.dropbtn')) {
+      var dropdowns = document.getElementsByClassName("dropdown-content");
+      var i;
+      for (i = 0; i < dropdowns.length; i++) {
+        var openDropdown = dropdowns[i];
+        if (openDropdown.style.display === "block") {
+          openDropdown.style.display = "none";
+        }
+      }
+    }
+  }
+  //Display Pin Input
+  document.addEventListener('DOMContentLoaded', function () {
+    var teacherRole = document.getElementById('teacherRole');
+    var pinInput = document.getElementById('pinInput');
+
+    teacherRole.addEventListener('change', function () {
+        if (teacherRole.checked) {
+            pinInput.style.display = 'flex';
+        } else {
+            pinInput.style.display = 'none';
+        }
     });
 });
 
