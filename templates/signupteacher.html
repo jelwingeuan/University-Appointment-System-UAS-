@@ -6,12 +6,14 @@
     <title>Teacher Signup</title>
 </head>
 <body>
-    <h2>Teacher Signup</h2>
-    <form method="POST">
-        <label for="pin_number">Enter PIN Number:</label><br>
-        <input type="password" id="pin_number" name="pin_number" required><br>
-        <input type="hidden" name="next_page" value="{{ next_page }}"> <!-- Include hidden field for next page -->
-        <input type="submit" value="Submit">
+    <h1>Teacher Signup</h1>
+    {% if message %}
+    <p>{{ message }}</p>
+    {% endif %}
+    <form action="/signupteacher" method="post">
+        <label for="pin_number">PIN Number:</label>
+        <input type="text" id="pin_number" name="pin_number" required><br>
+        <button type="submit">Submit</button>
     </form>
 </body>
 </html>
