@@ -62,6 +62,53 @@ def hash_password(password):
 def signup():
     if request.method == "POST":
         role = request.form.get("role")
+        if role == "teacher":
+            # If the selected role is "teacher", redirect to the teacher sign-up page
+            return redirect("/signupteacher")
+        else:
+            # Handle other roles (e.g., student) here
+            faculty = request.form.get("faculty")
+            username = request.form.get("username")
+            email = request.form.get("email")
+            phone_number = request.form.get("phone_number")
+            password = request.form.get("password")
+
+            hashed_password = hash_password(password)
+
+            con = get_db_connection()
+            cur = con.cursor()
+
+            # Check if email already exists
+            cur.execute("SELECT * FROM users WHERE email = ?", (email,))
+            user = cur.fetchone()
+
+            if user:
+                con.close()
+                return render_template(
+                    "signup.html", message="User with this email already exists"
+                )
+            else:
+                cur.execute(
+                    "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
+                    (role, faculty, username, email, phone_number, hashed_password),
+                )
+                con.commit()
+                con.close()
+                return redirect("/signupflash")
+    else:
+        return render_template("signup.html")
+
+
+@app.route("/signupteacher", methods=["GET", "POST"])
+def signupteacher():
+    if request.method == "POST":
+        pin_number = request.form.get("pin_number")
+
+        # Check if the entered PIN number is correct
+        if pin_number != "006942000":
+            return render_template("signinteacher.html", message="Incorrect PIN number")
+
+        # If PIN is correct, proceed with saving teacher details
         faculty = request.form.get("faculty")
         username = request.form.get("username")
         email = request.form.get("email")
@@ -73,7 +120,7 @@ def signup():
         con = get_db_connection()
         cur = con.cursor()
 
-        # check if email already exists
+        # Check if email already exists
         cur.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cur.fetchone()
 
@@ -85,13 +132,54 @@ def signup():
         else:
             cur.execute(
                 "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
-                (role, faculty, username, email, phone_number, hashed_password),
+                ("teacher", faculty, username, email, phone_number, hashed_password),
             )
             con.commit()
             con.close()
-            return redirect('/signinflash')
+            return redirect(
+                "/signupflash"
+            )  # Redirect to signup flash page upon successful signup
     else:
-        return render_template("signup.html")
+        return render_template("signupteacher.html")
+
+
+@app.route("/verify_pin", methods=["POST"])
+def verify_pin():
+    if request.method == "POST":
+        pin = request.form.get("pin_number")  # Update to match the form field name
+        # Verify PIN number
+        if pin == "006942000":  # Replace with your actual PIN
+            # Proceed with saving teacher details
+            return redirect("/signupflash")
+        else:
+            return render_template("signupteacher.html", message="Incorrect PIN number")
+
+
+@app.route("/save_teacher_details", methods=["POST"])
+def save_teacher_details():
+    if request.method == "POST":
+        # Extract teacher details from the form
+        role = "teacher"
+        faculty = request.form.get("faculty")
+        username = request.form.get("username")
+        email = request.form.get("email")
+        phone_number = request.form.get("phone_number")
+        password = request.form.get("password")
+
+        # Hash the password
+        hashed_password = hash_password(password)
+
+        # Save teacher details to the database
+        con = get_db_connection()
+        cur = con.cursor()
+        cur.execute(
+            "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
+            (role, faculty, username, email, phone_number, hashed_password),
+        )
+        con.commit()
+        con.close()
+        # Redirect to home page
+        return redirect("/")
 
 
 # Route for "log in"
