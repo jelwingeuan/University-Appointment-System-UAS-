@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask import session, flash
 from flask_login import LoginManager, UserMixin, login_required, current_user
 from db_functions import update_user_info, create_appointment, get_appointments, update_appointment, delete_appointment
+from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 import bcrypt
 import random
@@ -73,7 +74,10 @@ def signup():
             phone_number = request.form.get("phone_number")
             password = request.form.get("password")
 
-            hashed_password = hash_password(password)
+            if not password:  # Check if password is provided
+                return render_template("signup.html", message="Password is required")
+
+            hashed_password = generate_password_hash(password)
 
             con = get_db_connection()
             cur = con.cursor()
@@ -99,23 +103,27 @@ def signup():
         return render_template("signup.html")
 
 
+# Route for signupteacjer
 @app.route("/signupteacher", methods=["GET", "POST"])
 def signupteacher():
     if request.method == "POST":
         pin_number = request.form.get("pin_number")
 
         # Check if the entered PIN number is correct
-        if pin_number != "006942000":
-            return render_template("signinteacher.html", message="Incorrect PIN number")
+        if pin_number != "911":
+            return render_template("signupteacher.html", message="Incorrect PIN number")
 
-        # If PIN is correct, proceed with saving teacher details
+        # PIN is correct, proceed with saving teacher details
         faculty = request.form.get("faculty")
         username = request.form.get("username")
         email = request.form.get("email")
         phone_number = request.form.get("phone_number")
         password = request.form.get("password")
 
-        hashed_password = hash_password(password)
+        if not password:  # Check if password is provided
+            return render_template("signupteacher.html", message="Password is required")
+
+        hashed_password = generate_password_hash(password)
 
         con = get_db_connection()
         cur = con.cursor()
@@ -130,56 +138,34 @@ def signupteacher():
                 "signup.html", message="User with this email already exists"
             )
         else:
-            cur.execute(
-                "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
-                ("teacher", faculty, username, email, phone_number, hashed_password),
-            )
-            con.commit()
-            con.close()
-            return redirect(
-                "/signupflash"
-            )  # Redirect to signup flash page upon successful signup
+            try:
+                # Insert teacher details into the database
+                cur.execute(
+                    "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
+                    (
+                        "teacher",
+                        faculty,
+                        username,
+                        email,
+                        phone_number,
+                        hashed_password,
+                    ),
+                )
+                con.commit()
+                con.close()
+
+                # Redirect to signup flash page upon successful signup
+                return redirect("/signupflash")
+            except Exception as e:
+                con.rollback()
+                con.close()
+                return render_template(
+                    "signupteacher.html",
+                    message="An error occurred while processing your request.",
+                )
+
     else:
         return render_template("signupteacher.html")
-
-
-@app.route("/verify_pin", methods=["POST"])
-def verify_pin():
-    if request.method == "POST":
-        pin = request.form.get("pin_number")  # Update to match the form field name
-        # Verify PIN number
-        if pin == "006942000":  # Replace with your actual PIN
-            # Proceed with saving teacher details
-            return redirect("/signupflash")
-        else:
-            return render_template("signupteacher.html", message="Incorrect PIN number")
-
-
-@app.route("/save_teacher_details", methods=["POST"])
-def save_teacher_details():
-    if request.method == "POST":
-        # Extract teacher details from the form
-        role = "teacher"
-        faculty = request.form.get("faculty")
-        username = request.form.get("username")
-        email = request.form.get("email")
-        phone_number = request.form.get("phone_number")
-        password = request.form.get("password")
-
-        # Hash the password
-        hashed_password = hash_password(password)
-
-        # Save teacher details to the database
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute(
-            "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
-            (role, faculty, username, email, phone_number, hashed_password),
-        )
-        con.commit()
-        con.close()
-        # Redirect to home page
-        return redirect("/")
 
 
 # Route for "log in"
@@ -449,9 +435,9 @@ def signoutflash():
 def signoutflash2():
     return render_template("signoutflash2.html")
 
-@app.route("/signinflash")
-def signinflash():
-    return render_template("signinflash.html")
+@app.route("/signupflash")
+def sigupflash():
+    return render_template("signupflash.html")
 
 @app.route('/profile')
 def profile():
