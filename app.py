@@ -1,6 +1,7 @@
+
 from flask import Flask, render_template, request, redirect, url_for
 from flask import session, flash
-from flask_login import LoginManager, UserMixin, login_required, current_user
+from flask_login import LoginManager, UserMixin, login_required
 from db_functions import (
     update_user_info,
     create_appointment,
@@ -8,7 +9,6 @@ from db_functions import (
     update_appointment,
     delete_appointment,
 )
-from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 import bcrypt
 import random
@@ -48,6 +48,17 @@ def load_user(user_id):
         return None
 
 
+# Prevent auto log in
+first_request = True
+
+@app.before_request
+def clear_session():
+    global first_request
+    if first_request:
+        session.clear()
+        first_request = False
+
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -83,7 +94,7 @@ def signup():
             if not password:  # Check if password is provided
                 return render_template("signup.html", message="Password is required")
 
-            hashed_password = generate_password_hash(password)
+            hashed_password = hash_password(password)
 
             con = get_db_connection()
             cur = con.cursor()
@@ -127,9 +138,9 @@ def signupteacher():
         password = request.form.get("password")
 
         if not password:  # Check if password is provided
-            return render_template("signupteacher.html", message="PIN is required")
+            return render_template("signupteacher.html", message="Password is required")
 
-        hashed_password = generate_password_hash(password)
+        hashed_password = hash_password(password)
 
         con = get_db_connection()
         cur = con.cursor()
@@ -171,45 +182,6 @@ def signupteacher():
         return render_template("signupteacher.html")
 
 
-@app.route("/verify_pin", methods=["POST"])
-def verify_pin():
-    if request.method == "POST":
-        pin = request.form.get("pin_number")  # Update to match the form field name
-        # Verify PIN number
-        if pin == "006942000":  # Replace with your actual PIN
-            # Proceed with saving teacher details
-            return redirect("/signupflash")
-        else:
-            return render_template("signupteacher.html", message="Incorrect PIN number")
-
-
-@app.route("/save_teacher_details", methods=["POST"])
-def save_teacher_details():
-    if request.method == "POST":
-        # Extract teacher details from the form
-        role = "teacher"
-        faculty = request.form.get("faculty")
-        username = request.form.get("username")
-        email = request.form.get("email")
-        phone_number = request.form.get("phone_number")
-        password = request.form.get("password")
-
-        # Hash the password
-        hashed_password = hash_password(password)
-
-        # Save teacher details to the database
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute(
-            "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
-            (role, faculty, username, email, phone_number, hashed_password),
-        )
-        con.commit()
-        con.close()
-        # Redirect to home page
-        return redirect("/")
-
-
 # Route for "log in"
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -232,7 +204,7 @@ def login():
             ):
                 # Redirect to the home page upon successful login for regular users
                 session["logged_in"] = True
-                session["id"] = user[0]
+                session["id"] = user["id"]
                 return redirect("/flash")
             else:
                 return render_template(
@@ -240,6 +212,31 @@ def login():
                 )
     else:
         return render_template("login.html")
+
+
+# Route for rendering profile page
+@app.route("/profile")
+def profile():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
+    user_data = cursor.fetchone()
+    conn.close()
+
+    session["username"] = user_data[3]
+    session["role"] = user_data[1]
+    session["faculty"] = user_data[2]
+    session["phone_number"] = user_data[5]
+
+    return render_template(
+        "profile.html",
+        username=user_data["username"],
+        email=user_data["email"],
+        faculty=user_data["faculty"],
+        phone_number=user_data["phone_number"],
+        role=user_data["role"],
+    )
+
 
 
 # Route for updating user information
@@ -516,28 +513,6 @@ def signoutflash2():
 @app.route("/signupflash")
 def sigupflash():
     return render_template("signupflash.html")
-
-
-@app.route("/profile")
-def profile():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
-    user_data = cursor.fetchone()
-    conn.close()
-
-    session["username"] = user_data[3]
-    session["role"] = user_data[1]
-    session["faculty"] = user_data[2]
-
-    return render_template(
-        "profile.html",
-        username=user_data["username"],
-        email=user_data["email"],
-        faculty=user_data["faculty"],
-        phonenumber=user_data["phone_number"],
-        role=user_data["role"],
-    )
 
 
 @app.route("/logout")
