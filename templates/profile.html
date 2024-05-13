@@ -11,14 +11,29 @@
     <nav>
         <ul>
             <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">About<i class='bx bx-chevron-down'></i></a>
+                <div class="dropdown-content">
+                    <a href="/about">About Us</a>
+                    <a href="/about">Faculty</a>
+                    <a href="/about">History</a>
+                </div>
+            </li>
+            
             <li><a href="/appointment">Make An Appointment</a></li>
             {% if session['logged_in'] == True %}
-            <li><a href="/logout">Logout </a></li>
-            <li><a href="/profile">Profile </a></li>
+            <li class="dropdown">
+                <a href="/profile" class="dropbtn">Profile<i class='bx bx-chevron-down'></i></a>
+                <div class="dropdown-content">
+                    <a href="/profile">View Profile</a>
+                    <a href="/changepassword">Change Password</a>
+                    <a href="/history">Booking History</a>
+                </div>
+            </li>
+            <li><a href="/logout">Logout</a></li>
             {% else %}
             <li><a href="/login">Login</a></li>
-            <li><a href="/signup">Sign Up</a></li> <!-- Sign-up link -->
+            <li><a href="/signup">Sign Up</a></li>
             {% endif %}
         </ul>  
     </nav>
@@ -29,8 +44,8 @@
             </div>
             <div class="profilesubwrapper">
                 <div class="profilesidebar">
-                    <img src="https://scontent.fkul15-1.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p200x200&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=jxgK-o95X-wQ7kNvgFSetlb&_nc_ht=scontent.fkul15-1.fna&oh=00_AfDtomrDyFoe3IlHfqfXCL3WjT5_vvVmwqC1fWdN8x0iyA&oe=6640556C" >
-                    <h3>Kim Hong Zhang</h3> 
+                    <img src="https://scontent.fkul15-1.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p200x200&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=sEi16yVIs4QQ7kNvgGOe5Kt&_nc_ht=scontent.fkul15-1.fna&oh=00_AYBs9O_E6-37D-nOEx1p-R927FGnvxJ0LLeHWwmlWnZINg&oe=6646442C" >
+                    <h3>{{ user_full_name }}</h3> 
                     <a class="listitem active" data-toogle="list" href="/profile">General</a>
                     <a class="listitem" data-toogle="list" href="/changepassword">Change password</a>
                     <a class="listitem" data-toogle="list" href="/history">History</a>
@@ -40,13 +55,13 @@
                     <h1>Account Setting</h1>
                     <div class="profileinput">
                         <div class="subprofileinput">
-                            <label>Name</label><input id="nameInput" class="profileinputdetails" type="text" placeholder="Kim Hong Zhang">
-                            <label>Email</label><input id="emailInput" class="profileinputdetails" type="email" placeholder="kim.hong.zhang323@gmail.com">
+                            <label>Name</label><input id="nameInput" class="profileinputdetails" type="text" placeholder="{{ username }}">
+                            <label>Email</label><input id="emailInput" class="profileinputdetails" type="email" placeholder="{{ email }}">
                         </div>
                         <div class="profileinput">
-                            <h2>Faculty : FCI</h2>
-                            <label>Phone Number</label><input id="phoneInput" class="profileinputdetails" type="text" placeholder="+60 12-5751521">
-                            <h2>Role : Student </h2>
+                            <h2>Faculty : {{ faculty }}</h2>
+                            <label>Phone Number</label><input id="phoneInput" class="profileinputdetails" type="text" placeholder="{{ phone_number }}">
+                            <h2>Role : {{ role }} </h2>
                         </div>   
                     </div>                       
                 </div>

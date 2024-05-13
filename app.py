@@ -1,17 +1,22 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask import session, flash
-from flask_login import LoginManager, UserMixin, login_required, current_user
-from db_functions import update_user_info, create_appointment, get_appointments, update_appointment, delete_appointment
-from werkzeug.security import check_password_hash, generate_password_hash
+from flask_login import LoginManager, UserMixin, login_required
+from db_functions import (
+    update_user_info,
+    create_appointment,
+    get_appointments,
+    update_appointment,
+    delete_appointment,
+)
 import sqlite3
 import bcrypt
 import random
-import os 
+import os
 
 app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
-app.secret_key = 'jelwin'
+app.secret_key = "jelwin"
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -37,9 +42,20 @@ def load_user(user_id):
     user = cur.fetchone()
     con.close()
     if user:
-        return User(user['id'])
+        return User(user["id"])
     else:
         return None
+
+# Prevent auto log in
+first_request = True
+
+
+@app.before_request
+def clear_session():
+    global first_request
+    if first_request:
+        session.clear()
+        first_request = False
 
 
 @app.route("/")
@@ -67,7 +83,6 @@ def signup():
             # If the selected role is "teacher", redirect to the teacher sign-up page
             return redirect("/signupteacher")
         else:
-            # Handle other roles (e.g., student) here
             faculty = request.form.get("faculty")
             username = request.form.get("username")
             email = request.form.get("email")
@@ -77,7 +92,7 @@ def signup():
             if not password:  # Check if password is provided
                 return render_template("signup.html", message="Password is required")
 
-            hashed_password = generate_password_hash(password)
+            hashed_password = hash_password(password)
 
             con = get_db_connection()
             cur = con.cursor()
@@ -103,14 +118,14 @@ def signup():
         return render_template("signup.html")
 
 
-# Route for signupteacjer
+# Route for signupteacher
 @app.route("/signupteacher", methods=["GET", "POST"])
 def signupteacher():
     if request.method == "POST":
         pin_number = request.form.get("pin_number")
 
         # Check if the entered PIN number is correct
-        if pin_number != "911":
+        if pin_number != "006942000":
             return render_template("signupteacher.html", message="Incorrect PIN number")
 
         # PIN is correct, proceed with saving teacher details
@@ -123,23 +138,22 @@ def signupteacher():
         if not password:  # Check if password is provided
             return render_template("signupteacher.html", message="Password is required")
 
-        hashed_password = generate_password_hash(password)
+        hashed_password = hash_password(password)
 
         con = get_db_connection()
         cur = con.cursor()
 
-        # Check if email already exists
-        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user = cur.fetchone()
+        try:
+            # Check if email already exists
+            cur.execute("SELECT * FROM users WHERE email = ?", (email,))
+            user = cur.fetchone()
 
-        if user:
-            con.close()
-            return render_template(
-                "signup.html", message="User with this email already exists"
-            )
-        else:
-            try:
-                # Insert teacher details into the database
+            if user:
+                con.close()
+                return render_template(
+                    "signup.html", message="User with this email already exists"
+                )
+            else:
                 cur.execute(
                     "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
                     (
@@ -153,16 +167,14 @@ def signupteacher():
                 )
                 con.commit()
                 con.close()
+                return redirect(
+                    "/signinflash"
+                )  # Redirect to signup flash page upon successful signup
 
-                # Redirect to signup flash page upon successful signup
-                return redirect("/signupflash")
-            except Exception as e:
-                con.rollback()
-                con.close()
-                return render_template(
-                    "signupteacher.html",
-                    message="An error occurred while processing your request.",
-                )
+        except Exception as e:
+            # Handle exceptions here, if necessary
+            print(e)
+            return render_template("error.html", message="An error occurred.")
 
     else:
         return render_template("signupteacher.html")
@@ -176,8 +188,8 @@ def login():
         password = request.form.get("password")
 
         if email == "admin@example.com" and password == "123":
-            session['logged_in'] = True
-            return redirect('/admin')
+            session["logged_in"] = True
+            return redirect("/admin")
         else:
             # If not admin, proceed with regular user login logic
             con = get_db_connection()
@@ -185,16 +197,39 @@ def login():
             cur.execute("SELECT * FROM users WHERE email = ?", (email,))
             user = cur.fetchone()
 
-            if user and bcrypt.checkpw(
-                password.encode("utf-8"), user["password"].encode("utf-8")
-            ):
+            if user and check_password_hash(user["password"], password):
                 # Redirect to the home page upon successful login for regular users
-                session['logged_in'] = True
-                return redirect('/flash')
+                session["logged_in"] = True
+                session["id"] = user["id"]
+                return redirect("/flash")
             else:
-                return render_template("login.html", message="Invalid email or password")
-    else:
-        return render_template("login.html")
+                flash("Invalid email or password", "error")
+
+    return render_template("login.html")
+
+
+# Route for rendering profile page
+@app.route("/profile")
+def profile():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
+    user_data = cursor.fetchone()
+    conn.close()
+
+    session["username"] = user_data[3]
+    session["role"] = user_data[1]
+    session["faculty"] = user_data[2]
+    session["phone_number"] = user_data[5]
+
+    return render_template(
+        "profile.html",
+        username=user_data["username"],
+        email=user_data["email"],
+        faculty=user_data["faculty"],
+        phone_number=user_data["phone_number"],
+        role=user_data["role"],
+    )
 
 
 # Route for updating user information
@@ -206,8 +241,7 @@ def update_user():
         username = request.form.get("username")
         email = request.form.get("email")
         phone_number = request.form.get("phone_number")
-
-        update_user_info(current_user.id, faculty, username, email, phone_number)
+        update_user_info(session["id"], faculty, username, email, phone_number)
 
         return redirect(url_for("profile"))
 
@@ -223,26 +257,33 @@ def change_password():
 
         # Verify if new password and confirm password match
         if new_password != confirm_password:
-            return render_template("profile.html", message= "New password and confirm password do not match")
+            return render_template(
+                "profile.html", message="New password and confirm password do not match"
+            )
 
         # Verify if the current password is correct
         con = get_db_connection()
         cur = con.cursor()
-        cur.execute("SELECT password FROM users WHERE id = ?", (current_user.id,))
+        cur.execute("SELECT password FROM users WHERE id = ?", (session["id"],))
         user_data = cur.fetchone()
 
-        if not user_data or not bcrypt.checkpw(current_password.encode("utf-8"), user_data["password"].encode("utf-8")):
-            return render_template("profile.html", message= "Incorrect current password")
+        if not user_data or not bcrypt.checkpw(
+            current_password.encode("utf-8"), user_data["password"].encode("utf-8")
+        ):
+            return render_template("profile.html", message="Incorrect current password")
 
         # Update the password in the database
         hashed_new_password = hash_password(new_password)
         con = get_db_connection()
         cur = con.cursor()
-        cur.execute("UPDATE users SET password = ? WHERE id = ?", (hashed_new_password, current_user.id))
+        cur.execute(
+            "UPDATE users SET password = ? WHERE id = ?",
+            (hashed_new_password, session["id"]),
+        )
         con.commit()
         con.close()
 
-        return render_template("profile.html", message= "Password updated successfully")
+        return render_template("profile.html", message="Password updated successfully")
 
     else:
         return render_template("profile.html")
@@ -257,13 +298,24 @@ def make_appointment():
         appointment_date = request.form.get("appointment_date")
         appointment_time = request.form.get("appointment_time")
         purpose = request.form.get("purpose")
-        
+
         if student and lecturer and appointment_date and appointment_time and purpose:
-            create_appointment(student, lecturer, appointment_date, appointment_time, purpose, status="Pending")
-            
-            return render_template("appointment.html", message= "Appointment created successfully")
+            create_appointment(
+                student,
+                lecturer,
+                appointment_date,
+                appointment_time,
+                purpose,
+                status="Pending",
+            )
+
+            return render_template(
+                "appointment.html", message="Appointment created successfully"
+            )
         else:
-            return render_template("appointment.html", message= "Missing required field(s)")
+            return render_template(
+                "appointment.html", message="Missing required field(s)"
+            )
     else:
         return render_template("appointment.html")
 
@@ -285,32 +337,36 @@ def update_appointments(appointment_id):
         new_date = request.form.get("new_date")
         new_time = request.form.get("new_time")
         new_purpose = request.form.get("new_purpose")
-        
+
         update_appointment(appointment_id, new_date, new_time, new_purpose)
-        
+
         return redirect(url_for("list_appointments"))
 
 
 @app.route("/delete_appointment", methods=["POST"])
 def delete_appointment(appointment_id):
     if request.method == "POST":
-        
+
         delete_appointment(appointment_id)
-        
+
         return redirect(url_for("list_appointments"))
 
 
 @app.route("/flash")
 def flash():
+
     return render_template("messageflashing.html")
+
 
 @app.route("/appointment")
 def appointment():
     return render_template("appointment.html")
 
+
 @app.route("/appointment2")
 def appointment2():
     return render_template("appointment2.html")
+
 
 @app.route("/invoice")
 def render_template_invoice():
@@ -321,17 +377,21 @@ def render_template_invoice():
 def admin():
     return render_template("admin.html")
 
+
 @app.route("/usercontrol")
 def usercontrol():
     return render_template("usercontrol.html")
+
 
 @app.route("/appointmentcontrol")
 def appointmentcontrol():
     return render_template("appointment_control.html")
 
+
 @app.route("/changepassword")
 def changepassword():
     return render_template("changepassword.html")
+
 
 @app.route("/history")
 def history():
@@ -358,7 +418,9 @@ def faculty_hub_page(hub_id=None):
             # Retrieve faculty hub information from the database based on hub_id
             conn = get_db_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT name, image_path FROM facultyhub WHERE id = ?", (hub_id,))
+            cursor.execute(
+                "SELECT name, image_path FROM facultyhub WHERE id = ?", (hub_id,)
+            )
             faculty_hub = cursor.fetchone()
             conn.close()
 
@@ -370,10 +432,14 @@ def faculty_hub_page(hub_id=None):
                 return render_template("error.html", message="Faculty Hub Not Found")
         else:
             # Handle the case when hub_id is not provided
-            return render_template("error.html", message="Please provide a valid Faculty Hub ID")
+            return render_template(
+                "error.html", message="Please provide a valid Faculty Hub ID"
+            )
     except Exception as e:
         print("Error in faculty_hub_page:", e)
-        return render_template("error.html", message="An error occurred while processing your request")
+        return render_template(
+            "error.html", message="An error occurred while processing your request"
+        )
 
 
 @app.route("/createfacultyhub", methods=["GET", "POST"])
@@ -431,22 +497,21 @@ def create_faculty_hub():
 def signoutflash():
     return render_template("signoutflash.html")
 
+
 @app.route("/signoutflash2")
 def signoutflash2():
     return render_template("signoutflash2.html")
+
 
 @app.route("/signupflash")
 def sigupflash():
     return render_template("signupflash.html")
 
-@app.route('/profile')
-def profile():
-    return render_template("profile.html")
 
-@app.route('/logout')
+@app.route("/logout")
 def logout():
-    session.pop('logged_in', None)
-    return redirect('/signoutflash')
+    session.clear()
+    return redirect("/signoutflash")
 
 
 @app.route("/create_booking", methods=["POST"])
