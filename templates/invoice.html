@@ -50,7 +50,7 @@
                     <div class="hr"></div>
                     <div class="invoice-head-middle">
                         <div class="invoice-head-middle-left text-start">
-                            <p><span class="text-bold">Date</span>: {{ booking_date }}</p>
+                            <p><span class="text-bold">Date</span>: {{ appointment_date }}</p>
                         </div>
                         <div class="invoice-head-middle-right text-end">
                             <p><span class="text-bold">Booking ID:</span> {{ booking_id }}</p>
@@ -81,10 +81,10 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>{{ appointment_date }}</td>
-                                    <td>{{ booking_time }}</td>
-                                    <td>{{ appointment_time }}</td>
-                                    <td>{{ lecturer }}</td>
+                                    <td>{{ appointment[3] }}</td>
+                                    <td>{{ appointment[4] }}</td>
+                                    <td>{{ appointment[5] }}</td>
+                                    <td>{{ appointment[2] }}</td>
                                     <td>{{ faculty }}</td>
                                 </tr>
                             </tbody>

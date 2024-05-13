@@ -45,23 +45,29 @@
                             <th> No. </th>
                             <th> Name </th>
                             <th> Role </th>
-                            <th> Apppointment </th>
+                            <th> Faculty </th>
                             <th> Phone Number </th>
                             <th> Action </th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for user in users %}
-                        <tr>
-                            <td> {{ loop.index }} </td>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.role }}</td>
-                            <td> {{ user.appointment_count }} </td>
-                            <td> {{ user.phone_number }}</td>
-                            <td> <button><i class='bx bx-user-minus'></i></button></td>
-                        </tr>
+                        <form action="/delete_user" method="POST">
+                            <tr>
+                                <td> {{ loop.index }} </td>
+                                <td>{{ user[3] }}</td>
+                                <td>{{ user[1] }}</td>
+                                <td> {{ user[2] }} </td>
+                                <td> {{ user[4] }}</td>
+                                <td> 
+                                    <input type="hidden" name="id" value="{{ user[0] }}">
+                                    <button type="submit"><i class='bx bx-user-minus'></i></button>
+                                </td>
+                            </tr>
+                        </form>
                         {% endfor %}
                     </tbody>
+                    
                 </table>
             </div>
             

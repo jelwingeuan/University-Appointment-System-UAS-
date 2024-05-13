@@ -33,7 +33,7 @@
     <div class="admincontainer">
         <div class="subadmincontainer">
             <div class="subdes">
-                <h2>54</h2>
+                <h2>{{ num_students }}</h2>
                 <h4>Student</h4>
             </div>
             <div class="icon">
@@ -42,7 +42,7 @@
         </div>
         <div class="subadmincontainer">
             <div class="subdes">
-                <h2>65</h2>
+                <h2>{{ num_teachers }}</h2>
                 <h4>Lecturer</h4>
             </div>
             <div class="icon">
@@ -51,7 +51,7 @@
         </div>
         <div class="subadmincontainer">
             <div class="subdes">
-                <h2>20</h2>
+                <h2>{{ num_appointments }}</h2>
                 <h4>Appointment</h4>
             </div>
             <div class="icon">
@@ -60,7 +60,7 @@
         </div>
         <div class="subadmincontainer">
             <div class="subdes">
-                <h2>120</h2>
+                <h2>{{ num_users }}</h2>
                 <h4>User</h4>
             </div>
             <div class="icon">
@@ -89,27 +89,27 @@
                 <thead>
                     <tr>
                         <th> Appointment ID </th>
-                        <th> Lecturer </th>
                         <th> Student </th>
+                        <th> Lecturer </th>
                         <th> Date </th>
-                        <th> Status </th>
                         <th> Time </th>
+                        <th> Title </th>
+                        <th> Status </th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for appointment in appointments %}
                     <tr>
-                        <td>{{ appointment.appointment_id }}</td>
-                        <td><img src="{{ appointment.lecturer_image }}" alt="">{{ appointment.lecturer_name }}</td>
-                        <td>{{ appointment.student_name }}</td>
-                        <td>{{ appointment.date }}</td>
-                        <td>
-                            <p class="status {{ appointment.status_class }}">{{ appointment.status }}</p>
-                        </td>
-                        <td><strong>{{ appointment.time }}</strong></td>
+                        <td>12345</td>
+                        <td>{{ appointment[1] }}</td>
+                        <td>{{ appointment[0] }}</td>
+                        <td>{{ appointment[2] }}</td>
+                        <td>{{ appointment[5] }}</td>
+                        <td>{{ appointment[3] }}</td>
+                        <td>{{ appointment[4] }}</td>
                     </tr>
                     {% endfor %}
-                </tbody>
+                </tbody>                               
             </table>
         </div>
     </div>   
