@@ -47,6 +47,17 @@ def load_user(user_id):
     else:
         return None
 
+# Prevent auto log in
+first_request = True
+
+
+@app.before_request
+def clear_session():
+    global first_request
+    if first_request:
+        session.clear()
+        first_request = False
+
 
 @app.route("/")
 def home():
@@ -73,7 +84,6 @@ def signup():
             # If the selected role is "teacher", redirect to the teacher sign-up page
             return redirect("/signupteacher")
         else:
-            # Handle other roles (e.g., student) here
             faculty = request.form.get("faculty")
             username = request.form.get("username")
             email = request.form.get("email")
@@ -127,7 +137,7 @@ def signupteacher():
         password = request.form.get("password")
 
         if not password:  # Check if password is provided
-            return render_template("signupteacher.html", message="PIN is required")
+            return render_template("signupteacher.html", message="Password is required")
 
         hashed_password = generate_password_hash(password)
 
@@ -159,7 +169,7 @@ def signupteacher():
                 con.commit()
                 con.close()
                 return redirect(
-                    "/signupflash"
+                    "/signinflash"
                 )  # Redirect to signup flash page upon successful signup
 
         except Exception as e:
@@ -171,46 +181,6 @@ def signupteacher():
         return render_template("signupteacher.html")
 
 
-@app.route("/verify_pin", methods=["POST"])
-def verify_pin():
-    if request.method == "POST":
-        pin = request.form.get("pin_number")  # Update to match the form field name
-        # Verify PIN number
-        if pin == "006942000":  # Replace with your actual PIN
-            # Proceed with saving teacher details
-            return redirect("/signupflash")
-        else:
-            return render_template("signupteacher.html", message="Incorrect PIN number")
-
-
-@app.route("/save_teacher_details", methods=["POST"])
-def save_teacher_details():
-    if request.method == "POST":
-        # Extract teacher details from the form
-        role = "teacher"
-        faculty = request.form.get("faculty")
-        username = request.form.get("username")
-        email = request.form.get("email")
-        phone_number = request.form.get("phone_number")
-        password = request.form.get("password")
-
-        # Hash the password
-        hashed_password = hash_password(password)
-
-        # Save teacher details to the database
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute(
-            "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
-            (role, faculty, username, email, phone_number, hashed_password),
-        )
-        con.commit()
-        con.close()
-        # Redirect to home page
-        return redirect("/")
-
-
-# Route for "log in"
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -227,19 +197,15 @@ def login():
             cur.execute("SELECT * FROM users WHERE email = ?", (email,))
             user = cur.fetchone()
 
-            if user and bcrypt.checkpw(
-                password.encode("utf-8"), user["password"].encode("utf-8")
-            ):
+            if user and check_password_hash(user["password"], password):
                 # Redirect to the home page upon successful login for regular users
                 session["logged_in"] = True
                 session["id"] = user[0]
                 return redirect("/flash")
             else:
-                return render_template(
-                    "login.html", message="Invalid email or password"
-                )
-    else:
-        return render_template("login.html")
+                flash("Invalid email or password", "error")
+
+    return render_template("login.html")
 
 
 # Route for updating user information
