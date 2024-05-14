@@ -328,54 +328,15 @@ def appointment2():
 
 @app.route("/admin")
 def admin_dashboard():
-    # Connect to the database
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Execute SQL queries to get the counts based on role
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'teacher'")
-    num_teachers = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'student'")
-    num_students = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM appointments")
-    num_appointments = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(*) FROM users")
-    num_users = cursor.fetchone()[0]
-
-    cursor.execute("SELECT lecturer, student, appointment_date, purpose, status, appointment_time FROM appointments")
-    appointments = cursor.fetchall()
-
-    # Close the cursor and connection
-    cursor.close()
-    conn.close()
-
     return render_template("admin.html",appointments=appointments, num_teachers=num_teachers, num_students=num_students, num_appointments=num_appointments, num_users=num_users)
 
 
 @app.route("/usercontrol")
 def usercontrol():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users")  
-    user_data = cursor.fetchall()
-    conn.close()
-
     return render_template('usercontrol.html', users=user_data)
-
-def delete_user(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
 
 @app.route('/delete_user', methods=['POST'])
 def delete_user_route():
-    id = request.form['id']
-    delete_user(id)
     return redirect('/usercontrol')
 
 
@@ -536,45 +497,10 @@ def logout():
 
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
-    if request.method == "POST":
-        student = request.form.get("student")
-        lecturer = request.form.get("lecturer")
-        purpose = request.form.get("purpose")
-        appointment_date = request.form.get("appointment_date")
-        appointment_time = request.form.get("appointment_time")
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO appointments (student, lecturer, purpose, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ?)",
-            (student, lecturer, purpose, appointment_date, appointment_time, "Pending")
-        )
-        conn.commit()
-        conn.close()
-
-        return redirect('/invoice')
+     return redirect('/invoice')
     
 @app.route("/invoice")
 def render_template_invoice():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
-    user_data = cursor.fetchone()
-    conn.close()
-
-    session["username"] = user_data[3]
-    session["role"] = user_data[1]
-    session["faculty"] = user_data[2]
-    session["email"] = user_data[4]
-    session["phone_number"] = user_data[5] 
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM appointments")
-    appointment = cursor.fetchone()
-    conn.close()
-
-    
     return render_template("invoice.html", 
                         username=user_data["username"],
                         email=user_data["email"],
@@ -586,28 +512,13 @@ def render_template_invoice():
 
 @app.route("/bookinghistory", methods=["GET", "POST"])
 def booking_history():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, lecturer, student, appointment_date, purpose, status, appointment_time FROM appointments")
-    appointments = cursor.fetchall()
-
-    # Close the cursor and connection
-    cursor.close()
-    conn.close()
-
     return render_template('booking_history.html', appointments=appointments)
 
 def delete_appointment(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM appointments WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
+
 
 @app.route('/delete_booking', methods=['POST'])
 def delete_booking():
-    id = request.form['id']
-    delete_appointment(id)
     return redirect('/bookinghistory')
 
 
