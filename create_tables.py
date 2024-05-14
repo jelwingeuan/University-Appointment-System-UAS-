@@ -1,4 +1,3 @@
-
 import sqlite3
 
 # Connect with db
@@ -41,7 +40,6 @@ cur.execute(
         faculty_image TEXT NOT NULL
         )"""
 )
-
 
 con.commit()
 con.close()
