@@ -12,10 +12,9 @@
 <body>
     <header>
         <h2>Dashboard</h2>
-
         <div class="profile-container">
             <img src="{{ url_for('static', filename='profile.jpg') }}" class="profile-photo"> <!-- Replace 'profile.jpg' with your actual profile image filename -->
-            <h4>Kim Hong Zhang</h4>
+            <h4>Admin</h4>
         </div>
     </header>
     <div class="sidebar">
@@ -38,9 +37,9 @@
             {% for faculty in faculty_info %}
             <div class="card">
                 <div class="card-image">
-                    <img src="{{ faculty['faculty_image'] }}" alt="Profile image">
+                    <img src="{{ 'faculty_image' }}" >
                 </div>
-                <p class="name">{{ faculty['faculty_name'] }}</p>
+                <p class="name">{{ 'faculty_name' }}</p>
             </div>
             {% endfor %}
         </div> 
