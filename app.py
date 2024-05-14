@@ -328,15 +328,54 @@ def appointment2():
 
 @app.route("/admin")
 def admin_dashboard():
+    # Connect to the database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Execute SQL queries to get the counts based on role
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'teacher'")
+    num_teachers = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'student'")
+    num_students = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM appointments")
+    num_appointments = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM users")
+    num_users = cursor.fetchone()[0]
+
+    cursor.execute("SELECT lecturer, student, appointment_date, purpose, status, appointment_time FROM appointments")
+    appointments = cursor.fetchall()
+
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
+
     return render_template("admin.html",appointments=appointments, num_teachers=num_teachers, num_students=num_students, num_appointments=num_appointments, num_users=num_users)
 
 
 @app.route("/usercontrol")
 def usercontrol():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users")  
+    user_data = cursor.fetchall()
+    conn.close()
+
     return render_template('usercontrol.html', users=user_data)
+
+def delete_user(id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM users WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
 
 @app.route('/delete_user', methods=['POST'])
 def delete_user_route():
+    id = request.form['id']
+    delete_user(id)
     return redirect('/usercontrol')
 
 
