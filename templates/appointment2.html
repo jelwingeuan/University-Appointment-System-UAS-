@@ -26,66 +26,70 @@
         </ul>  
     </nav>
 
-    <div class="appointmentwrapper">
-        <div class="appointment-header">
-            <h1>Pick Your Slot</h1>
-            <div class="contactinfo">
-                <label>Choose Your Lecturer</label>
-                <select class="bordered-select">
-                    <option value="Willie Poh">Willie Poh</option>
-                    <option value="William Ban">William Ban</option>
-                    <option value="Angeline Pang">Angeline Pang</option>
-                </select>              
+    <form method="post" action="/create_booking">
+        <div class="appointmentwrapper">
+            <div class="appointment-header">
+                <h1>Pick Your Slot</h1>
+                <div class="contactinfo">
+                    <label>Choose Your Lecturer</label>
+                    <select name="lecturer" class="bordered-select">
+                        <option value="Willie Poh">Willie Poh</option>
+                        <option value="William Ban">William Ban</option>
+                        <option value="Angeline Pang">Angeline Pang</option>
+                    </select>
+                <label>Student Name</label><input type="text" name="student">
+                </div>
+                <div class="contactinfo">
+                    <label>Purpose of Appointment</label>
+                    <select name="purpose" class="bordered-select">
+                        <option value="">Select Appointment Option</option>
+                        <option value="Academic Advising">Academic Advising</option>
+                        <option value="Course Registration Assistance">Course Registration Assistance</option>
+                        <option value="Tutoring Services">Tutoring Services</option>
+                        <option value="Financial Aid Consultation">Financial Aid Consultation</option>
+                        <option value="Career Counseling">Career Counseling</option>
+                        <option value="Study Abroad Program Information Session">Study Abroad Program Information Session</option>
+                        <option value="Research Project Guidance">Research Project Guidance</option>
+                        <option value="Thesis/Dissertation Advisement">Thesis/Dissertation Advisement</option>
+                        <option value="Internship/Co-op Placement Assistance">Internship/Co-op Placement Assistance</option>
+                        <option value="Disability Services Consultation">Disability Services Consultation</option>
+                        <option value="Mental Health Counseling">Mental Health Counseling</option>
+                        <option value="Health Services Appointment">Health Services Appointment</option>
+                        <option value="Library Research Assistance">Library Research Assistance</option>
+                        <option value="Student Organization Advising">Student Organization Advising</option>
+                        <option value="Housing Assistance">Housing Assistance</option>
+                        <option value="Graduation Planning Session">Graduation Planning Session</option>
+                        <option value="Transfer Credit Evaluation">Transfer Credit Evaluation</option>
+                        <option value="Faculty Office Hours">Faculty Office Hours</option>
+                        <option value="Student Conduct Consultation">Student Conduct Consultation</option>
+                        <option value="Alumni Networking Session">Alumni Networking Session</option>  
+                    </select>           
+                </div>
             </div>
-            <div class="contactinfo">
-                <label>Purpose of Appointment</label>
-                <select class="bordered-select">
-                    <option value="">Select Appointment Option</option>
-                    <option value="Academic Advising">Academic Advising</option>
-                    <option value="Course Registration Assistance">Course Registration Assistance</option>
-                    <option value="Tutoring Services">Tutoring Services</option>
-                    <option value="Financial Aid Consultation">Financial Aid Consultation</option>
-                    <option value="Career Counseling">Career Counseling</option>
-                    <option value="Study Abroad Program Information Session">Study Abroad Program Information Session</option>
-                    <option value="Research Project Guidance">Research Project Guidance</option>
-                    <option value="Thesis/Dissertation Advisement">Thesis/Dissertation Advisement</option>
-                    <option value="Internship/Co-op Placement Assistance">Internship/Co-op Placement Assistance</option>
-                    <option value="Disability Services Consultation">Disability Services Consultation</option>
-                    <option value="Mental Health Counseling">Mental Health Counseling</option>
-                    <option value="Health Services Appointment">Health Services Appointment</option>
-                    <option value="Library Research Assistance">Library Research Assistance</option>
-                    <option value="Student Organization Advising">Student Organization Advising</option>
-                    <option value="Housing Assistance">Housing Assistance</option>
-                    <option value="Graduation Planning Session">Graduation Planning Session</option>
-                    <option value="Transfer Credit Evaluation">Transfer Credit Evaluation</option>
-                    <option value="Faculty Office Hours">Faculty Office Hours</option>
-                    <option value="Student Conduct Consultation">Student Conduct Consultation</option>
-                    <option value="Alumni Networking Session">Alumni Networking Session</option>  
-                </select>           
+            <div class="datepicker">
+                <label>Select Date</label>
+                <input type="date" name="appointment_date">
+                <div class="time-grid">
+                    <div class="time-grid">
+                        <button type="submit" name="appointment_time" value="8:00 AM">8:00 AM</button>
+                        <button type="submit" name="appointment_time" value="9:00 AM">9:00 AM</button>
+                        <button type="submit" name="appointment_time" value="10:00 AM">10:00 AM</button>
+                        <button type="submit" name="appointment_time" value="11:00 AM">11:00 AM</button>
+                        <button type="submit" name="appointment_time" value="12:00 PM">12:00 PM</button>
+                        <button type="submit" name="appointment_time" value="1:00 PM">1:00 PM</button>
+                        <button type="submit" name="appointment_time" value="2:00 PM">2:00 PM</button>
+                        <button type="submit" name="appointment_time" value="3:00 PM">3:00 PM</button>
+                        <button type="submit" name="appointment_time" value="4:00 PM">4:00 PM</button>
+                        <button type="submit" name="appointment_time" value="5:00 PM">5:00 PM</button>
+                        <button type="submit" name="appointment_time" value="6:00 PM">6:00 PM</button>
+                    </div>                    
+                </div>
             </div>
         </div>
-        <div class="datepicker">
-            <input type="date">
-            <div class="time-grid">
-                <!-- Buttons for time slots -->
-                <button>8:00 AM</button>
-                <button>9:00 AM</button>
-                <button class="unavailable">10:00 AM</button>
-                <button>11:00 AM</button>
-                <button>12:00 PM</button>
-                <button>1:00 PM</button>
-                <button class="choose">2:00 PM</button>
-                <button>3:00 PM</button>
-                <button>4:00 PM</button>
-                <button>5:00 PM</button>
-                <!-- Repeat buttons as needed -->
-            </div>
-        </div>
-        <div class="checkout">
-            <a href="/invoice"><button>checkout</button></a>
-        </div>
-    </div>
-
+    </form>
+    
     <script src="../static/myscripts.js"></script>
+   
+
 </body>
 </html>

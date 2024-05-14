@@ -45,10 +45,11 @@
             <div class="profilesubwrapper">
                 <div class="profilesidebar">
                     <img src="https://scontent.fkul15-1.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p200x200&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=sEi16yVIs4QQ7kNvgGOe5Kt&_nc_ht=scontent.fkul15-1.fna&oh=00_AYBs9O_E6-37D-nOEx1p-R927FGnvxJ0LLeHWwmlWnZINg&oe=6646442C" >
-                    <h3>{{ user_full_name }}</h3> 
+                    <h3>{{ username }}</h3> 
                     <a class="listitem active" data-toogle="list" href="/profile">General</a>
                     <a class="listitem" data-toogle="list" href="/changepassword">Change password</a>
                     <a class="listitem" data-toogle="list" href="/history">History</a>
+                    <a class="listitem" data-toogle="list" href="/bookinghistory">Booking History</a>
                     <a class="listitem" data-toogle="list" href="/logout">Log Out</a>
                 </div>
                 <div class="profilemain">
@@ -67,11 +68,27 @@
                 </div>
             </div>
             <div class="profilefooter">
-                <button id="updateButton">Update</button>
                 <button id="cancelButton">Cancel</button>
                 <button id="editButton">Edit</button>
             </div>
         </div>
+    </div>
+    <div id="profileEditContainer" class="edit-container" style="display: none;">   
+        <form id="updateForm" method="post" action="/update_user_info">
+            
+            <label for="username">Username:</label>
+            <input type="text" id="usernameInput" name="username" value="{{ username }}">
+            
+            <label for="email">Email:</label>
+            <input type="email" id="emailInput" name="email" value="{{ email }}">
+            
+            <label for="phone_number">Phone Number:</label>
+            <input type="text" id="phoneInput" name="phone_number" value="{{ phone_number }}">
+            
+            <div class="profilefooter">
+                <button id="updateButton" type="submit" >Update</button>
+            </div>
+        </form>
     </div>
     <div class="footer-wrapper">
         <footer class="footer">
