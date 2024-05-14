@@ -226,80 +226,80 @@ def change_password():
 
 
 
-# # Function to create a new appointment
-# @app.route("/make_appointment", methods=["POST"])
-# def make_appointment():
-#     if request.method == "POST":
-#         student = request.form.get("student")
-#         lecturer = request.form.get("lecturer")
-#         appointment_date = request.form.get("appointment_date")
-#         appointment_time = request.form.get("appointment_time")
-#         purpose = request.form.get("purpose")
+# Function to create a new appointment
+@app.route("/make_appointment", methods=["POST"])
+def make_appointment():
+    if request.method == "POST":
+        student = request.form.get("student")
+        lecturer = request.form.get("lecturer")
+        appointment_date = request.form.get("appointment_date")
+        appointment_time = request.form.get("appointment_time")
+        purpose = request.form.get("purpose")
 
-#         # Check if all required fields are provided
-#         if student and lecturer and appointment_date and appointment_time and purpose:
-#             # Create the appointment
-#             create_appointment(
-#                 student,
-#                 lecturer,
-#                 appointment_date,
-#                 appointment_time,
-#                 purpose,
-#                 status="Pending",
-#             )
+        # Check if all required fields are provided
+        if student and lecturer and appointment_date and appointment_time and purpose:
+            # Create the appointment
+            create_appointment(
+                student,
+                lecturer,
+                appointment_date,
+                appointment_time,
+                purpose,
+                status="Pending",
+            )
 
-#             # Redirect to the appointment page with a success message
-#             return render_template(
-#                 "appointment.html", message="Appointment created successfully"
-#             )
-#         else:
-#             # If any required field is missing, show an error message
-#             return render_template(
-#                 "appointment.html", message="Missing required field(s)"
-#             )
-#     else:
-#         # If the request method is not POST, render the appointment page
-#         return render_template("appointment.html")
-
-
-# # Function to list a student's appointment(s)
-# @app.route("/appointments", methods=["GET"])
-# def list_appointments():
-#     student = request.args.get("student")
-#     if student:
-#         # Retrieve appointments for the specified student
-#         appointments = get_appointments(student)
-#         return render_template("appointments.html", appointments=appointments)
-#     else:
-#         # If no student is specified, show a message
-#         return render_template("appointment.html", message="No student specified")
+            # Redirect to the appointment page with a success message
+            return render_template(
+                "appointment.html", message="Appointment created successfully"
+            )
+        else:
+            # If any required field is missing, show an error message
+            return render_template(
+                "appointment.html", message="Missing required field(s)"
+            )
+    else:
+        # If the request method is not POST, render the appointment page
+        return render_template("appointment.html")
 
 
-# # Route to update an appointment
-# @app.route("/update_appointment", methods=["POST"])
-# def update_appointments(appointment_id):
-#     if request.method == "POST":
-#         # Extract new details from the form
-#         new_date = request.form.get("new_date")
-#         new_time = request.form.get("new_time")
-#         new_purpose = request.form.get("new_purpose")
-
-#         # Update the appointment with the new details
-#         update_appointment(appointment_id, new_date, new_time, new_purpose)
-
-#         # Redirect to the list of appointments
-#         return redirect(url_for("list_appointments"))
+# Function to list a student's appointment(s)
+@app.route("/appointments", methods=["GET"])
+def list_appointments():
+    student = request.args.get("student")
+    if student:
+        # Retrieve appointments for the specified student
+        appointments = get_appointments(student)
+        return render_template("appointments.html", appointments=appointments)
+    else:
+        # If no student is specified, show a message
+        return render_template("appointment.html", message="No student specified")
 
 
-# # Route to delete an appointment
-# @app.route("/delete_appointment", methods=["POST"])
-# def delete_appointment(appointment_id):
-#     if request.method == "POST":
-#         # Delete the specified appointment
-#         delete_appointment(appointment_id)
+# Route to update an appointment
+@app.route("/update_appointment", methods=["POST"])
+def update_appointments(appointment_id):
+    if request.method == "POST":
+        # Extract new details from the form
+        new_date = request.form.get("new_date")
+        new_time = request.form.get("new_time")
+        new_purpose = request.form.get("new_purpose")
 
-#         # Redirect to the list of appointments
-#         return redirect(url_for("list_appointments"))
+        # Update the appointment with the new details
+        update_appointment(appointment_id, new_date, new_time, new_purpose)
+
+        # Redirect to the list of appointments
+        return redirect(url_for("list_appointments"))
+
+
+# Route to delete an appointment
+@app.route("/delete_appointment", methods=["POST"])
+def delete_appointment(appointment_id):
+    if request.method == "POST":
+        # Delete the specified appointment
+        delete_appointment(appointment_id)
+
+        # Redirect to the list of appointments
+        return redirect(url_for("list_appointments"))
 
 
 
@@ -536,10 +536,45 @@ def logout():
 
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
-     return redirect('/invoice')
-    
+    if request.method == "POST":
+        student = request.form.get("student")
+        lecturer = request.form.get("lecturer")
+        purpose = request.form.get("purpose")
+        appointment_date = request.form.get("appointment_date")
+        appointment_time = request.form.get("appointment_time")
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO appointments (student, lecturer, purpose, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ?)",
+            (student, lecturer, purpose, appointment_date, appointment_time, "Pending")
+        )
+        conn.commit()
+        conn.close()
+
+        return redirect('/invoice')
+
 @app.route("/invoice")
 def render_template_invoice():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
+    user_data = cursor.fetchone()
+    conn.close()
+
+    session["username"] = user_data[3]
+    session["role"] = user_data[1]
+    session["faculty"] = user_data[2]
+    session["email"] = user_data[4]
+    session["phone_number"] = user_data[5] 
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM appointments")
+    appointment = cursor.fetchone()
+    conn.close()
+
+
     return render_template("invoice.html", 
                         username=user_data["username"],
                         email=user_data["email"],
@@ -548,19 +583,33 @@ def render_template_invoice():
                         role=user_data["role"],
                         appointment=appointment 
     )
-
 @app.route("/bookinghistory", methods=["GET", "POST"])
-def booking_history():
+def bookinghistory():
+    conn = getdbconnection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, lecturer, student, appointmentdate, purpose, status, appointment_time FROM appointments")
+    appointments = cursor.fetchall()
+
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
+
     return render_template('booking_history.html', appointments=appointments)
 
 def delete_appointment(id):
-
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM appointments WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
 
 @app.route('/delete_booking', methods=['POST'])
 def delete_booking():
+    id = request.form['id']
+    delete_appointment(id)
     return redirect('/bookinghistory')
 
 
-if __name__ == "__main__":
+if __name == "__main":
     # Run the application
     app.run(debug=True, port=6969)
