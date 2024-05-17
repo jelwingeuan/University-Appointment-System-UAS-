@@ -44,8 +44,6 @@ The University Appointment System (UAS) is a web application built with Flask, d
 
 6. Access the application in your web browser at `http://localhost:6969`.
 
-## Usage
-
 - Visit the home page to get started.
 - Sign up for an account or log in if you already have one.
 - Faculty members can create hubs to manage their availability and appointments.
