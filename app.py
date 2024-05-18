@@ -12,6 +12,7 @@ import sqlite3
 import bcrypt
 import random
 import os
+import json
 
 app = Flask(__name__)
 login_manager = LoginManager()
@@ -47,12 +48,24 @@ def load_user(id):
         return None
 
 
+
+def load_content():
+    with open("content.json", "r") as f:
+        return json.load(f)
+
+
+def save_content(content):
+    with open("content.json", "w") as f:
+        json.dump(content, f)
+
+
+content_data = load_content()
+home_content = content_data["home_content"]
+
+
 @app.route("/")
 def home():
     return render_template("home.html", home_content=home_content)
-
-# Sample home content
-home_content = "Multimedia University, is a private research university in Cyberjaya and Melaka in Malaysia. Founded in 1997, it is the first private university within Malaysia and is a member of The Alliance of Government Linked Universities."
 
 
 @app.route("/about")
@@ -390,7 +403,9 @@ def admin_page_editor():
 @app.route("/update_home_content", methods=["POST"])
 def update_home_content():
     global home_content
-    home_content = request.form["content"]
+    home_content = request.form["home_content"]
+    content_data["home_content"] = home_content
+    save_content(content_data)
     return redirect("/adminpageeditor")
 
 
