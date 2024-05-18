@@ -12,7 +12,6 @@
 <body>
     <header>
         <h2>Page Editor</h2>
-
         <div class="profile-container">
             <img src="https://scontent.fkul16-4.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p320x320&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=3roSzPxS-N0Ab58mfNR&_nc_ht=scontent.fkul16-4.fna&oh=00_AfDVQyRsWjBjOiwuFkSgNSTAYj98gOwqrjaiYsLGGEFRVw&oe=662BE62C" class="profile-photo">
             <h4>Kim Hong Zhang</h4>
@@ -32,11 +31,11 @@
     </div>
     <div class="admincontainer">
         <div class="subadmincontainer">
-            <h2>Edit Page Content</h2>
-            <form id="pageEditorForm" action="/update_home_content" method="POST">
+            <h2>Edit Home Page Content</h2>
+            <form action="/update_home_content" method="post">
                 <div class="form-group">
-                    <label for="pageContent">Page Content</label>
-                    <textarea id="pageContent" name="content" rows="10" placeholder="Enter page content">{{ home_content }}</textarea>
+                    <label for="content">Home Page Paragraph</label>
+                    <textarea id="content" name="content" rows="10">{{ home_content }}</textarea>
                 </div>
                 <button type="submit">Save Changes</button>
             </form>
