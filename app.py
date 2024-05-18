@@ -49,9 +49,10 @@ def load_user(id):
 
 @app.route("/")
 def home():
-    # Fetch content from the database or some source
-    home_content = "Multimedia University, is a private research university in Cyberjaya and Melaka in Malaysia. Founded in 1997, it is the first private university within Malaysia and is a member of The Alliance of Government Linked Universities."
     return render_template("home.html", home_content=home_content)
+
+# Sample home content
+home_content = "Multimedia University, is a private research university in Cyberjaya and Melaka in Malaysia. Founded in 1997, it is the first private university within Malaysia and is a member of The Alliance of Government Linked Universities."
 
 
 @app.route("/about")
@@ -383,17 +384,14 @@ def delete_user(id):
 
 @app.route("/adminpageeditor")
 def admin_page_editor():
-    # Get the updated content from the query parameter
-    home_content = request.args.get("home_content", "")
     return render_template("adminpageeditor.html", home_content=home_content)
 
 
 @app.route("/update_home_content", methods=["POST"])
 def update_home_content():
-    content = request.form["content"]
-    print("Updated content:", content)
-    # You can pass the updated content as a query parameter in the redirection
-    return redirect("/adminpageeditor?home_content=" + content)
+    global home_content
+    home_content = request.form["content"]
+    return redirect("/adminpageeditor")
 
 
 @app.route("/delete_user", methods=["POST"])
