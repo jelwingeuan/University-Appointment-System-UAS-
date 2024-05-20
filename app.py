@@ -23,8 +23,9 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
 class User(UserMixin):
-    def __init__(self, id):
+    def __init__(self, id, username):
         self.id = id
+        self.username = username
 
 
 # Function to get database connection
@@ -43,20 +44,24 @@ def load_user(id):
     user = cur.fetchone()
     con.close()
     if user:
-        return User(user["id"])
-    else:
-        return None
+        return User(user['id'], user['username'])
+    
+    return None
 
 
 
 def load_content():
     with open("content.json", "r") as f:
-        return json.load(f)
+        content = f.read().strip()
+            
+
+    return json.loads(content)
 
 
+# Save content to JSON file
 def save_content(content):
     with open("content.json", "w") as f:
-        json.dump(content, f)
+        json.dump(content,f)
 
 
 content_data = load_content()
@@ -84,74 +89,40 @@ def hash_password(password):
 def signup():
     if request.method == "POST":
         role = request.form.get("role")
-        if role == "teacher":
-            # If the selected role is "teacher", redirect to the teacher sign-up page
-            return redirect("/signupteacher")
-        else:
-            # Handle other roles (e.g., student) here
-            faculty = request.form.get("faculty")
-            username = request.form.get("username")
-            email = request.form.get("email")
-            phone_number = request.form.get("phone_number")
-            password = request.form.get("password")
+        faculty = request.form.get("faculty")
+        username = request.form.get("username")
+        email = request.form.get("email")
+        phone_number = request.form.get("phone_number")
+        password = request.form.get("password")
 
-            if not password:  # Check if password is provided
-                return render_template("signup.html", message="Password is required")
+        if not password:  # Check if password is provided
+            return render_template("signup.html", message="Password is required")
 
-            hashed_password = hash_password(password)
+        hashed_password = hash_password(password)
 
-            con = get_db_connection()
-            cur = con.cursor()
+        con = get_db_connection()
+        cur = con.cursor()
 
             # Check if email already exists
-            cur.execute("SELECT * FROM users WHERE email = ?", (email,))
-            user = cur.fetchone()
+        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
+        user = cur.fetchone()
 
-            if user:
-                con.close()
-                return render_template(
-                    "signup.html", message="User with this email already exists"
-                )
-            else:
-                cur.execute(
-                    "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
-                    (role, faculty, username, email, phone_number, hashed_password),
-                )
-                con.commit()
-                con.close()
-                return redirect("/signupflash")
+        if user:
+            con.close()
+            return render_template(
+                "signup.html", message="User with this email already exists"
+            )
+        else:
+            cur.execute(
+                "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
+                (role, faculty, username, email, phone_number, hashed_password),
+            )
+            con.commit()
+            con.close()
+            return redirect("/login")
     else:
         return render_template("signup.html")
 
-
-# Route for signupteacher
-
-
-# @app.route("/save_teacher_details", methods=["POST"])
-# def save_teacher_details():
-#     if request.method == "POST":
-#         # Extract teacher details from the form
-#         role = "teacher"
-#         faculty = request.form.get("faculty")
-#         username = request.form.get("username")
-#         email = request.form.get("email")
-#         phone_number = request.form.get("phone_number")
-#         password = request.form.get("password")
-
-#         # Hash the password
-#         hashed_password = hash_password(password)
-
-#         # Save teacher details to the database
-#         con = get_db_connection()
-#         cur = con.cursor()
-#         cur.execute(
-#             "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
-#             (role, faculty, username, email, phone_number, hashed_password),
-#         )
-#         con.commit()
-#         con.close()
-#         # Redirect to home page
-#         return redirect("/")
 
 
 # Route for "log in"
@@ -177,7 +148,8 @@ def login():
                 # Redirect to the home page upon successful login for regular users
                 session["logged_in"] = True
                 session["id"] = user[0]
-                return redirect("/flash")
+                
+                return redirect("/")
             else:
                 return render_template(
                     "login.html", message="Invalid email or password"
@@ -315,18 +287,6 @@ def change_password():
 #         return redirect(url_for("list_appointments"))
 
 
-@app.route("/flash")
-def flash():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
-    user_data = cursor.fetchone()
-    conn.close()
-
-    session["username"] = user_data[1]
-
-    return render_template("messageflashing.html", username=user_data["username"])
-
 
 @app.route("/appointment")
 def appointment():
@@ -395,9 +355,31 @@ def delete_user(id):
     conn.close()
 
 
-@app.route("/adminpageeditor")
+@app.route('/adminpageeditor', methods=['GET', 'POST'])
 def admin_page_editor():
-    return render_template("adminpageeditor.html", home_content=home_content)
+    if request.method == 'POST':
+        
+        # Get form data
+        home_content = request.form.get('home_content')
+        school_name = request.form.get('school_name')
+        school_tel = request.form.get('school_tel')
+        school_email = request.form.get('school_email')
+
+            # Update content with new data
+        content['home_content'] = home_content
+        content['school_name'] = school_name
+        content['school_tel'] = school_tel
+        content['school_email'] = school_email
+
+            # Save updated content to JSON file
+        save_content(content)
+
+        return redirect('/adminpageeditor')
+    
+    # For GET request, load content to display in the form
+    content = load_content()
+    return render_template('adminpageeditor.html', **content)
+
 
 
 @app.route("/update_home_content", methods=["POST"])
@@ -416,10 +398,6 @@ def delete_user_route():
     return redirect("/usercontrol")
 
 
-@app.route("/appointmentcontrol")
-def appointmentcontrol():
-    return render_template("appointment_control.html")
-
 
 @app.route("/changepassword")
 def changepassword():
@@ -428,7 +406,7 @@ def changepassword():
 
 @app.route("/history")
 def history():
-    return render_template("history.html")
+    return render_template("schedule.html")
 
 
 @app.route("/faculty")
@@ -526,20 +504,6 @@ def create_faculty_hub():
         return render_template("createfacultyhub.html", faculty_hubs=faculty_hubs)
 
 
-@app.route("/signoutflash")
-def signoutflash():
-    return render_template("signoutflash.html")
-
-
-@app.route("/signoutflash2")
-def signoutflash2():
-    return render_template("signoutflash2.html")
-
-
-@app.route("/signupflash")
-def sigupflash():
-    return render_template("signupflash.html")
-
 
 @app.route("/profile")
 def profile():
@@ -568,53 +532,81 @@ def profile():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect("/signoutflash")
+    return redirect("/")
 
 
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
-    if request.method == "POST":
-        student = request.form.get("student")
-        lecturer = request.form.get("lecturer")
-        purpose = request.form.get("purpose")
-        appointment_date = request.form.get("appointment_date")
-        appointment_time = request.form.get("appointment_time")
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO appointments (student, lecturer, purpose, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ?)",
-            (student, lecturer, purpose, appointment_date, appointment_time, "Pending"),
-        )
-        conn.commit()
-        conn.close()
-
-        return redirect("/invoice")
-
-
-@app.route("/invoice")
-def render_template_invoice():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
     user_data = cursor.fetchone()
     conn.close()
 
-    session["username"] = user_data[3]
-    session["role"] = user_data[1]
-    session["faculty"] = user_data[2]
-    session["email"] = user_data[4]
-    session["phone_number"] = user_data[5]
+    # After successful login
+    session["username"] = user_data["username"]
+
+
+    if request.method == "POST":
+        booking_id = random.randint(100000, 999999)
+        student = session["username"]  # Use dictionary access for session data
+        lecturer = request.form.get("lecturer")
+        purpose = request.form.get("purpose")
+        appointment_date = request.form.get("appointment_date")
+        appointment_time = request.form.get("appointment_time")
+
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO appointments (student, lecturer, purpose, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ? )",
+                (student, lecturer, purpose, appointment_date, appointment_time, "Pending"),
+            )
+            appointment_id = cursor.lastrowid
+            conn.commit()
+        finally:
+            conn.close()
+
+        session["appointment_id"] = appointment_id
+
+        flash("Booking created successfully!", "success")
+        return redirect("/invoice")
+
+
+
+
+@app.route("/invoice")
+def render_template_invoice():
+    # Ensure the session has the current user ID
+    user_id = session.get("id")
+
+    # Fetch user data from the database using the session user ID
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user_data = cursor.fetchone()
+    conn.close()
+
+    # Store necessary user data in the session
+    session["username"] = user_data["username"]
+    session["role"] = user_data["role"]
+    session["faculty"] = user_data["faculty"]
+    session["email"] = user_data["email"]
+    session["phone_number"] = user_data["phone_number"]
+
+    # Fetch the latest appointment data using the appointment ID stored in the session
+    appointment_id = session.get("appointment_id")
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM appointments")
+    cursor.execute("SELECT * FROM appointments WHERE id = ?", (appointment_id,))
     appointment = cursor.fetchone()
     conn.close()
 
     return render_template(
         "invoice.html",
-        username=user_data["username"],
+        username=session.get("username"),
         email=user_data["email"],
         faculty=user_data["faculty"],
         phone_number=user_data["phone_number"],
@@ -623,8 +615,8 @@ def render_template_invoice():
     )
 
 
-@app.route("/bookinghistory", methods=["GET", "POST"])
-def booking_history():
+@app.route("/appointmentcontrol", methods=["GET", "POST"])
+def appointmentcontrol():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -636,7 +628,7 @@ def booking_history():
     cursor.close()
     conn.close()
 
-    return render_template("booking_history.html", appointments=appointments)
+    return render_template("appointment_control.html", appointments=appointments)
 
 
 def delete_appointment(id):
@@ -652,6 +644,70 @@ def delete_booking():
     id = request.form["id"]
     delete_appointment(id)
     return redirect("/bookinghistory")
+
+
+@app.route("/bookinghistory")
+def user_booking_history():
+    username = session.get("username")
+    role = session.get("role")
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+
+        if role == "student":
+            cursor.execute("SELECT * FROM appointments WHERE student = ?", (username,))
+            display_role = "lecturer"
+            role = 'student'
+        else :
+            cursor.execute("SELECT * FROM appointments WHERE lecturer = ?", (username,))
+            display_role = "student"
+            role = 'lecturer'
+
+        appointments = cursor.fetchall()
+    finally:
+        conn.close()
+
+    return render_template("booking_history.html", appointments=appointments, display_role=display_role, role=role)
+
+
+
+
+
+@app.route("/cancel_booking", methods=["POST"])
+def cancel_booking():
+
+    # Get the booking ID from the form
+    booking_id = request.form.get("id")
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("cancel", booking_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+    return redirect("/bookinghistory")
+
+
+@app.route("/accept_booking", methods=["POST"])
+def accept_booking():
+    # Get the booking ID from the form
+    booking_id = request.form.get("id")
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # Update the status to "accept" for the booking with the provided ID
+        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("accept", booking_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+    return redirect("/bookinghistory")
+
+
 
 
 if __name__ == "__main__":

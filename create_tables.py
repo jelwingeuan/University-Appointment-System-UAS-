@@ -21,8 +21,9 @@ cur.execute(
 cur.execute(
     """CREATE TABLE IF NOT EXISTS appointments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student INTEGER NOT NULL,
-        lecturer INTEGER NOT NULL,
+        booking_id INTEGER NOT NULL,
+        student TEXT NOT NULL,
+        lecturer TEXT NOT NULL,
         appointment_date TEXT NOT NULL,
         appointment_time TEXT NOT NULL,
         purpose TEXT NOT NULL,

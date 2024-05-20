@@ -1247,6 +1247,7 @@ header input[type="search"] {
 .profile-container {
     display: flex;
     align-items: center; /* Align items vertically */
+    
 }
 
 .sidebar {
@@ -1420,14 +1421,6 @@ table {
     width: 100%;
 }
 
-td img {
-    width: 36px;
-    height: 36px;
-    margin-right: 6.4px; /* Converted from .5rem */
-    border-radius: 50%;
-    vertical-align: middle;
-}
-
 table,
 th,
 td {
@@ -1444,11 +1437,7 @@ thead th {
     text-transform: capitalize;
 }
 
-tbody tr td,
-tbody tr td p,
-tbody tr td img {
-    transition: .2s ease-in-out;
-}
+
 
 .table__body button  {
     background-color: transparent;
@@ -1463,43 +1452,54 @@ tbody tr td img {
     
 }
 
-.status {
-    padding: 6.4px 0; /* Converted from .4rem */
-    border-radius: 32px; /* Converted from 2rem */
+td .accept, .cancel, .Pending {
+    margin-top: 27px;
+    padding: 8px 16px; 
+    border-radius: 12px; 
+    font-weight: bold;
+    display: flex;
+   
     text-align: center;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for 3D effect */
 }
 
-.status.delivered {
+.accept {
     background-color: #86e49d;
     color: #006b21;
+    margin-top: 27px;
+    padding: 8px 16px; 
+    border-radius: 12px; 
+    font-weight: bold;
+    display: flex;
+    
+    text-align: center;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for 3D effect */
 }
 
-.status.cancelled {
+.cancel {
     background-color: #d893a3;
     color: #b30021;
 }
 
-.status.shipped {
+.Pending {
     background-color: #6fcaea;
+    color: #005a8c; /* Ensure text color is readable */
 }
 
-
-thead th.active,
-tbody td.active {
-    color: #6c00bd;
-}
 
 .profilecontainer{
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
+   
     
 }
 
 .profilewrapper{
     display: flex;
     flex-direction: column;
+    height:1000px;
 
 }
 
@@ -1508,7 +1508,7 @@ tbody td.active {
     flex-direction: row;
     justify-content: space-evenly;
     width: 1000px;
-    height: 700px;
+    height: 900px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     margin: 10px;
     padding: 10px;
@@ -1918,4 +1918,145 @@ tbody td.active {
   display: block;
 }
 
+.toggle-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border-radius: 0.5em;
+    box-shadow: 0 1px 1px rgb(255 255 255 / 0.6);
+    /* resize for demo */
+  }
+  
+.toggle-checkbox {
+    appearance: none;
+    position: absolute;
+    z-index: 1;
+    border-radius: inherit;
+    width: 100%;
+    height: 100%;
+    /* fix em sizing */
+    font: inherit;
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+.toggle-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    border-radius: 0.375em;
+    width: 3em;
+    height: 1.5em;
+    box-shadow: inset 0 0 0.0625em 0.125em rgb(255 255 255 / 0.2),
+      inset 0 0.0625em 0.125em rgb(0 0 0 / 0.4);
+    transition: background-color 0.4s linear;
+  }
+  
+.toggle-checkbox:checked + .toggle-container {
+    background-color: lime;
+  }
+  
+.toggle-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    left: 0.0625em;
+    border-radius: 0.3125em;
+    width: 1.375em;
+    height: 1.375em;
+    background-color: #e8e8e8;
+    box-shadow: inset 0 -0.0625em 0.0625em 0.125em rgb(0 0 0 / 0.1),
+      inset 0 -0.125em 0.0625em rgb(0 0 0 / 0.2),
+      inset 0 0.1875em 0.0625em rgb(255 255 255 / 0.3),
+      0 0.125em 0.125em rgb(0 0 0 / 0.5);
+    transition: left 0.4s;
+  }
+  
+.toggle-checkbox:checked + .toggle-container > .toggle-button {
+    left: 1.5625em;
+  }
+  
+.toggle-button-circles-container {
+    display: grid;
+    grid-template-columns: repeat(3, min-content);
+    gap: 0.125em;
+    position: absolute;
+    margin: 0 auto;
+  }
+  
+.toggle-button-circle {
+    border-radius: 50%;
+    width: 0.125em;
+    height: 0.125em;
+    background-image: radial-gradient(circle at 50% 0, #f5f5f5, #c4c4c4);
+  }
+  
+.schedule-main {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 600px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0,0.1); 
+
+}
+
+.schedule-main p{
+    text-align: center;
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    font-weight:700;
+    font-size:24px;
+
+}
+
+.schedule-container{
+    max-height:700px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    left: 10%;
     
+}
+
+.schedule-edit{
+    display:flex;
+    flex-direction: column;
+    margin-top:100px;
+    width:400px;
+    margin-left:100px;
+
+}
+
+.edit-main{
+    display:flex;
+    flex-direction:row;
+    justify-content:space-between;
+    margin:10px;
+    height:60px;
+    border-radius:10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.schedule-input{
+    position:relative;
+    top:12.5%;
+    margin-left:500px;
+    
+}
+
+.edit-left{
+    display:flex;
+    margin-left:120px;
+    padding-top:15px;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.edit-right{
+    display:flex;
+    margin-right:60px;
+    margin-top:10px;
+}
