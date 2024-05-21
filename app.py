@@ -287,7 +287,17 @@ def change_password():
 #         return redirect(url_for("list_appointments"))
 
 
+def l_profile():
+    return redirect(url_for("l_profile"))
 
+
+def l_appointment():
+    return redirect(url_for("l_appointment"))
+
+def l_approval():
+    return redirect(url_for("l_approval"))
+
+ 
 @app.route("/appointment")
 def appointment():
     return render_template("appointment.html")
