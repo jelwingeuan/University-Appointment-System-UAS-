@@ -43,7 +43,7 @@
             </div>
             <div class="profilesubwrapper">
                 <div class="profilesidebar">
-                    <img src="https://scontent.fkul15-1.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p200x200&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=sEi16yVIs4QQ7kNvgGOe5Kt&_nc_ht=scontent.fkul15-1.fna&oh=00_AYBs9O_E6-37D-nOEx1p-R927FGnvxJ0LLeHWwmlWnZINg&oe=6646442C" >
+                    <img src="https://avatars.githubusercontent.com/u/3817939?v=4" >
                     <h3>{{ username }}</h3> 
                     <a class="listitem" data-toggle="list" href="/profile">General</a>
                     <a class="listitem" data-toggle="list" href="/changepassword">Change password</a>
@@ -57,32 +57,55 @@
                             <thead>
                                 <tr>
                                     <th>No.</th>
-                                    <th>Lecturer</th>
+                                    <th>{{ display_role }}</th>
                                     <th>Date</th>
                                     <th>Time</th>
                                     <th>Purpose</th>
                                     <th>Status</th>
-                                    <th>Delete</th>
+                                    {% if role == 'lecturer' %}                                  
+                                    <th>Action</th>
+                                    <th>Action</th>
+                                    {% endif %}
+                                    {% if role == 'student' %}                                  
+                                    <th>Action</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for appointment in appointments %}
                                 <tr>
                                     <td>{{ loop.index }}</td>
-                                    <td>{{ appointment['lecturer'] }}</td>
+                                    <td>{{ appointment[display_role] }}</td>
                                     <td>{{ appointment['appointment_date'] }}</td>
                                     <td>{{ appointment['appointment_time'] }}</td>
                                     <td>{{ appointment['purpose'] }}</td>
-                                    <td>{{ appointment['status'] }}</td>
+                                    <td class="{{ appointment['status']}}">{{ appointment['status'] }}</td>
+                                    {% if role == "lecturer" %}
                                     <td>
-                                        <form method="post" action="/delete_booking">
+                                        <form method="post" action="/accept_booking">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            <button type="submit"><i class='bx bx-user-minus'></i></button>
+                                            <button type="submit" value="accept">Accept</button>
                                         </form>
                                     </td>
+                                    <td>
+                                        <form method="post" action="/cancel_booking">
+                                            <input type="hidden" name="id" value="{{ appointment['id'] }}">
+                                            <button type="submit" value="cancel">Cancel</button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+
+                                    {% if role == "student" %}
+                                    <td>
+                                        <form method="post" action="/cancel_booking">
+                                            <input type="hidden" name="id" value="{{ appointment['id'] }}">
+                                            <button type="submit" value="cancel">Cancel</button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
                                 </tr>
                                 {% endfor %}
-                            </tbody>                               
+                            </tbody>                           
                         </table>
                     </div>                     
                 </div>

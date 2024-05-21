@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="../static/style.css"> 
+    <link rel="stylesheet" href="../static/styles/output.css">
+
+
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropbtn">About<i class='bx bx-chevron-down'></i></a>
+                <div class="dropdown-content">
+                    <a href="/about">About Us</a>
+                    <a href="/about">Faculty</a>
+                    <a href="/about">History</a>
+                </div>
+            </li>
+            <li><a href="/appointment">Make An Appointment</a></li>
+            {% if session['logged_in'] == True %}
+            <li class="dropdown">
+                <a href="/profile" class="dropbtn">Profile<i class='bx bx-chevron-down'></i></a>
+                <div class="dropdown-content">
+                    <a href="/profile">View Profile</a>
+                    <a href="/changepassword">Change Password</a>
+                    <a href="/bookingzhistory">Booking History</a>
+                </div>
+            </li>
+            <li><a href="/logout">Logout</a></li>
+            {% else %}
+            <li><a href="/login">Login</a></li>
+            <li><a href="/signup">Sign Up</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <div class="profilecontainer">
+        <div class="profilewrapper">
+            <div class="profileheader">
+                <h3>Profiles</h3>
+            </div>
+            <div class="profilesubwrapper">
+                <div class="profilesidebar">
+                    <img src="https://avatars.githubusercontent.com/u/3817939?v=4" alt="User Avatar">
+                    <h3>{{ username }}</h3> 
+                    <a class="listitem active" data-toggle="list" href="/profile">General</a>
+                    <a class="listitem" data-toggle="list" href="/changepassword">Change password</a>
+                    <a class="listitem" data-toggle="list" href="/history">History</a>
+                    <a class="listitem" data-toggle="list" href="/bookinghistory">Booking History</a>
+                    <a class="listitem" data-toggle="list" href="/logout">Log Out</a>
+                </div>
+                <div class="schedule-main">
+                    <div class="schedule-header">
+                        <p>Schedule</p>
+                    </div>
+                    <div class="schedule-container">
+                        <div class="schedule-input">
+                            <input type="date" name="schedule_date">
+                        </div>
+                        <div class="schedule-edit">
+                            <div class="edit-main" style="background-color: rgb(255,220,230);">
+                                <div class="edit-left">
+                                    8:00AM
+                                </div>
+                                <div class="edit-right" >
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" value="" class="sr-only peer">
+                                        <div class="peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-500 w-12 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-['✖️'] after:rounded-full after:absolute after:outline-none after:h-10 after:w-10 after:bg-gray-50 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-hover:after:scale-75 peer-checked:after:content-['✔️'] after:-rotate-180 peer-checked:after:rotate-0"  style="margin-top: -5px;">
+                                        </div>
+                                    </label>
+                                </div>
+                                
+                            </div>
+                                {% for hour in range(9, 18) %}
+                                <div class="edit-main" style="background-color: rgb(255,220,230)">
+                                    <div class="edit-left">
+                                        {{ hour % 12 if hour % 12 != 0 else 12 }}:00{{ 'AM' if hour < 12 else 'PM' }}
+                                    </div>
+                                    <div class="edit-right" >
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" value="" class="sr-only peer">
+                                            <div class="peer ring-0 bg-rose-400 rounded-full outline-none duration-300 after:duration-500 w-12 h-12 shadow-md peer-checked:bg-emerald-500 peer-focus:outline-none after:content-['✖️'] after:rounded-full after:absolute after:outline-none after:h-10 after:w-10 after:bg-gray-50 after:top-1 after:left-1 after:flex after:justify-center after:items-center peer-hover:after:scale-75 peer-checked:after:content-['✔️'] after:-rotate-180 peer-checked:after:rotate-0"  style="margin-top: -5px;">
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-wrapper">
+        <footer class="footer">
+            <div class="footer-col">
+                <h4>Universal Appointment Booking System</h4>
+                <ul>
+                    <li><a href="/aboutus">about us</a></li>
+                    <li><a href="#">our services</a></li>
+                    <li><a href="/appointment">book now</a></li>
+                </ul>
+            </div>
+        </footer>
+    </div>
+
+    <script src="../static/myscripts.js"></script>
+</body>
+</html>

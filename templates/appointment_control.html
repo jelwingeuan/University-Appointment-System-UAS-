@@ -54,14 +54,20 @@
                         {% for appointment in appointments %}
                         <tr>
                             <td>{{ loop.index }}</td>
-                            <td>{{ appointment.id }}</td>
-                            <td>{{ appointment.lecturer }}</td>
-                            <td>{{ appointment.student }}</td>
-                            <td>{{ appointment.title }}</td>
-                            <td> <button><i class='bx bx-user-minus'></i></button></td>
+                            <td>{{ appointment['lecturer'] }}</td>
+                            <td>{{ appointment['appointment_date'] }}</td>
+                            <td>{{ appointment['appointment_time'] }}</td>
+                            <td>{{ appointment['purpose'] }}</td>
+                            <td>{{ appointment['status'] }}</td>
+                            <td>
+                                <form method="post" action="/delete_booking">
+                                    <input type="hidden" name="id" value="{{ appointment['id'] }}">
+                                    <button type="submit"><i class='bx bx-user-minus'></i></button>
+                                </form>
+                            </td>
                         </tr>
                         {% endfor %}
-                    </tbody>
+                    </tbody>    
                 </table>
                 
             </div>

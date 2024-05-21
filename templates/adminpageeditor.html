@@ -12,8 +12,7 @@
     <header>
         <h2>Page Editor</h2>
         <div class="profile-container">
-            <img src="https://scontent.fkul16-4.fna.fbcdn.net/v/t39.30808-1/436449833_7379349335463790_1784858083920378799_n.jpg?stp=dst-jpg_p320x320&_nc_cat=104&ccb=1-7&_nc_sid=5f2048&_nc_ohc=3roSzPxS-N0Ab58mfNR&_nc_ht=scontent.fkul16-4.fna&oh=00_AfDVQyRsWjBjOiwuFkSgNSTAYj98gOwqrjaiYsLGGEFRVw&oe=662BE62C" class="profile-photo">
-            <h4>Kim Hong Zhang</h4>
+            <h4>Admin</h4>
         </div>
     </header>
     <div class="sidebar">
@@ -23,7 +22,6 @@
             <li><i class='bx bx-cart'></i><a href="/appointmentcontrol">Booking Control</a></li>
             <li><i class='bx bx-plus'></i><a href="/faculty">My Faculty</a></li>
             <li><i class='bx bx-plus'></i><a href="/createfacultyhub">Create Faculty</a></li>
-            <li><i class='bx bx-plus'></i><a href="/facultyhub">Faculty Hub</a></li>
             <li><i class='bx bx-edit'></i><a href="/adminpageeditor">Page Editor</a></li>
             <li><i class='bx bx-cog'></i><a href="/logout">Signout</a></li>
         </ul>
@@ -31,12 +29,38 @@
     <div class="admincontainer">
         <div class="subadmincontainer">
             <h2>Edit Home Page Content</h2>
-            <form action="/update_home_content" method="post">
+            <form action="/update_home_content" method="post" >
                 <div class="form-group">
                     <label for="home_content">Home Page Content</label>
-                    <textarea id="home_content" name="home_content" rows="10">{{ home_content }}</textarea>
+                    <textarea id="home_content" name="home_content">{{ home_content }}</textarea>
                 </div>
-                <button type="submit">Save Changes</button>
+                <div class="register-container">
+                        <div class="input-container">
+                            <label>
+                                Upload School Logo:
+                            </label>
+                            <input type="file" name="school_logo">
+                        </div>
+                        <div class="input-container">
+                            <label>
+                                Enter School Name:
+                            </label>
+                            <textarea type="text" id="school_name" name="school_name" placeholder="{{ school_name }}"></textarea>
+                        </div>
+                        <div class="input-container">
+                            <label>
+                                Enter School Contact:
+                            </label>
+                            <textarea type="tel" id="school_tel" name="school_tel" placeholder="{{ school_tel }}"></textarea>
+                        </div>
+                        <div class="input-container">
+                            <label>
+                                Enter School Email:
+                            </label>
+                            <textarea type="email" id="school_email" name="school_email" placeholder="{{ school_email }}"></textarea>
+                        </div>  
+                        <button type="submit">Save Change</button>
+                </div>
             </form>
         </div>
     </div>

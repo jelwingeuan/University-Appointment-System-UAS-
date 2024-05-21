@@ -1,0 +1,7 @@
+/* tailwind.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add HTML or JSX content here that utilizes Tailwind CSS utility classes */
