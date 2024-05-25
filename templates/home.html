@@ -26,7 +26,6 @@
                     <a href="/about">History</a>
                 </div>
             </li>
-            
             <li><a href="/appointment">Make An Appointment</a></li>
             {% if session['logged_in'] == True %}
             <li class="dropdown">
@@ -42,15 +41,14 @@
             <li><a href="/login">Login</a></li>
             <li><a href="/signup">Sign Up</a></li>
             {% endif %}
-        </ul>  
+        </ul>
     </nav>
-    
-    
+
     <div class="homecontent-wrapper">
         <div class="homecontent1">
             <form action="/search" method="get">
-                </i><input type="search" placeholder="Begin your journey here"><i class='bx bx-search-alt-2'></i>
-                <i class='bx bxs-calendar' ></i><input type="date" placeholder="Appointment Date">
+                <input type="search" placeholder="Begin your journey here"><i class='bx bx-search-alt-2'></i>
+                <i class='bx bxs-calendar'></i><input type="date" placeholder="Appointment Date">
                 <input type="time" placeholder="Appointment Time">
                 <button type="submit">Search</button>
             </form>
@@ -60,6 +58,25 @@
             <h2>Multimedia University</h2>
             <p>{{ home_content }}</p>
         </div>
+
+        <!-- School-related content -->
+        <div class="homecontent211">
+            <h2>School Information</h2>
+            <ul>
+                <li><strong>School Name:</strong> {{ school_name }}</li>
+                <li><strong>Contact:</strong> {{ school_tel }}</li>
+                <li><strong>Email:</strong> {{ school_email }}</li>
+            </ul>
+        </div>
+
+        <!-- School logo -->
+        {% if school_logo %}
+        <div class="homecontent211">
+            <h2>School Logo</h2>
+            <img src="{{ url_for('static', filename='uploads/' + school_logo) }}" alt="School Logo">
+        </div>
+        {% endif %}
+
         <div class="homecontent2">
             <div class="homecontent21">
                 <h2>Join us today</h2>
@@ -107,7 +124,6 @@
         </div>
     </div>
     <div class="slidecontainer">
-
         <div class="slide">
             <div class="item" style="background-image: url(https://www.forbes.com/advisor/wp-content/uploads/2022/06/computer_programming.jpeg-900x510.jpg);">
                 <div class="content">
@@ -151,16 +167,12 @@
                     <button>See More</button>
                 </div>
             </div>
-
         </div>
-
         <div class="slidebutton">
             <button class="prev"><i class="fa-solid fa-arrow-left"></i></button>
             <button class="next"><i class="fa-solid fa-arrow-right"></i></button>
         </div>
-
     </div>
-
     <footer class="footer">
         <div class="footer-col">
             <h4>Universal Appointment Booking System</h4>
@@ -171,6 +183,5 @@
             </ul>
         </div>
     </footer>
-
 </body>
 </html>
