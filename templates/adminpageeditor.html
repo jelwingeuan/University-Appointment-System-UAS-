@@ -22,44 +22,44 @@
             <li><i class='bx bx-cart'></i><a href="/appointmentcontrol">Booking Control</a></li>
             <li><i class='bx bx-plus'></i><a href="/faculty">My Faculty</a></li>
             <li><i class='bx bx-plus'></i><a href="/createfacultyhub">Create Faculty</a></li>
-            <li><i class='bx bx-edit'></i><a href="/adminpageeditor">Page Editor</a></li>
-            <li><i class='bx bx-cog'></i><a href="/logout">Signout</a></li>
+            <li><i class='bx bx-edit' ></i><a href="/adminpageeditor">Page Editor</a></li>
+            <li><i class='bx bx-cog' ></i><a href="/logout">Signout</a></li>
         </ul>
     </div>
     <div class="admincontainer">
         <div class="subadmincontainer">
             <h2>Edit Home Page Content</h2>
-            <form action="/update_home_content" method="post" >
+            <form action="/adminpageeditor" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="home_content">Home Page Content</label>
                     <textarea id="home_content" name="home_content">{{ home_content }}</textarea>
                 </div>
                 <div class="register-container">
-                        <div class="input-container">
-                            <label>
-                                Upload School Logo:
-                            </label>
-                            <input type="file" name="school_logo">
-                        </div>
-                        <div class="input-container">
-                            <label>
-                                Enter School Name:
-                            </label>
-                            <textarea type="text" id="school_name" name="school_name" placeholder="{{ school_name }}"></textarea>
-                        </div>
-                        <div class="input-container">
-                            <label>
-                                Enter School Contact:
-                            </label>
-                            <textarea type="tel" id="school_tel" name="school_tel" placeholder="{{ school_tel }}"></textarea>
-                        </div>
-                        <div class="input-container">
-                            <label>
-                                Enter School Email:
-                            </label>
-                            <textarea type="email" id="school_email" name="school_email" placeholder="{{ school_email }}"></textarea>
-                        </div>  
-                        <button type="submit">Save Change</button>
+                    <div class="input-container">
+                        <label>
+                            Upload School Logo:
+                        </label>
+                        <input type="file" name="school_logo">
+                    </div>
+                    <div class="input-container">
+                        <label>
+                            Enter School Name:
+                        </label>
+                        <textarea id="school_name" name="school_name">{{ school_name }}</textarea>
+                    </div>
+                    <div class="input-container">
+                        <label>
+                            Enter School Contact:
+                        </label>
+                        <textarea id="school_tel" name="school_tel">{{ school_tel }}</textarea>
+                    </div>
+                    <div class="input-container">
+                        <label>
+                            Enter School Email:
+                        </label>
+                        <textarea id="school_email" name="school_email">{{ school_email }}</textarea>
+                    </div>
+                    <button type="submit">Save Change</button>
                 </div>
             </form>
         </div>

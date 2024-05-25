@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask import session, flash
 from flask_login import LoginManager, UserMixin, login_required, current_user
+from werkzeug.utils import secure_filename
 from db_functions import (
     update_user_info,
     create_appointment,
@@ -18,7 +19,9 @@ app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.secret_key = "jelwin"
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = "static/uploads"
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
@@ -28,7 +31,6 @@ class User(UserMixin):
         self.username = username
 
 
-# Function to get database connection
 def get_db_connection():
     con = sqlite3.connect("database.db")
     con.row_factory = sqlite3.Row
@@ -37,7 +39,6 @@ def get_db_connection():
 
 @login_manager.user_loader
 def load_user(id):
-    # Load and return a user from the database based on user_id
     con = get_db_connection()
     cur = con.cursor()
     cur.execute("SELECT * FROM users WHERE id = ?", (id,))
@@ -49,19 +50,14 @@ def load_user(id):
     return None
 
 
-
 def load_content():
-    with open("content.json", "r") as f:
-        content = f.read().strip()
-            
-
-    return json.loads(content)
+    with open("content.json") as f:
+        return json.load(f)
 
 
-# Save content to JSON file
 def save_content(content):
     with open("content.json", "w") as f:
-        json.dump(content,f)
+        json.dump(content, f)
 
 
 content_data = load_content()
@@ -70,7 +66,17 @@ home_content = content_data["home_content"]
 
 @app.route("/")
 def home():
-    return render_template("home.html", home_content=home_content)
+    with open("content.json", "r") as file:
+        content = json.load(file)
+
+    return render_template(
+        "home.html",
+        home_content=content["home_content"],
+        school_name=content["school_name"],
+        school_tel=content["school_tel"],
+        school_email=content["school_email"],
+        school_logo=content["school_logo"],  
+    )
 
 
 @app.route("/about")
@@ -78,13 +84,12 @@ def about():
     return render_template("about.html")
 
 
-# Function for hashed password
+
 def hash_password(password):
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     return hashed_password.decode("utf-8")
 
 
-# Route for "sign up"
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
@@ -95,7 +100,7 @@ def signup():
         phone_number = request.form.get("phone_number")
         password = request.form.get("password")
 
-        if not password:  # Check if password is provided
+        if not password: 
             return render_template("signup.html", message="Password is required")
 
         hashed_password = hash_password(password)
@@ -103,7 +108,7 @@ def signup():
         con = get_db_connection()
         cur = con.cursor()
 
-            # Check if email already exists
+    
         cur.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cur.fetchone()
 
@@ -125,7 +130,6 @@ def signup():
 
 
 
-# Route for "log in"
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -136,7 +140,6 @@ def login():
             session["logged_in"] = True
             return redirect("/admin")
         else:
-            # If not admin, proceed with regular user login logic
             con = get_db_connection()
             cur = con.cursor()
             cur.execute("SELECT * FROM users WHERE email = ?", (email,))
@@ -145,7 +148,6 @@ def login():
             if user and bcrypt.checkpw(
                 password.encode("utf-8"), user["password"].encode("utf-8")
             ):
-                # Redirect to the home page upon successful login for regular users
                 session["logged_in"] = True
                 session["id"] = user[0]
                 
@@ -158,7 +160,7 @@ def login():
         return render_template("login.html")
 
 
-# Route for updating user information
+
 @app.route("/update_user_info", methods=["POST"])
 def update_user():
     if request.method == "POST":
@@ -170,7 +172,6 @@ def update_user():
         return redirect("/profile")
 
 
-# Route for changing password
 @app.route("/change_password", methods=["GET", "POST"])
 def change_password():
     if request.method == "POST":
@@ -178,13 +179,11 @@ def change_password():
         new_password = request.form.get("new_password")
         confirm_password = request.form.get("confirm_password")
 
-        # Verify if new password and confirm password match
         if new_password != confirm_password:
             return render_template(
                 "profile.html", message="New password and confirm password do not match"
             )
 
-        # Verify if the current password is correct
         con = get_db_connection()
         cur = con.cursor()
         cur.execute("SELECT password FROM users WHERE id = ?", (session["id"],))
@@ -195,7 +194,7 @@ def change_password():
         ):
             return render_template("profile.html", message="Incorrect current password")
 
-        # Update the password in the database
+
         hashed_new_password = hash_password(new_password)
         cur.execute(
             "UPDATE users SET password = ? WHERE id = ?",
@@ -204,10 +203,8 @@ def change_password():
         con.commit()
         con.close()
 
-        # Redirect the user to a success page or profile page
         return redirect("/profile")
     else:
-        # Render the profile page with the password change form
         return render_template("profile.html")
 
 
@@ -297,7 +294,7 @@ def l_appointment():
 def l_approval():
     return redirect(url_for("l_approval"))
 
- 
+
 @app.route("/appointment")
 def appointment():
     return render_template("appointment.html")
@@ -310,11 +307,9 @@ def appointment2():
 
 @app.route("/admin")
 def admin_dashboard():
-    # Connect to the database
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Execute SQL queries to get the counts based on role
     cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'teacher'")
     num_teachers = cursor.fetchone()[0]
 
@@ -332,7 +327,6 @@ def admin_dashboard():
     )
     appointments = cursor.fetchall()
 
-    # Close the cursor and connection
     cursor.close()
     conn.close()
 
@@ -365,39 +359,48 @@ def delete_user(id):
     conn.close()
 
 
-@app.route('/adminpageeditor', methods=['GET', 'POST'])
+@app.route("/adminpageeditor", methods=["GET", "POST"])
 def admin_page_editor():
-    if request.method == 'POST':
-        
-        # Get form data
-        home_content = request.form.get('home_content')
-        school_name = request.form.get('school_name')
-        school_tel = request.form.get('school_tel')
-        school_email = request.form.get('school_email')
+    content = load_content()  
 
-            # Update content with new data
-        content['home_content'] = home_content
-        content['school_name'] = school_name
-        content['school_tel'] = school_tel
-        content['school_email'] = school_email
+    if request.method == "POST":
+        home_content = request.form.get("home_content")
+        school_name = request.form.get("school_name")
+        school_tel = request.form.get("school_tel")
+        school_email = request.form.get("school_email")
 
-            # Save updated content to JSON file
+
+        if "school_logo" in request.files:
+            file = request.files["school_logo"]
+            if file.filename != "":
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            else:
+                filename = ""  
+
+        content.update(
+            {
+                "home_content": home_content,
+                "school_name": school_name,
+                "school_tel": school_tel,
+                "school_email": school_email,
+                "school_logo": filename,
+            }
+        )
+
         save_content(content)
 
-        return redirect('/adminpageeditor')
-    
-    # For GET request, load content to display in the form
-    content = load_content()
-    return render_template('adminpageeditor.html', **content)
+        return redirect(url_for("admin_page_editor"))
 
+    return render_template("adminpageeditor.html", **content)
 
 
 @app.route("/update_home_content", methods=["POST"])
 def update_home_content():
-    global home_content
+    content = load_content()
     home_content = request.form["home_content"]
-    content_data["home_content"] = home_content
-    save_content(content_data)
+    content["home_content"] = home_content
+    save_content(content)
     return redirect("/adminpageeditor")
 
 
@@ -406,7 +409,6 @@ def delete_user_route():
     id = request.form["id"]
     delete_user(id)
     return redirect("/usercontrol")
-
 
 
 @app.route("/changepassword")
@@ -421,14 +423,15 @@ def history():
 
 @app.route("/faculty")
 def faculty():
-    # Retrieve faculty information from the database
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
     faculty_info = cursor.fetchall()
     conn.close()
 
-    # Render the faculty.html template with the faculty_info variable
+    for faculty in faculty_info:
+        print(f"Name: {faculty[0]}, Image: {faculty[1]}")
+
     return render_template("faculty.html", faculty_info=faculty_info)
 
 
@@ -436,7 +439,6 @@ def faculty():
 def faculty_hub_page(hub_id=None):
     try:
         if hub_id:
-            # Retrieve faculty hub information from the database based on hub_id
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
@@ -446,13 +448,10 @@ def faculty_hub_page(hub_id=None):
             conn.close()
 
             if faculty_hub:
-                # Render the faculty hub page with the relevant information
                 return render_template("facultyhub.html", faculty_hub=faculty_hub)
             else:
-                # If faculty hub not found, render an error page or redirect to another page
                 return render_template("error.html", message="Faculty Hub Not Found")
         else:
-            # Handle the case when hub_id is not provided
             return render_template(
                 "error.html", message="Please provide a valid Faculty Hub ID"
             )
@@ -475,18 +474,16 @@ def create_faculty_hub():
             )
 
         try:
-            # Save image to server
             if not os.path.exists(app.config["UPLOAD_FOLDER"]):
                 os.makedirs(app.config["UPLOAD_FOLDER"])
 
             image_path = os.path.join(
                 app.config["UPLOAD_FOLDER"], faculty_image.filename
             )
-            print("Image Path:", image_path)  # Debugging print statement
+            print("Image Path:", image_path) 
 
             faculty_image.save(image_path)
 
-            # Insert faculty hub info into database
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
@@ -496,10 +493,10 @@ def create_faculty_hub():
             conn.commit()
 
             conn.close()
-            print("Faculty hub created successfully!")  # Debugging print statement
+            print("Faculty hub created successfully!")  
             return redirect(url_for("create_faculty_hub"))
         except Exception as e:
-            print("Error occurred:", e)  # Debugging print statement
+            print("Error occurred:", e) 
             return render_template(
                 "createfacultyhub.html",
                 message="An error occurred while creating faculty hub",
@@ -512,7 +509,6 @@ def create_faculty_hub():
         faculty_hubs = cursor.fetchall()
         conn.close()
         return render_template("createfacultyhub.html", faculty_hubs=faculty_hubs)
-
 
 
 @app.route("/profile")
@@ -554,13 +550,12 @@ def create_booking():
     user_data = cursor.fetchone()
     conn.close()
 
-    # After successful login
     session["username"] = user_data["username"]
 
 
     if request.method == "POST":
         booking_id = random.randint(100000, 999999)
-        student = session["username"]  # Use dictionary access for session data
+        student = session["username"] 
         lecturer = request.form.get("lecturer")
         purpose = request.form.get("purpose")
         appointment_date = request.form.get("appointment_date")
@@ -584,28 +579,22 @@ def create_booking():
         return redirect("/invoice")
 
 
-
-
 @app.route("/invoice")
 def render_template_invoice():
-    # Ensure the session has the current user ID
     user_id = session.get("id")
 
-    # Fetch user data from the database using the session user ID
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
     user_data = cursor.fetchone()
     conn.close()
 
-    # Store necessary user data in the session
     session["username"] = user_data["username"]
     session["role"] = user_data["role"]
     session["faculty"] = user_data["faculty"]
     session["email"] = user_data["email"]
     session["phone_number"] = user_data["phone_number"]
 
-    # Fetch the latest appointment data using the appointment ID stored in the session
     appointment_id = session.get("appointment_id")
 
     conn = get_db_connection()
@@ -634,7 +623,6 @@ def appointmentcontrol():
     )
     appointments = cursor.fetchall()
 
-    # Close the cursor and connection
     cursor.close()
     conn.close()
 
@@ -681,13 +669,9 @@ def user_booking_history():
     return render_template("booking_history.html", appointments=appointments, display_role=display_role, role=role)
 
 
-
-
-
 @app.route("/cancel_booking", methods=["POST"])
 def cancel_booking():
 
-    # Get the booking ID from the form
     booking_id = request.form.get("id")
 
     try:
@@ -703,13 +687,11 @@ def cancel_booking():
 
 @app.route("/accept_booking", methods=["POST"])
 def accept_booking():
-    # Get the booking ID from the form
     booking_id = request.form.get("id")
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # Update the status to "accept" for the booking with the provided ID
         cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("accept", booking_id))
         conn.commit()
     finally:
@@ -718,8 +700,5 @@ def accept_booking():
     return redirect("/bookinghistory")
 
 
-
-
 if __name__ == "__main__":
-    # Run the application
     app.run(debug=True, port=6969)
