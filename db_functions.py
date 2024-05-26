@@ -65,12 +65,12 @@ def update_appointment(appointment_id, new_date, new_time, new_purpose):
 
 
 # Function to delete an appointment
-def delete_appointment(appointment_id):
+def delete_appointment(id):
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
         "DELETE FROM appointments WHERE id = ?",
-        (appointment_id,)
+        (id,)
         )
         conn.commit()
         conn.close()
