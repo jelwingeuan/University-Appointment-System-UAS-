@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask import session, flash
 from flask_login import LoginManager, UserMixin, login_required, current_user
+from create_tables import get_db_connection
 import sqlite3
 import bcrypt
 import random
@@ -8,13 +9,6 @@ import os
 
 
 app = Flask(__name__)
-
-# Function to get database connection
-def get_db_connection():
-        con = sqlite3.connect("database.db")
-        con.row_factory = sqlite3.Row
-        return con
-
 
 # Function for updating student info
 def update_user_info(id, username, email, phone_number):
