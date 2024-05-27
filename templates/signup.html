@@ -1,49 +1,58 @@
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Sign Up</title>
-        <link rel="stylesheet" href="../static/style.css">
-        <script src="myscripts.js"></script>
-    </head>
-    <body>
-        <nav>
-            <ul>
-                <li><a href="/">Home</a></li>
-                <li><a href="/about">About</a></li>
-                <li><a href="/appointment">Make An Appointment</a></li>
-                {% if session['logged_in'] == True %}
-                <li><a href="/logout">Logout </a></li>
-                <li><a href="/profile">Profile </a></li>
-                {% else %}
-                <li><a href="/login">Login</a></li>
-                <li><a href="/signup">Sign Up</a></li> <!-- Sign-up link -->
-                {% endif %}
-            </ul>  
-        </nav>
-        <div class="wrapper">
-            <h1>Sign Up</h1>
-            <form method="post" action="/signup">
-                <div class="role">
-                    <label>Choose your role</label>
-                    <div class="role-options">
-                        <input type="radio" name="role" value="student">
-                        <label for="student">Student</label>
-                        <input type="radio" name="role" value="teacher">
-                        <label for="teacher">Teacher</label>
-                      </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <script src="myscripts.js"></script>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/appointment">Make An Appointment</a></li>
+            {% if session['logged_in'] == True %}
+            <li><a href="/logout">Logout </a></li>
+            <li><a href="/profile">Profile </a></li>
+            {% else %}
+            <li><a href="/login">Login</a></li>
+            <li><a href="/signup">Sign Up</a></li> <!-- Sign-up link -->
+            {% endif %}
+        </ul>
+    </nav>
+    <div class="wrapper">
+        <h1>Sign Up</h1>
+        <form method="post" action="/signup">
+            <div class="role">
+                <label>Choose your role</label>
+                <div class="role-options">
+                    <input type="radio" name="role" value="student" id="studentRole">
+                    <label for="student">Student</label>
+                    <input type="radio" name="role" value="teacher" id="teacherRole">
+                    <label for="teacher">Teacher</label>
                 </div>
-                    <div class="profileinput">
-                        <label>Faculty</label><select class="profileinputdetails" name="faculty" required>
-                            <option value="FCI">FCI</option>
-                            <option value="FCM">FCM</option>
-                            <option value="FOM">FOM</option>
-                            <option value="FOM">FOE</option>
-                            <option value="FOM">FAC</option>
-                            <option value="FOM">FCA</option>
-                        </select>
-                    </div>
+            </div>
+            <div id="pinInput" style="display: none;">
+                <label for="pin">Enter PIN:</label>
+                <input type="password" name="pin" id="pin">
+                <button type="button" onclick="validatePin()">Submit PIN</button>
+                <button type="button" onclick="retractPin()">Retract</button>
+                <p id="pinMessage" style="color: red;"></p>
+            </div>
+            <div id="signupDetails" style="display: none;">
+                <div class="profileinput">
+                    <label>Faculty</label>
+                    <select class="profileinputdetails" name="faculty" required>
+                        <option value="FCI">FCI</option>
+                        <option value="FCM">FCM</option>
+                        <option value="FOM">FOM</option>
+                        <option value="FOE">FOE</option>
+                        <option value="FAC">FAC</option>
+                        <option value="FCA">FCA</option>
+                    </select>
+                </div>
                 <div class="input_box">
                     <input type="text" name="username" required>
                     <span></span>
@@ -69,25 +78,48 @@
                     <span></span>
                     <label for="confirmPasswordField">Confirm your password</label>
                 </div>
-                
                 <input type="submit" value="Sign Up">
-            </form>
+            </div>
+        </form>
+    </div>
+    <div class="footer-wrapper">
+        <footer class="footer">
+            <div class="footer-col">
+                <h4>Universal Appointment Booking System</h4>
+                <ul>
+                    <li><a href="#">about us</a></li>
+                    <li><a href="#">our services</a></li>
+                    <li><a href="#">book now</a></li>
+                </ul>
+            </div>
+        </footer>
+    </div>
+    <script>
+        document.getElementById('studentRole').addEventListener('click', function() {
+            document.getElementById('pinInput').style.display = 'none';
+            document.getElementById('signupDetails').style.display = 'block';
+        });
 
-        </div>
+        document.getElementById('teacherRole').addEventListener('click', function() {
+            document.getElementById('signupDetails').style.display = 'none';
+            document.getElementById('pinInput').style.display = 'block';
+        });
 
+        function validatePin() {
+            const pin = document.getElementById('pin').value;
+            if (pin === '6969') {
+                document.getElementById('pinInput').style.display = 'none';
+                document.getElementById('signupDetails').style.display = 'block';
+            } else {
+                document.getElementById('pinMessage').innerText = 'PIN is incorrect';
+            }
+        }
 
-        <div class="footer-wrapper">
-            <footer class="footer">
-                    <div class="footer-col">
-                        <h4>Universal Appointment Booking System</h4>
-                            <ul>
-                                <li><a href="#">about us</a></li>
-                                <li><a href="#">our services</a></li>
-                                <li><a href="#">book now</a></li>
-                            </ul>
-                    </div>
-            </footer>
-        </div>
-
-    </body>
-    </html>
+        function retractPin() {
+            document.getElementById('pinInput').style.display = 'none';
+            document.getElementById('signupDetails').style.display = 'none';
+            document.getElementById('teacherRole').checked = false;
+        }
+    </script>
+</body>
+</html>

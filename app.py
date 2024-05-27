@@ -79,7 +79,6 @@ def about():
     return render_template("about.html")
 
 
-
 def hash_password(password):
     hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     return hashed_password.decode("utf-8")
@@ -94,8 +93,12 @@ def signup():
         email = request.form.get("email")
         phone_number = request.form.get("phone_number")
         password = request.form.get("password")
+        pin = request.form.get("pin")
 
-        if not password: 
+        if role == "teacher" and pin != "6969":
+            return render_template("signup.html", message="PIN is incorrect")
+
+        if not password:
             return render_template("signup.html", message="Password is required")
 
         hashed_password = hash_password(password)
@@ -103,7 +106,6 @@ def signup():
         con = get_db_connection()
         cur = con.cursor()
 
-    
         cur.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cur.fetchone()
 
@@ -122,7 +124,6 @@ def signup():
             return redirect("/login")
     else:
         return render_template("signup.html")
-
 
 
 @app.route("/login", methods=["GET", "POST"])
