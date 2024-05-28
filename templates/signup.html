@@ -14,11 +14,11 @@
             <li><a href="/about">About</a></li>
             <li><a href="/appointment">Make An Appointment</a></li>
             {% if session['logged_in'] == True %}
-            <li><a href="/logout">Logout </a></li>
-            <li><a href="/profile">Profile </a></li>
+            <li><a href="/logout">Logout</a></li>
+            <li><a href="/profile">Profile</a></li>
             {% else %}
             <li><a href="/login">Login</a></li>
-            <li><a href="/signup">Sign Up</a></li> <!-- Sign-up link -->
+            <li><a href="/signup">Sign Up</a></li>
             {% endif %}
         </ul>
     </nav>
@@ -29,9 +29,9 @@
                 <label>Choose your role</label>
                 <div class="role-options">
                     <input type="radio" name="role" value="student" id="studentRole">
-                    <label for="student">Student</label>
+                    <label for="studentRole">Student</label>
                     <input type="radio" name="role" value="teacher" id="teacherRole">
-                    <label for="teacher">Teacher</label>
+                    <label for="teacherRole">Teacher</label>
                 </div>
             </div>
             <div id="pinInput" style="display: none;">
@@ -107,12 +107,16 @@
 
         function validatePin() {
             const pin = document.getElementById('pin').value;
-            if (pin === '6969') {
-                document.getElementById('pinInput').style.display = 'none';
-                document.getElementById('signupDetails').style.display = 'block';
-            } else {
-                document.getElementById('pinMessage').innerText = 'PIN is incorrect';
-            }
+            fetch('/getpin')
+                .then(response => response.json())
+                .then(data => {
+                    if (pin === data.pin) {
+                        document.getElementById('pinInput').style.display = 'none';
+                        document.getElementById('signupDetails').style.display = 'block';
+                    } else {
+                        document.getElementById('pinMessage').innerText = 'PIN is incorrect';
+                    }
+                });
         }
 
         function retractPin() {

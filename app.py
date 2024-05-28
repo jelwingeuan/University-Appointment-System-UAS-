@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask import session, flash
 from flask_login import LoginManager, UserMixin
 from werkzeug.utils import secure_filename
@@ -41,9 +41,18 @@ def load_user(id):
     con.close()
     if user:
         return User(user['id'], user['username'])
-    
+
     return None
 
+
+def load_pin():
+    with open("pin.json", "r") as file:
+        return json.load(file)["pin"]
+
+
+def save_pin(new_pin):
+    with open("pin.json", "w") as file:
+        json.dump({"pin": new_pin}, file)
 
 def load_content():
     with open("content.json") as f:
@@ -95,8 +104,10 @@ def signup():
         password = request.form.get("password")
         pin = request.form.get("pin")
 
-        if role == "teacher" and pin != "6969":
-            return render_template("signup.html", message="PIN is incorrect")
+        if role == "teacher":
+            stored_pin = load_pin()
+            if pin != stored_pin:
+                return render_template("signup.html", message="PIN is incorrect")
 
         if not password:
             return render_template("signup.html", message="Password is required")
@@ -468,22 +479,22 @@ def delete_user(id):
 
 @app.route("/adminpageeditor", methods=["GET", "POST"])
 def admin_page_editor():
-    content = load_content()  
+    content = load_content()
 
     if request.method == "POST":
         home_content = request.form.get("home_content")
         school_name = request.form.get("school_name")
         school_tel = request.form.get("school_tel")
         school_email = request.form.get("school_email")
+        new_pin = request.form.get("new_pin")
+        retype_new_pin = request.form.get("retype_new_pin")
 
-
+        filename = ""
         if "school_logo" in request.files:
             file = request.files["school_logo"]
             if file.filename != "":
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-            else:
-                filename = ""  
 
         content.update(
             {
@@ -497,9 +508,25 @@ def admin_page_editor():
 
         save_content(content)
 
+        if new_pin and retype_new_pin:
+            if new_pin == retype_new_pin:
+                save_pin(new_pin)
+            else:
+                return render_template(
+                    "adminpageeditor.html",
+                    **content,
+                    pin=load_pin(),
+                    message="PINs do not match",
+                )
+
         return redirect(url_for("admin_page_editor"))
 
-    return render_template("adminpageeditor.html", **content)
+    return render_template("adminpageeditor.html", **content, pin=load_pin())
+
+
+@app.route("/getpin", methods=["GET"])
+def get_pin():
+    return jsonify({"pin": load_pin()})
 
 
 @app.route("/update_home_content", methods=["POST"])
