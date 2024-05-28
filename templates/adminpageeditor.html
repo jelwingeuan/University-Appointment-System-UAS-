@@ -36,28 +36,32 @@
                 </div>
                 <div class="register-container">
                     <div class="input-container">
-                        <label>
-                            Upload School Logo:
-                        </label>
+                        <label>Upload School Logo:</label>
                         <input type="file" name="school_logo">
                     </div>
                     <div class="input-container">
-                        <label>
-                            Enter School Name:
-                        </label>
+                        <label>Enter School Name:</label>
                         <textarea id="school_name" name="school_name">{{ school_name }}</textarea>
                     </div>
                     <div class="input-container">
-                        <label>
-                            Enter School Contact:
-                        </label>
+                        <label>Enter School Contact:</label>
                         <textarea id="school_tel" name="school_tel">{{ school_tel }}</textarea>
                     </div>
                     <div class="input-container">
-                        <label>
-                            Enter School Email:
-                        </label>
+                        <label>Enter School Email:</label>
                         <textarea id="school_email" name="school_email">{{ school_email }}</textarea>
+                    </div>
+                    <div class="input-container">
+                        <label>Current Teacher PIN:</label>
+                        <input type="text" name="current_pin" value="{{ pin }}" readonly>
+                    </div>
+                    <div class="input-container">
+                        <label>New Teacher PIN:</label>
+                        <input type="password" name="new_pin" placeholder="Enter new PIN">
+                    </div>
+                    <div class="input-container">
+                        <label>Retype New Teacher PIN:</label>
+                        <input type="password" name="retype_new_pin" placeholder="Retype new PIN">
                     </div>
                     <button type="submit">Save Change</button>
                 </div>
