@@ -16,7 +16,7 @@ login_manager.init_app(app)
 app.secret_key = "jelwin"
 UPLOAD_FOLDER = os.path.join(
     app.static_folder, "faculty_pp"
-)  # Correctly set the upload folder path
+) 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -565,18 +565,13 @@ def faculty():
     faculty_info = cursor.fetchall()
     conn.close()
 
-    # Convert the fetched data to a list of dictionaries for easier template handling
     faculty_info = [
         {"faculty_name": faculty[0], "faculty_image": faculty[1]}
         for faculty in faculty_info
     ]
 
-    # Debugging output
-    app.logger.debug("Faculty Info:")
     for faculty in faculty_info:
-        app.logger.debug(
-            f"Name: {faculty['faculty_name']}, Image: {faculty['faculty_image']}"
-        )
+        print(f"Name: {faculty['faculty_name']}, Image: {faculty['faculty_image']}")
 
     return render_template("faculty.html", faculty_info=faculty_info)
 
@@ -622,15 +617,14 @@ def create_faculty_hub():
 
         try:
             filename = secure_filename(faculty_image.filename)
-            image_path = os.path.join(
-                app.config["UPLOAD_FOLDER"], filename
-            )  # Directly use the correct path
+            image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
-            # Save the image file to the specified path
+ 
             faculty_image.save(image_path)
 
-            # Store the relative path to the image in the database
-            relative_image_path = os.path.join("faculty_pp", filename)
+            print(f"Saved file to {image_path}")
+
+            relative_image_path = filename
 
             conn = get_db_connection()
             cursor = conn.cursor()
