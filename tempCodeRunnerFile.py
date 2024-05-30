@@ -571,13 +571,6 @@ def faculty():
         for faculty in faculty_info
     ]
 
-    # Debugging output
-    app.logger.debug("Faculty Info:")
-    for faculty in faculty_info:
-        app.logger.debug(
-            f"Name: {faculty['faculty_name']}, Image: {faculty['faculty_image']}"
-        )
-
     return render_template("faculty.html", faculty_info=faculty_info)
 
 
