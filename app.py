@@ -3,7 +3,7 @@ from flask import session, flash
 from flask_login import LoginManager, UserMixin
 from werkzeug.utils import secure_filename
 from db_functions import update_user_info, delete_appointment
-from lecturer_calendar import set_availability, get_available_slots
+from lecturer_calendar import event_record, event_repeat
 import sqlite3
 import bcrypt
 import random
@@ -347,40 +347,44 @@ def accept_booking():
 
     return redirect("/bookinghistory")
 
-# lecturer
-@app.route("/set_availability", methods=["GET", "POST"])
-def set_availability_route():
+# lecturer\
+@app.route("/calendar", methods=["GET", "POST"])
+def create_event():
     if request.method == "POST":
-        lecturer = request.form.get("lecturer")
-        available_date = request.form.get("available_date")
-        available_hour_start = request.form.get("available_hour_start")
-        available_hour_end = request.form.get("available_hour_end")
-        time_slot_start = request.form.get("time_slot_start")
-        time_slot_end = request.form.get("time_slot_end")
-        slot_duration = request.form.get("slot_duration")
-
-        set_availability(lecturer, available_date, available_hour_start, available_hour_end, time_slot_start, time_slot_end, slot_duration)
+        student = request.form["student"]
+        lecturer = request.form["lecturer"]
+        event_title = request.form["event_title"]
+        event_date = request.form["event_date"]
+        start_time = request.form["start_time"]
+        end_time = request.form["end_time"]
+        purpose = request.form["purpose"]
+        status = request.form.get("status", "Pending")
         
-        return redirect(url_for("set_availability_route"))
+        event_record(student, lecturer, event_title, event_date, start_time, end_time, purpose, status)
+        
+        return redirect(url_for("calendar"))
     
-    return render_template("set_availability.html")
+    return render_template("calendar.html")
 
 
-# lecturer
-@app.route('/get_available_slots', methods=['GET'])
-def get_available_slots_route():
-    lecturer = request.args.get('lecturer')
-    available_date = request.args.get('available_date')
 
-    if not lecturer or not available_date:
-        return render_template("get_available_slots.html", message="lecturer_id or available_date MISSING!")
-
-    slots = get_available_slots(lecturer, available_date)
-    if not slots:
-        return render_template("get_available_slots.html", message="No available slots found for the specified lecturer and date.")
-
-    return render_template("get_available_slots.html", slots=slots)
-
+@app.route("/calendar", methods=["GET", "POST"])
+def repeat_event():
+    if request.method == "POST":
+        appointment_id = request.form["appointment_id"]
+        repeat_type = request.form["repeat_type"]
+        repeat_until = request.form.get("repeat_until")
+        
+        result = event_repeat(appointment_id, repeat_type, repeat_until)
+        
+        if result == "Appointment not found.":
+            return render_template("calendar.html", message= "Appointment Not Found.")
+        elif result == "Invalid repeat type.":
+            return render_template("calendar.html", message= "Invalid Repeat Type.")
+        
+        return redirect(url_for("calendar"))
+    
+    
 
 @app.route("/appointment")
 def appointment():
