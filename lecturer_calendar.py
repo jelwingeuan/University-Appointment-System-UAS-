@@ -1,93 +1,68 @@
 
 from create_tables import get_db_connection
-import datetime
+from datetime import datetime, timedelta
 
-def event_record(student, lecturer, event_title, event_date, start_time, end_time, purpose, status="Pending"):
+def calendar_record(lecturer, event_title, event_date, start_time, end_time):
     con = get_db_connection()
     cur = con.cursor()
     
     cur.execute("""
-        INSERT INTO appointments (student, lecturer, event_title, event_date, start_time, end_time, purpose, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (student, lecturer, event_title, event_date, start_time, end_time, purpose, status))
+        INSERT INTO calendar (lecturer, event_title, event_date, start_time, end_time)
+        VALUES (?, ?, ?, ?, ?)
+    """, (lecturer, event_title, event_date, start_time, end_time))
     
     con.commit()
     con.close()
 
 
-def event_repeat(id, repeat_type, repeat_until=None):
+def calendar_repeat(event_title, repeat_type, repeat_count):
     con = get_db_connection()
     cur = con.cursor()
     
     cur.execute("""SELECT *
-                FROM appointments WHERE id = ?""", (id,)
+                FROM calendar WHERE event_title = ?""", (event_title,)
                 )
-    appointment = cur.fetchone()
+    event = cur.fetchone()
     
-    if not appointment:
-        print("Appointment not found.")
-        return
-
-    student, lecturer, event_title, event_date, start_time, end_time, purpose, status = appointment[1:]
-    
-    if repeat_type == "None":
-        return
-
-    repeat_date = datetime.datetime.strptime(event_date, "%Y-%m-%d")
-    repeat_until = datetime.datetime.strptime(repeat_until, "%Y-%m-%d") if repeat_until else None
-    
-    while True:
-        if repeat_type == "Daily":
-            repeat_date += datetime.timedelta(days=1)
-        elif repeat_type == "Weekly":
-            repeat_date += datetime.timedelta(weeks=1)
-        elif repeat_type == "Monthly":
-            month = repeat_date.month + 1 if repeat_date.month < 12 else 1
-            year = repeat_date.year + 1 if month == 1 else repeat_date.year
-            repeat_date = repeat_date.replace(year=year, month=month)
-        else:
-            print("Invalid repeat type.")
-            return
-
-        if repeat_until and repeat_date > repeat_until:
-            break
-        
-        cur.execute("""
-            INSERT INTO appointments (student, lecturer, event_title, event_date, start_time, end_time, purpose, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (student, lecturer, event_title, repeat_date.strftime("%Y-%m-%d"), start_time, end_time, purpose, status))
-        
-        cur.execute("""
-        INSERT INTO repeat_appointments (booking_id, repeat_type, repeat_until)
-        VALUES (?, ?, ?)
-    """, (id, repeat_type, repeat_until.strftime("%Y-%m-%d") if repeat_until else None))
-        
-        con.commit()
+    if event is None:
         con.close()
+        print("Event not found")
+        return None
+
+    lecturer = event["lecturer"]
+    start_time = event["start_time"]
+    end_time = event["end_time"]
     
+    try:
+        event_date = datetime.strptime(event["event_date"], "%Y-%m-%d")
+    except ValueError:
+        con.close()
+        print("Invalid date format. Expected YYYY-MM-DD.")
+        return None
     
-
-def book_slot(student, lecturer, booking_date, time_slot_start, time_slot_end):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Check if the slot is available
-    cursor.execute('''
-        SELECT COUNT(*) FROM lecturer_availability
-        WHERE lecturer = ? AND available_date = ? AND time_slot_start = ? AND time_slot_end = ?
-    ''', (lecturer, booking_date, time_slot_start, time_slot_end))
-    count = cursor.fetchone()[0]
-
-    if count == 0:
-        conn.close()
-        return "Slot is not available"
-
-    # Book the slot
-    cursor.execute('''
-        INSERT INTO bookings (student, lecturer, booking_date, time_slot_start, time_slot_end)
-        VALUES (?, ?, ?, ?, ?)
-    ''', (student, lecturer, booking_date, time_slot_start, time_slot_end))
-    conn.commit()
-    conn.close()
-    return "Booking successful"
+    if repeat_count == 1:
+        con.close()
+        return True
+    
+    for i in range(1,repeat_count):
+        if repeat_type == "daily":
+            event_date += timedelta(days=1)
+        elif repeat_type == "weekly":
+            event_date += timedelta(weeks=1)
+        elif repeat_type == "monthly":
+            new_month = event_date.month + 1
+            new_year = event_date.year
+            if new_month > 12:
+                new_month = 1
+                new_year += 1
+            event_date = event_date.replace(year=new_year, month=new_month)
+            
+        cur.execute("""
+            INSERT INTO calendar (lecturer, event_title, event_date, start_time, end_time)
+        """, (lecturer, event_title, event_date.strftime("%Y-%m-%d"), start_time, end_time)
+        )
+        
+    con.commit()
+    con.close()
+    return True
 
