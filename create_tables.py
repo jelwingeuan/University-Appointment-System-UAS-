@@ -23,7 +23,7 @@ cur.execute(
         email TEXT NOT NULL UNIQUE,
         phone_number TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL
-        )"""
+    )"""
 )
 
 # Create "appointments" table
@@ -33,9 +33,10 @@ cur.execute(
         booking_id INTEGER NOT NULL,
         student TEXT NOT NULL,
         lecturer TEXT NOT NULL,
-        booking_date TEXT NOT NULL,
-        time_slot_start TEXT NOT NULL,
-        time_slot_end TEXT NOT NULL,
+        event_title TEXT NOT NULL,
+        event_date TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
         purpose TEXT NOT NULL,
         status TEXT NOT NULL,
         FOREIGN KEY (student) REFERENCES users (username),
@@ -43,22 +44,17 @@ cur.execute(
     )"""
 )
 
-
-# Create "calendar" table
+# Create "repeat_appointments" table
 cur.execute(
-    """CREATE TABLE IF NOT EXISTS calendar (
+    """CREATE TABLE IF NOT EXISTS repeat_calendar (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        lecturer INTEGER NOT NULL,
-        available_date DATE NOT NULL,
-        available_hour_start TIME NOT NULL,
-        available_hour_end TIME NOT NULL,
-        time_slot_start TIME NOT NULL,
-        time_slot_end TIME NOT NULL,
-        slot_duration TEXT CHECK(slot_duration IN ('15', '30', '45')) NOT NULL,
-        FOREIGN KEY (lecturer) REFERENCES users(username)  
-    )
-    """
+        booking_id INTEGER NOT NULL,
+        repeat_type TEXT NOT NULL,
+        repeat_until DATE,
+        FOREIGN KEY (booking_id) REFERENCES appointments(id)
+    )"""
 )
+
 
 # Create "facultyhub" table
 cur.execute(
