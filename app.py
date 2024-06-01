@@ -3,7 +3,7 @@ from flask import session, flash
 from flask_login import LoginManager, UserMixin
 from werkzeug.utils import secure_filename
 from db_functions import update_user_info, delete_appointment
-from lecturer_calendar import event_record, event_repeat
+from lecturer_calendar import calendar_record, calendar_repeat
 import sqlite3
 import bcrypt
 import random
@@ -354,18 +354,15 @@ def accept_booking():
 
 # lecturer\
 @app.route("/calendar", methods=["GET", "POST"])
-def create_event():
+def create_calendar():
     if request.method == "POST":
-        student = request.form["student"]
         lecturer = request.form["lecturer"]
         event_title = request.form["event_title"]
         event_date = request.form["event_date"]
         start_time = request.form["start_time"]
         end_time = request.form["end_time"]
-        purpose = request.form["purpose"]
-        status = request.form.get("status", "Pending")
         
-        event_record(student, lecturer, event_title, event_date, start_time, end_time, purpose, status)
+        calendar_record(lecturer, event_title, event_date, start_time, end_time)
         
         return redirect(url_for("calendar"))
     
@@ -374,22 +371,36 @@ def create_event():
 
 
 @app.route("/calendar", methods=["GET", "POST"])
-def repeat_event():
+def repeat_calendar():
     if request.method == "POST":
-        appointment_id = request.form["appointment_id"]
+        event_title = request.form["event_title"]
         repeat_type = request.form["repeat_type"]
-        repeat_until = request.form.get("repeat_until")
+        repeat_count = int(request.form["repeat_count"])
         
-        result = event_repeat(appointment_id, repeat_type, repeat_until)
+        if repeat_type not in ["daily", "weekly", "monthly"]:
+            return render_template("calendar.html", message="Invalid repeat type. Must be daily, weekly, or monthly.")
         
-        if result == "Appointment not found.":
-            return render_template("calendar.html", message= "Appointment Not Found.")
-        elif result == "Invalid repeat type.":
-            return render_template("calendar.html", message= "Invalid Repeat Type.")
+        if repeat_count < 1:
+            return render_template("calendar.html", message="Repeat count must be at least 1.")
+        
+        result = calendar_repeat(event_title, repeat_type, repeat_count)
+        
+        if result is None:
+            return render_template("calendar.html", message="Event not found or invalid date format.")
         
         return redirect(url_for("calendar"))
+
+
+@app.route("/calendar")
+def calendar():
+    con = get_db_connection()
+    cur = con.cursor()
     
+    cur.execute("SELECT * FROM calendar")
+    events = cur.fetchall()
+    con.close()
     
+    return render_template("calendar.html", events=events)
 
 @app.route("/appointment")
 def appointment():
