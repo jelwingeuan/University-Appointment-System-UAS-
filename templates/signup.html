@@ -24,6 +24,19 @@
     </nav>
     <div class="wrapper">
         <h1>Sign Up</h1>
+        <!-- Flash message section -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="flashes">
+              {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+        <!-- Notice for incorrect email format -->
+        <p id="emailFormatNotice" style="color: red;"></p>
+        <p id="emailNotice" style="color: red;"></p>
         <form method="post" action="/signup">
             <div class="role">
                 <label>Choose your role</label>
@@ -95,11 +108,13 @@
         document.getElementById('studentRole').addEventListener('click', function() {
             document.getElementById('pinInput').style.display = 'none';
             document.getElementById('signupDetails').style.display = 'block';
+            document.getElementById('emailFormatNotice').innerText = 'Note: Students must use an @student.mmu.edu.com email address.';
         });
 
         document.getElementById('teacherRole').addEventListener('click', function() {
             document.getElementById('signupDetails').style.display = 'none';
             document.getElementById('pinInput').style.display = 'block';
+            document.getElementById('emailFormatNotice').innerText = 'Note: Teachers must use an @lecturer.mmu.edu.com email address.';
         });
 
         function validatePin() {

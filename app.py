@@ -107,12 +107,29 @@ def signup():
         pin = request.form.get("pin")
 
         if role == "teacher":
+            if not email.endswith("@lecturer.mmu.edu.com"):
+                flash(
+                    "SIGN IN FAILED. Lecturers must use an @lecturer.mmu.edu.com email.",
+                    "error",
+                )
+                return redirect("/signup")
+
             stored_pin = load_pin()
             if pin != stored_pin:
-                return render_template("signup.html", message="PIN is incorrect")
+                flash("PIN is incorrect", "error")
+                return redirect("/signup")
+
+        elif role == "student":
+            if not email.endswith("@student.mmu.edu.com"):
+                flash(
+                    "SIGN IN FAILED. Students must use an @student.mmu.edu.com email.",
+                    "error",
+                )
+                return redirect("/signup")
 
         if not password:
-            return render_template("signup.html", message="Password is required")
+            flash("Password is required", "error")
+            return redirect("/signup")
 
         hashed_password = hash_password(password)
 
@@ -124,9 +141,8 @@ def signup():
 
         if user:
             con.close()
-            return render_template(
-                "signup.html", message="User with this email already exists"
-            )
+            flash("User with this email already exists", "error")
+            return redirect("/signup")
         else:
             cur.execute(
                 "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
@@ -367,7 +383,6 @@ def create_calendar():
         return redirect(url_for("calendar"))
     
     return render_template("calendar.html")
-
 
 
 @app.route("/calendar", methods=["GET", "POST"])
