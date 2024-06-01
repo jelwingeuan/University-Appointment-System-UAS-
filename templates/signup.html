@@ -45,12 +45,9 @@
                 <div class="profileinput">
                     <label>Faculty</label>
                     <select class="profileinputdetails" name="faculty" required>
-                        <option value="FCI">FCI</option>
-                        <option value="FCM">FCM</option>
-                        <option value="FOM">FOM</option>
-                        <option value="FOE">FOE</option>
-                        <option value="FAC">FAC</option>
-                        <option value="FCA">FCA</option>
+                        {% for faculty in faculties %}
+                            <option value="{{ faculty['faculty_name'] }}">{{ faculty['faculty_name'] }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="input_box">

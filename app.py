@@ -136,7 +136,12 @@ def signup():
             con.close()
             return redirect("/login")
     else:
-        return render_template("signup.html")
+        con = get_db_connection()
+        cur = con.cursor()
+        cur.execute("SELECT faculty_name FROM facultyhub")
+        faculties = cur.fetchall()
+        con.close()
+        return render_template("signup.html", faculties=faculties)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -568,6 +573,8 @@ def faculty():
     cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
     faculty_info = cursor.fetchall()
     conn.close()
+
+
 
     faculty_info = [
         {"faculty_name": faculty[0], "faculty_image": faculty[1]}
