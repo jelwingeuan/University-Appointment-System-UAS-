@@ -109,7 +109,7 @@ def signup():
         if role == "teacher":
             if not email.endswith("@lecturer.mmu.edu.com"):
                 flash(
-                    "SIGN IN FAILED. Lecturers must use an @lecturer.mmu.edu.com email.",
+                    "SIGN UP FAILED. Lecturers must use an @lecturer.mmu.edu.com email.",
                     "error",
                 )
                 return redirect("/signup")
@@ -122,7 +122,7 @@ def signup():
         elif role == "student":
             if not email.endswith("@student.mmu.edu.com"):
                 flash(
-                    "SIGN IN FAILED. Students must use an @student.mmu.edu.com email.",
+                    "SIGN UP FAILED. Students must use an @student.mmu.edu.com email.",
                     "error",
                 )
                 return redirect("/signup")
