@@ -9,6 +9,7 @@ import bcrypt
 import random
 import os
 import json
+from datetime import datetime, timedelta
 
 app = Flask(__name__, static_folder="static")
 login_manager = LoginManager()
@@ -369,53 +370,70 @@ def accept_booking():
     return redirect("/bookinghistory")
 
 # lecturer\
-@app.route("/calendar", methods=["GET", "POST"])
+
+
+def calendar_repeat(event_title, repeat_type, repeat_count):
+    event_date = datetime.strptime(request.form["event_date"], "%Y-%m-%d")
+    start_time = request.form["start_time"]
+    end_time = request.form["end_time"]
+    
+    repeated_events = []
+    
+    for i in range(repeat_count):
+        if repeat_type == "daily":
+            next_event_date = event_date + timedelta(days=i)
+        elif repeat_type == "weekly":
+            next_event_date = event_date + timedelta(weeks=i)
+        elif repeat_type == "monthly":
+            next_event_date = add_months(event_date, i)
+        else:
+            continue
+
+        repeated_events.append((next_event_date.strftime("%Y-%m-%d"), start_time, end_time))
+    
+    return repeated_events
+
+def add_months(source_date, months):
+    month = source_date.month - 1 + months
+    year = source_date.year + month // 12
+    month = month % 12 + 1
+    day = min(source_date.day, [31, 29 if year % 4 == 0 and not year % 100 == 0 or year % 400 == 0 else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1])
+    return datetime(year, month, day)
+
+@app.route("/calendar_record", methods=["GET", "POST"])
 def create_calendar():
     if request.method == "POST":
-        lecturer = request.form["lecturer"]
         event_title = request.form["event_title"]
         event_date = request.form["event_date"]
         start_time = request.form["start_time"]
         end_time = request.form["end_time"]
-        
-        calendar_record(lecturer, event_title, event_date, start_time, end_time)
-        
-        return redirect(url_for("calendar"))
-    
+        repeat_type = request.form.get("repeat_type", "")
+        repeat_count = int(request.form.get("repeat_count", 1))
+
+        repeated_events = calendar_repeat(event_title, repeat_type, repeat_count)
+
+        for event_date, start_time, end_time in repeated_events:
+            insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type)
+
+        return redirect("/calendar")
+
     return render_template("calendar.html")
 
-
-@app.route("/calendar", methods=["GET", "POST"])
-def repeat_calendar():
-    if request.method == "POST":
-        event_title = request.form["event_title"]
-        repeat_type = request.form["repeat_type"]
-        repeat_count = int(request.form["repeat_count"])
-        
-        if repeat_type not in ["daily", "weekly", "monthly"]:
-            return render_template("calendar.html", message="Invalid repeat type. Must be daily, weekly, or monthly.")
-        
-        if repeat_count < 1:
-            return render_template("calendar.html", message="Repeat count must be at least 1.")
-        
-        result = calendar_repeat(event_title, repeat_type, repeat_count)
-        
-        if result is None:
-            return render_template("calendar.html", message="Event not found or invalid date format.")
-        
-        return redirect(url_for("calendar"))
-
-
-@app.route("/calendar")
-def calendar():
+def insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type):
     con = get_db_connection()
     cur = con.cursor()
-    
-    cur.execute("SELECT * FROM calendar")
-    events = cur.fetchall()
+    cur.execute("""
+        INSERT INTO calendar (event_title, event_date, start_time, end_time, repeat_type)
+        VALUES (?, ?, ?, ?, ?)
+    """, (event_title, event_date, start_time, end_time, repeat_type))
+    con.commit()
     con.close()
-    
-    return render_template("calendar.html", events=events)
+    print(f"Inserted: {event_title} on {event_date} from {start_time} to {end_time}")
+
+@app.route("/calendar", methods=["GET", "POST"])
+def event():
+    return render_template("calendar.html")
+
 
 @app.route("/appointment")
 def appointment():
