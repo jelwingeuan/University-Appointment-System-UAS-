@@ -47,18 +47,22 @@
               </button>
             </div>
             <div class="modal-body">
-              <form id="eventForm">
+              <form id="eventForm" action="/calendar_record" method="post">
                 <div class="form-group">
                   <label for="eventTitle">Event Title</label>
-                  <input type="text" class="form-control" id="eventTitle" required>
+                  <input type="text" class="form-control" name="event_title" id="eventTitle" required>
                 </div>
                 <div class="form-group">
-                  <label for="eventStart">Start Date</label>
-                  <input type="text" class="form-control datetimepicker" id="eventStart" required>
+                  <label for="eventDate">Date</label>
+                  <input type="text" class="form-control datetimepicker" name="event_date" id="eventDate" required>
                 </div>
                 <div class="form-group">
-                  <label for="eventEnd">End Date</label>
-                  <input type="text" class="form-control datetimepicker" id="eventEnd">
+                  <label for="startTime">Start Time</label>
+                  <input type="time" class="form-control" name="start_time" id="startTime" required>
+                </div>
+                <div class="form-group">
+                  <label for="endTime">End Time</label>
+                  <input type="time" class="form-control" name="end_time" id="endTime">
                 </div>
                 <div class="form-group form-check">
                   <input type="checkbox" class="form-check-input" id="eventAllDay">
@@ -66,7 +70,7 @@
                 </div>
                 <div class="form-group">
                   <label for="eventRepeat">Repeat</label>
-                  <select class="form-control" id="eventRepeat">
+                  <select class="form-control" id="eventRepeat" name="repeat_type">
                     <option value="">No Repeat</option>
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
@@ -86,7 +90,7 @@
 
     <script>
         $(document).ready(function() {
-            $('.datetimepicker').datepicker({
+            $('#eventDate').datepicker({
                 format: 'yyyy-mm-dd',
                 autoclose: true,
                 todayHighlight: true
@@ -98,22 +102,6 @@
             var currentView = 'dayGridMonth';
             var selectedStart;
             var selectedEnd;
-
-            var malaysiaHolidays = [
-                {
-                    title: 'New Year\'s Day',
-                    start: '2024-01-01',
-                    allDay: true,
-                    color: '#ff0000' // Red color for public holidays
-                },
-                {
-                    title: 'Chinese New Year',
-                    start: '2024-01-25',
-                    allDay: true,
-                    color: '#ff0000' // Red color for public holidays
-                }
-                // Add other public holidays with appropriate colors
-            ];
 
             var dummyEvents = [
                 {
@@ -147,12 +135,13 @@
                     startTime: '09:00', // 9am
                     endTime: '18:00' // 6pm
                 },
-                events: dummyEvents.concat(malaysiaHolidays), // Concatenate Malaysia holidays with dummyEvents
+                events: dummyEvents, // Concatenate Malaysia holidays with dummyEvents if you have that variable defined
                 select: function(info) {
                     selectedStart = info.startStr;
                     selectedEnd = info.endStr;
-                    document.getElementById('eventStart').value = info.startStr;
-                    document.getElementById('eventEnd').value = info.endStr;
+                    document.getElementById('eventDate').value = info.startStr.split('T')[0];
+                    document.getElementById('startTime').value = info.startStr.split('T')[1] || '';
+                    document.getElementById('endTime').value = info.endStr.split('T')[1] || '';
                     $('#eventModal').modal('show');
                 },
                 editable: true,

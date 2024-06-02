@@ -46,36 +46,12 @@
 
     <div class="homecontent-wrapper">
         <div class="homecontent1">
-            <form action="/search" method="get">
-                <input type="search" placeholder="Begin your journey here"><i class='bx bx-search-alt-2'></i>
-                <i class='bx bxs-calendar'></i><input type="date" placeholder="Appointment Date">
-                <input type="time" placeholder="Appointment Time">
-                <button type="submit">Search</button>
-            </form>
+           
         </div>
         <div class="homecontent211">
             <h1>Discover our latest booking system for education organisation</h1>
             <h2>Multimedia University</h2>
-            <p>{{ home_content }}</p>
-        </div>
-
-        <!-- School-related content -->
-        <div class="homecontent211">
-            <h2>School Information</h2>
-            <ul>
-                <li><strong>School Name:</strong> {{ school_name }}</li>
-                <li><strong>Contact:</strong> {{ school_tel }}</li>
-                <li><strong>Email:</strong> {{ school_email }}</li>
-            </ul>
-        </div>
-
-        <!-- School logo -->
-        {% if school_logo %}
-        <div class="homecontent211">
-            <h2>School Logo</h2>
-            <img src="{{ url_for('static', filename='school_logo/' + school_logo) }}" alt="School Logo">
-        </div>
-        {% endif %}
+        </div>       
 
         <div class="homecontent2">
             <div class="homecontent21">
