@@ -614,21 +614,42 @@ def history():
 def faculty():
     conn = get_db_connection()
     cursor = conn.cursor()
+
     cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
     faculty_info = cursor.fetchall()
+
+    faculty_data = []
+    for faculty in faculty_info:
+        cursor.execute(
+            "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
+            (faculty["faculty_name"],),
+        )
+        lecturers = cursor.fetchall()
+
+        cursor.execute(
+            "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
+            (faculty["faculty_name"],),
+        )
+        students = cursor.fetchall()
+
+        faculty_data.append(
+            {
+                "faculty_name": faculty["faculty_name"],
+                "faculty_image": faculty["faculty_image"],
+                "lecturers": [
+                    {"username": lecturer[0], "email": lecturer[1]}
+                    for lecturer in lecturers
+                ],
+                "students": [
+                    {"username": student[0], "email": student[1]}
+                    for student in students
+                ],
+            }
+        )
+
     conn.close()
 
-
-
-    faculty_info = [
-        {"faculty_name": faculty[0], "faculty_image": faculty[1]}
-        for faculty in faculty_info
-    ]
-
-    for faculty in faculty_info:
-        print(f"Name: {faculty['faculty_name']}, Image: {faculty['faculty_image']}")
-
-    return render_template("faculty.html", faculty_info=faculty_info)
+    return render_template("faculty.html", faculty_info=faculty_data)
 
 
 # admin
