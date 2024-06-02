@@ -8,6 +8,31 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='myscripts.js') }}"></script>
+    <style>
+        .faculty-dropdown {
+            margin-bottom: 20px;
+        }
+        .faculty-dropdown select {
+            padding: 10px;
+            font-size: 16px;
+        }
+        .faculty-details {
+            display: none;
+        }
+        .faculty-details.active {
+            display: block;
+        }
+        .faculty-details h3 {
+            margin-top: 20px;
+        }
+        .faculty-details ul {
+            list-style: none;
+            padding: 0;
+        }
+        .faculty-details li {
+            padding: 5px 0;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -33,16 +58,52 @@
             <h1>My Faculty</h1>
             <a href="/createfacultyhub">Add Faculty</a>
         </div>
-        <div class="card-container"> 
-            {% for faculty in faculty_info %}
+        <div class="faculty-dropdown">
+            <label for="facultySelect">Select Faculty:</label>
+            <select id="facultySelect" onchange="showFacultyDetails()">
+                <option value="">-- Select --</option>
+                {% for faculty in faculty_info %}
+                <option value="faculty-{{ loop.index }}">{{ faculty['faculty_name'] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% for faculty in faculty_info %}
+        <div id="faculty-{{ loop.index }}" class="faculty-details">
             <div class="card">
                 <div class="card-image">
                     <img src="{{ url_for('static', filename='faculty_pp/' + faculty['faculty_image']) }}" alt="{{ faculty['faculty_name'] }}">
                 </div>
                 <p class="name">{{ faculty['faculty_name'] }}</p>
             </div>
-            {% endfor %}
-        </div> 
+            <h3>Lecturers</h3>
+            <ul>
+                {% for lecturer in faculty['lecturers'] %}
+                <li>{{ lecturer['username'] }} ({{ lecturer['email'] }})</li>
+                {% endfor %}
+            </ul>
+            <h3>Students</h3>
+            <ul>
+                {% for student in faculty['students'] %}
+                <li>{{ student['username'] }} ({{ student['email'] }})</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
     </div>
+    <script>
+        function showFacultyDetails() {
+            var select = document.getElementById('facultySelect');
+            var selectedValue = select.value;
+            var details = document.querySelectorAll('.faculty-details');
+
+            details.forEach(function(detail) {
+                detail.classList.remove('active');
+            });
+
+            if (selectedValue) {
+                document.getElementById(selectedValue).classList.add('active');
+            }
+        }
+    </script>
 </body>
 </html>
