@@ -10,6 +10,8 @@ import random
 import os
 import json
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+
 
 app = Flask(__name__, static_folder="static")
 login_manager = LoginManager()
@@ -327,8 +329,8 @@ def user_booking_history():
             cursor.execute("SELECT * FROM appointments WHERE student = ?", (username,))
             display_role = "lecturer"
             role = 'student'
-        else :
-            cursor.execute("SELECT * FROM appointments WHERE lecturer = ?", (username,))
+        else:
+            cursor.execute("SELECT * FROM appointments WHERE lecturer = ? AND status = 'accept'", (username,))
             display_role = "student"
             role = 'lecturer'
 
@@ -372,26 +374,33 @@ def accept_booking():
 # lecturer\
 
 
-def calendar_repeat(event_title, repeat_type, repeat_count):
-    event_date = datetime.strptime(request.form["event_date"], "%Y-%m-%d")
-    start_time = request.form["start_time"]
-    end_time = request.form["end_time"]
-    
+def calendar_repeat(event_title, repeat_type, repeat_count, event_date, start_time, end_time):
     repeated_events = []
-    
+
+    # Parse the event date
+    event_date = datetime.strptime(event_date, "%Y-%m-%d")
+
     for i in range(repeat_count):
         if repeat_type == "daily":
             next_event_date = event_date + timedelta(days=i)
         elif repeat_type == "weekly":
             next_event_date = event_date + timedelta(weeks=i)
         elif repeat_type == "monthly":
-            next_event_date = add_months(event_date, i)
+            next_event_date = event_date + relativedelta(months=i)
+        elif repeat_type == "yearly":
+            next_event_date = event_date + relativedelta(years=i)
         else:
             continue
 
-        repeated_events.append((next_event_date.strftime("%Y-%m-%d"), start_time, end_time))
-    
+        repeated_events.append({
+            "event_title": event_title,
+            "event_date": next_event_date.strftime("%Y-%m-%d"),  # Ensure date format is consistent
+            "start_time": start_time,
+            "end_time": end_time
+        })
+
     return repeated_events
+
 
 def add_months(source_date, months):
     month = source_date.month - 1 + months
@@ -409,26 +418,48 @@ def create_calendar():
         end_time = request.form["end_time"]
         repeat_type = request.form.get("repeat_type", "")
         repeat_count = int(request.form.get("repeat_count", 1))
+        lecturer = 'willie'  # Assuming lecturer is a static value
 
-        repeated_events = calendar_repeat(event_title, repeat_type, repeat_count)
+        repeated_events = calendar_repeat(event_title, repeat_type, repeat_count, event_date, start_time, end_time)
 
-        for event_date, start_time, end_time in repeated_events:
-            insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type)
+        for event in repeated_events:
+            insert_event_into_db(event["event_title"], event["event_date"], event["start_time"], event["end_time"], repeat_type, lecturer)
+
 
         return redirect("/calendar")
 
     return render_template("calendar.html")
 
-def insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type):
+@app.route("/events", methods=["GET"])
+def get_events():
+    con = get_db_connection()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM calendar")
+    events = cur.fetchall()
+    con.close()
+
+    events_list = []
+    for event in events:
+        events_list.append({
+            "title": event["event_title"],
+            "start": event["event_date"] + 'T' + event["start_time"],
+            "end": event["event_date"] + 'T' + event["end_time"],
+            "allDay": False if event["start_time"] and event["end_time"] else True
+        })
+
+    return jsonify(events_list)
+
+def insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type, lecturer):
     con = get_db_connection()
     cur = con.cursor()
     cur.execute("""
-        INSERT INTO calendar (event_title, event_date, start_time, end_time, repeat_type)
-        VALUES (?, ?, ?, ?, ?)
-    """, (event_title, event_date, start_time, end_time, repeat_type))
+        INSERT INTO calendar (event_title, event_date, start_time, end_time, repeat_type, lecturer)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (event_title, event_date, start_time, end_time, repeat_type, lecturer))
     con.commit()
     con.close()
-    print(f"Inserted: {event_title} on {event_date} from {start_time} to {end_time}")
+    print(f"Inserted: {event_title} on {event_date} from {start_time} to {end_time}, Lecturer: {lecturer}")
+
 
 @app.route("/calendar", methods=["GET", "POST"])
 def event():
