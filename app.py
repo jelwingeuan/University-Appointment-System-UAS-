@@ -418,36 +418,44 @@ def create_calendar():
         end_time = request.form["end_time"]
         repeat_type = request.form.get("repeat_type", "")
         repeat_count = int(request.form.get("repeat_count", 1))
-        lecturer = 'willie'  # Assuming lecturer is a static value
-
+        
+        # Fetch lecturer name from the session
+        lecturer = session["username"]  # Assuming the lecturer name is stored in the session
+        
         repeated_events = calendar_repeat(event_title, repeat_type, repeat_count, event_date, start_time, end_time)
 
         for event in repeated_events:
             insert_event_into_db(event["event_title"], event["event_date"], event["start_time"], event["end_time"], repeat_type, lecturer)
 
-
         return redirect("/calendar")
 
     return render_template("calendar.html")
 
+
 @app.route("/events", methods=["GET"])
 def get_events():
-    con = get_db_connection()
-    cur = con.cursor()
-    cur.execute("SELECT * FROM calendar")
-    events = cur.fetchall()
-    con.close()
+    if "lecturer" in session:
+        lecturer = session["lecturer"]
+        
+        con = get_db_connection()
+        cur = con.cursor()
+        
+        # Fetch events filtered by lecturer
+        cur.execute("SELECT * FROM calendar WHERE lecturer = ?", (lecturer,))
+        events = cur.fetchall()
+        
+        con.close()
 
-    events_list = []
-    for event in events:
-        events_list.append({
-            "title": event["event_title"],
-            "start": event["event_date"] + 'T' + event["start_time"],
-            "end": event["event_date"] + 'T' + event["end_time"],
-            "allDay": False if event["start_time"] and event["end_time"] else True
-        })
+        events_list = []
+        for event in events:
+            events_list.append({
+                "title": event["event_title"],
+                "start": event["event_date"] + 'T' + event["start_time"],
+                "end": event["event_date"] + 'T' + event["end_time"],
+                "allDay": False if event["start_time"] and event["end_time"] else True
+            })
 
-    return jsonify(events_list)
+        return jsonify(events_list)
 
 def insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type, lecturer):
     con = get_db_connection()
