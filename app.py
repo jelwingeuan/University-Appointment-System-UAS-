@@ -244,7 +244,6 @@ def change_password():
 # student
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
-
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
@@ -253,10 +252,9 @@ def create_booking():
 
     session["username"] = user_data["username"]
 
-
     if request.method == "POST":
         booking_id = random.randint(100000, 999999)
-        student = session["username"] 
+        student = session["username"]
         lecturer = request.form.get("lecturer")
         purpose = request.form.get("purpose")
         appointment_date = request.form.get("appointment_date")
@@ -266,8 +264,8 @@ def create_booking():
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO appointments (student, lecturer, purpose, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ? )",
-                (student, lecturer, purpose, appointment_date, appointment_time, "Pending"),
+                "INSERT INTO appointments (booking_id, student, lecturer, purpose, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (booking_id, student, lecturer, purpose, appointment_date, appointment_time, "Pending"),
             )
             appointment_id = cursor.lastrowid
             conn.commit()
@@ -276,8 +274,26 @@ def create_booking():
 
         session["appointment_id"] = appointment_id
 
+        # Correctly parse the appointment_time in 12-hour format and convert to 24-hour format
+        start_time = datetime.strptime(appointment_time, "%I:%M %p")
+        end_time = (start_time + timedelta(hours=1)).strftime("%H:%M")  # Assuming each appointment lasts 1 hour
+        start_time = start_time.strftime("%H:%M")  # Convert to 24-hour format
+
+        # Insert the appointment into the calendar as an event
+        event_title = f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
+        insert_event_into_db(
+            event_title=event_title,
+            event_date=appointment_date,
+            start_time=start_time,
+            end_time=end_time,
+            repeat_type="",  # No repeat type for individual appointments
+            lecturer=lecturer
+        )
+
         flash("Booking created successfully!", "success")
         return redirect("/invoice")
+
+
 
 # student
 @app.route("/invoice")
@@ -312,7 +328,9 @@ def render_template_invoice():
         phone_number=user_data["phone_number"],
         role=user_data["role"],
         appointment=appointment,
+        booking_id=appointment["booking_id"]
     )
+
 
 
 # student and lecturer
@@ -330,15 +348,16 @@ def user_booking_history():
             display_role = "lecturer"
             role = 'student'
         else:
-            cursor.execute("SELECT * FROM appointments WHERE lecturer = ? AND status = 'accept'", (username,))
+            cursor.execute("SELECT * FROM appointments WHERE lecturer = ?", (username,))
             display_role = "student"
-            role = 'lecturer'
+            role = 'teacher'
 
         appointments = cursor.fetchall()
     finally:
         conn.close()
 
     return render_template("booking_history.html", appointments=appointments, display_role=display_role, role=role)
+
 
 # lecturer
 @app.route("/cancel_booking", methods=["POST"])
@@ -350,6 +369,21 @@ def cancel_booking():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("cancel", booking_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+    return redirect("/bookinghistory")
+
+@app.route("/reject_booking", methods=["POST"])
+def reject_booking():
+
+    booking_id = request.form.get("id")
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("reject", booking_id))
         conn.commit()
     finally:
         conn.close()
@@ -434,8 +468,7 @@ def create_calendar():
 
 @app.route("/events", methods=["GET"])
 def get_events():
-    if "lecturer" in session:
-        lecturer = session["lecturer"]
+        lecturer = session["username"]
         
         con = get_db_connection()
         cur = con.cursor()
@@ -482,6 +515,32 @@ def appointment():
 @app.route("/appointment2")
 def appointment2():
     return render_template("appointment2.html")
+
+
+@app.route("/check_availability", methods=["POST"])
+def check_availability():
+    # Get form data
+    lecturer = request.form["lecturer"]
+    event_date = request.form["appointment_date"]
+
+    # Query the database to check for existing appointments within the time range
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM calendar WHERE lecturer = ? AND event_date = ? ", (lecturer, event_date,))
+    existing_appointments = cursor.fetchall()
+    conn.close()
+
+    # Check availability
+    if existing_appointments:
+        availability = "unavailable"
+    else:
+        availability = "available"
+
+    # Return availability status
+    return jsonify({"availability": availability})
+
+
+
 
 # admin
 @app.route("/appointmentcontrol", methods=["GET", "POST"])
