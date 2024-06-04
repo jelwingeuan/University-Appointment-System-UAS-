@@ -258,7 +258,8 @@ def create_booking():
         lecturer = request.form.get("lecturer")
         purpose = request.form.get("purpose")
         appointment_date = request.form.get("appointment_date")
-        appointment_time = request.form.get("appointment_time")
+        appointment_time = request.form.get("selected_time_slot")
+        
 
         try:
             conn = get_db_connection()
@@ -274,19 +275,17 @@ def create_booking():
 
         session["appointment_id"] = appointment_id
 
-        # Correctly parse the appointment_time in 12-hour format and convert to 24-hour format
         start_time = datetime.strptime(appointment_time, "%I:%M %p")
-        end_time = (start_time + timedelta(hours=1)).strftime("%H:%M")  # Assuming each appointment lasts 1 hour
-        start_time = start_time.strftime("%H:%M")  # Convert to 24-hour format
+        end_time = (start_time + timedelta(hours=1)).strftime("%H:%M")
+        start_time = start_time.strftime("%H:%M")
 
-        # Insert the appointment into the calendar as an event
         event_title = f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
         insert_event_into_db(
             event_title=event_title,
             event_date=appointment_date,
             start_time=start_time,
             end_time=end_time,
-            repeat_type="",  # No repeat type for individual appointments
+            repeat_type="", 
             lecturer=lecturer
         )
 
@@ -522,11 +521,15 @@ def check_availability():
     # Get form data
     lecturer = request.form["lecturer"]
     event_date = request.form["appointment_date"]
+    selected_time_slot = request.form["selected_time_slot"]
+
+    # Combine date and time slot to create event datetime
+    event_datetime = f"{event_date} {selected_time_slot}"
 
     # Query the database to check for existing appointments within the time range
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM calendar WHERE lecturer = ? AND event_date = ? ", (lecturer, event_date,))
+    cursor.execute("SELECT * FROM calendar WHERE lecturer = ? AND event_date = ?", (lecturer, event_date))
     existing_appointments = cursor.fetchall()
     conn.close()
 

@@ -13,6 +13,9 @@
         .time-grid button.unavailable {
             background-color: red;
         }
+        .time-grid button.selected {
+            background-color: green;
+        }
     </style>
 </head>
 <body>
@@ -74,72 +77,63 @@
                 <label>Select Date</label>
                 <input type="date" id="appointment-date" name="appointment_date" required>
                 <div id="time-slots" class="time-grid">
-                    <button type="submit" name="appointment_time" value="08:00 AM" {% if unavailable %}class="unavailable"{% endif %}>08:00 AM</button>
-                    <button type="submit" name="appointment_time" value="09:00 AM" {% if unavailable %}class="unavailable"{% endif %}>09:00 AM</button>
-                    <button type="submit" name="appointment_time" value="10:00 AM" {% if unavailable %}class="unavailable"{% endif %}>10:00 AM</button>
-                    <button type="submit" name="appointment_time" value="11:00 AM" {% if unavailable %}class="unavailable"{% endif %}>11:00 AM</button>
-                    <button type="submit" name="appointment_time" value="12:00 PM" {% if unavailable %}class="unavailable"{% endif %}>12:00 PM</button>
-                    <button type="submit" name="appointment_time" value="01:00 PM" {% if unavailable %}class="unavailable"{% endif %}>01:00 PM</button>
-                    <button type="submit" name="appointment_time" value="02:00 PM" {% if unavailable %}class="unavailable"{% endif %}>02:00 PM</button>
-                    <button type="submit" name="appointment_time" value="03:00 PM" {% if unavailable %}class="unavailable"{% endif %}>03:00 PM</button>
-                    <button type="submit" name="appointment_time" value="04:00 PM" {% if unavailable %}class="unavailable"{% endif %}>04:00 PM</button>
-                    <button type="submit" name="appointment_time" value="05:00 PM" {% if unavailable %}class="unavailable"{% endif %}>05:00 PM</button>
-                    <button type="submit" name="appointment_time" value="06:00 PM" {% if unavailable %}class="unavailable"{% endif %}>06:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="08:00 AM" {% if unavailable %}class="unavailable"{% endif %}>08:00 AM</button>
+                    <button type="submit" name="selected_time_slot" value="09:00 AM" {% if unavailable %}class="unavailable"{% endif %}>09:00 AM</button>
+                    <button type="submit" name="selected_time_slot" value="10:00 AM" {% if unavailable %}class="unavailable"{% endif %}>10:00 AM</button>
+                    <button type="submit" name="selected_time_slot" value="11:00 AM" {% if unavailable %}class="unavailable"{% endif %}>11:00 AM</button>
+                    <button type="submit" name="selected_time_slot" value="12:00 PM" {% if unavailable %}class="unavailable"{% endif %}>12:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="01:00 PM" {% if unavailable %}class="unavailable"{% endif %}>01:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="02:00 PM" {% if unavailable %}class="unavailable"{% endif %}>02:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="03:00 PM" {% if unavailable %}class="unavailable"{% endif %}>03:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="04:00 PM" {% if unavailable %}class="unavailable"{% endif %}>04:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="05:00 PM" {% if unavailable %}class="unavailable"{% endif %}>05:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="06:00 PM" {% if unavailable %}class="unavailable"{% endif %}>06:00 PM</button>
                 </div>                    
             </div>
-        </div>
+        </div>   
     </form>
 
     <script>
         $(document).ready(function() {
-            // Function to check availability asynchronously
-            function checkAvailability() {
-                var lecturer = $("select[name='lecturer']").val();
-                var date = $("#appointment-date").val();
-                var formData = {
-                    lecturer: lecturer,
-                    appointment_date: date
-                };
-                $.ajax({
-                    type: "POST",
-                    url: "/check_availability",
-                    data: formData,
-                    dataType: "json",
-                    success: function(response) {
-                        if (response.availability === "available") {
-                            // Enable all time slots
-                            $("#time-slots button").removeClass("unavailable");
-                        } else {
-                            // Disable unavailable time slots
-                            $("#time-slots button").addClass("unavailable");
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Error:", error);
-                    }
-                });
-            }
-    
             // Event listener for date change
             $("#appointment-date").on("change", function() {
-                checkAvailability();
+                // Get the selected date
+                let appointmentDate = $(this).val();
+                let lecturer = $("select[name='lecturer']").val();
+        
+                // Loop through each time slot button
+                $("#time-slots button").each(function() {
+                    let timeSlot = $(this).val();
+                    // Make AJAX request to check availability
+                    $.ajax({
+                        type: "POST",
+                        url: "/check_availability",
+                        data: {
+                            lecturer: lecturer,
+                            appointment_date: appointmentDate,
+                            selected_time_slot: timeSlot
+                        },
+                        success: function(response) {
+                            if (response.availability === "unavailable") {
+                                $(this).addClass("unavailable").prop("disabled", true);
+                            } else {
+                                $(this).removeClass("unavailable").prop("disabled", false);
+                            }
+                        }.bind(this),
+                        error: function() {
+                            console.log("Error checking availability");
+                        }
+                    });
+                });
             });
-    
-            // Initial check for availability
-            checkAvailability();
-    
-            // Event listener for form submission
-            $("#appointment-form").on("submit", function(event) {
-                event.preventDefault(); // Prevent default form submission
-                // Manually submit the form if availability check is successful
-                if (!$("#time-slots button").hasClass("unavailable")) {
-                    this.submit();
-                } else {
-                    alert("Selected slot is unavailable. Please choose another slot.");
-                }
+        
+            // Event listener for lecturer change
+            $("select[name='lecturer']").on("change", function() {
+                // Trigger date change to check availability again
+                $("#appointment-date").trigger("change");
             });
         });
-    </script>
+        </script>
         
 </body>
 </html>
