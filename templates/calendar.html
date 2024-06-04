@@ -109,16 +109,10 @@
               headerToolbar: {
                   left: 'prev,next today',
                   center: 'title',
-                  right: 'dayGridMonth,timeGridWeek,timeGridDay,resourceTimelineWeek'
+                  right: 'dayGridMonth,timeGridWeek,timeGridDay'
               },
               selectable: true,
               selectHelper: true,
-              businessHours: {
-                  // Business hours from Monday to Friday, 9am to 6pm
-                  daysOfWeek: [1, 2, 3, 4, 5], // Monday to Friday
-                  startTime: '09:00', // 9am
-                  endTime: '18:00' // 6pm
-              },
               events: function(fetchInfo, successCallback, failureCallback) {
                   $.ajax({
                       url: '/events',

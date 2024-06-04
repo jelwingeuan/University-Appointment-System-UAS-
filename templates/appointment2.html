@@ -12,7 +12,9 @@
     <style>
         .time-grid button.unavailable {
             background-color: red;
-            
+        }
+        .time-grid button.selected {
+            background-color: green;
         }
     </style>
 </head>
@@ -22,17 +24,17 @@
             <li><a href="/">Home</a></li>
             <li><a href="/about">About</a></li>
             <li><a href="/appointment">Make An Appointment</a></li>
-            {% if session['logged_in'] == True %}
-            <li><a href="/logout">Logout </a></li>
-            <li><a href="/profile">Profile </a></li>
+            {% if session['logged_in'] %}
+            <li><a href="/logout">Logout</a></li>
+            <li><a href="/profile">Profile</a></li>
             {% else %}
             <li><a href="/login">Login</a></li>
-            <li><a href="/signup">Sign Up</a></li> <!-- Sign-up link -->
+            <li><a href="/signup">Sign Up</a></li>
             {% endif %}
-        </ul>  
+        </ul>
     </nav>
 
-    <form method="post" action="/create_booking">
+    <form id="appointment-form" method="post" action="/create_booking">
         <div class="appointmentwrapper">
             <div class="appointment-header">
                 <h1>Pick Your Slot</h1>
@@ -73,28 +75,65 @@
             </div>
             <div class="datepicker">
                 <label>Select Date</label>
-                <input type="date" name="appointment_date">
-                <div class="time-grid">
-                    <div class="time-grid">
-                        <button type="submit" name="appointment_time" value="8:00 AM" {% if unavailable %}class="unavailable"{% endif %}>8:00 AM</button>
-                        <button type="submit" name="appointment_time" value="9:00 AM"{% if unavailable %}class="unavailable"{% endif %}>9:00 AM</button>
-                        <button type="submit" name="appointment_time" value="10:00 AM"{% if unavailable %}class="unavailable"{% endif %}>10:00 AM</button>
-                        <button type="submit" name="appointment_time" value="11:00 AM"{% if unavailable %}class="unavailable"{% endif %}>11:00 AM</button>
-                        <button type="submit" name="appointment_time" value="12:00 PM"{% if unavailable %}class="unavailable"{% endif %}>12:00 PM</button>
-                        <button type="submit" name="appointment_time" value="1:00 PM"{% if unavailable %}class="unavailable"{% endif %}>1:00 PM</button>
-                        <button type="submit" name="appointment_time" value="2:00 PM"{% if unavailable %}class="unavailable"{% endif %}>2:00 PM</button>
-                        <button type="submit" name="appointment_time" value="3:00 PM"{% if unavailable %}class="unavailable"{% endif %}>3:00 PM</button>
-                        <button type="submit" name="appointment_time" value="4:00 PM"{% if unavailable %}class="unavailable"{% endif %}>4:00 PM</button>
-                        <button type="submit" name="appointment_time" value="5:00 PM"{% if unavailable %}class="unavailable"{% endif %}>5:00 PM</button>
-                        <button type="submit" name="appointment_time" value="6:00 PM"{% if unavailable %}class="unavailable"{% endif %}>6:00 PM</button>
-                    </div>                    
-                </div>
+                <input type="date" id="appointment-date" name="appointment_date" required>
+                <div id="time-slots" class="time-grid">
+                    <button type="submit" name="selected_time_slot" value="08:00 AM" {% if unavailable %}class="unavailable"{% endif %}>08:00 AM</button>
+                    <button type="submit" name="selected_time_slot" value="09:00 AM" {% if unavailable %}class="unavailable"{% endif %}>09:00 AM</button>
+                    <button type="submit" name="selected_time_slot" value="10:00 AM" {% if unavailable %}class="unavailable"{% endif %}>10:00 AM</button>
+                    <button type="submit" name="selected_time_slot" value="11:00 AM" {% if unavailable %}class="unavailable"{% endif %}>11:00 AM</button>
+                    <button type="submit" name="selected_time_slot" value="12:00 PM" {% if unavailable %}class="unavailable"{% endif %}>12:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="01:00 PM" {% if unavailable %}class="unavailable"{% endif %}>01:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="02:00 PM" {% if unavailable %}class="unavailable"{% endif %}>02:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="03:00 PM" {% if unavailable %}class="unavailable"{% endif %}>03:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="04:00 PM" {% if unavailable %}class="unavailable"{% endif %}>04:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="05:00 PM" {% if unavailable %}class="unavailable"{% endif %}>05:00 PM</button>
+                    <button type="submit" name="selected_time_slot" value="06:00 PM" {% if unavailable %}class="unavailable"{% endif %}>06:00 PM</button>
+                </div>                    
             </div>
-        </div>
+        </div>   
     </form>
-    
-    <script src="../static/myscripts.js"></script>
-   
 
+    <script>
+        $(document).ready(function() {
+            // Event listener for date change
+            $("#appointment-date").on("change", function() {
+                // Get the selected date
+                let appointmentDate = $(this).val();
+                let lecturer = $("select[name='lecturer']").val();
+        
+                // Loop through each time slot button
+                $("#time-slots button").each(function() {
+                    let timeSlot = $(this).val();
+                    // Make AJAX request to check availability
+                    $.ajax({
+                        type: "POST",
+                        url: "/check_availability",
+                        data: {
+                            lecturer: lecturer,
+                            appointment_date: appointmentDate,
+                            selected_time_slot: timeSlot
+                        },
+                        success: function(response) {
+                            if (response.availability === "unavailable") {
+                                $(this).addClass("unavailable").prop("disabled", true);
+                            } else {
+                                $(this).removeClass("unavailable").prop("disabled", false);
+                            }
+                        }.bind(this),
+                        error: function() {
+                            console.log("Error checking availability");
+                        }
+                    });
+                });
+            });
+        
+            // Event listener for lecturer change
+            $("select[name='lecturer']").on("change", function() {
+                // Trigger date change to check availability again
+                $("#appointment-date").trigger("change");
+            });
+        });
+        </script>
+        
 </body>
 </html>
