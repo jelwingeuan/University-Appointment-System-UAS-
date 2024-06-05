@@ -110,10 +110,7 @@ def signup():
 
         if role == "teacher":
             if not email.endswith("@mmu.edu.my"):
-                flash(
-                    "SIGN UP FAILED. Lecturers must use an @mmu.edu.my email.",
-                    "error",
-                )
+                flash("SIGN UP FAILED. Lecturers must use an @mmu.edu.my email.", "error")
                 return redirect("/signup")
 
             stored_pin = load_pin()
@@ -123,10 +120,7 @@ def signup():
 
         elif role == "student":
             if not email.endswith("@student.mmu.edu.my"):
-                flash(
-                    "SIGN UP FAILED. Students must use an @student.mmu.edu.my email.",
-                    "error",
-                )
+                flash("SIGN UP FAILED. Students must use an @student.mmu.edu.my email.", "error")
                 return redirect("/signup")
 
         if not password:
@@ -139,11 +133,18 @@ def signup():
         cur = con.cursor()
 
         cur.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user = cur.fetchone()
+        user_email = cur.fetchone()
 
-        if user:
+        cur.execute("SELECT * FROM users WHERE username = ?", (username,))
+        user_username = cur.fetchone()
+
+        if user_email:
             con.close()
             flash("User with this email already exists", "error")
+            return redirect("/signup")
+        elif user_username:
+            con.close()
+            flash("User with this username already exists", "error")
             return redirect("/signup")
         else:
             cur.execute(
@@ -160,7 +161,6 @@ def signup():
         faculties = cur.fetchall()
         con.close()
         return render_template("signup.html", faculties=faculties)
-
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
