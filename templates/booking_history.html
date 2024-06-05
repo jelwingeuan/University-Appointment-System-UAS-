@@ -43,12 +43,13 @@
             </div>
             <div class="profilesubwrapper">
                 <div class="profilesidebar">
-                    <img src="https://avatars.githubusercontent.com/u/3817939?v=4" >
-                    <h3>{{ username }}</h3> 
-                    <a class="listitem" data-toggle="list" href="/profile">General</a>
+                    <h3>{{ session.username }}</h3>
+                    <a class="listitem active" data-toggle="list" href="/profile">General</a>
                     <a class="listitem" data-toggle="list" href="/changepassword">Change password</a>
-                    <a class="listitem" data-toggle="list" href="/history">History</a>
-                    <a class="listitem active" data-toggle="list" href="/bookinghistory">Booking History</a>
+                    {% if session.role == 'teacher' %}
+                    <a class="listitem" data-toggle="list" href="/calendar">Calendar</a>
+                    {% endif %}
+                    <a class="listitem" data-toggle="list" href="/bookinghistory">Booking History</a>
                     <a class="listitem" data-toggle="list" href="/logout">Log Out</a>
                 </div>
                 <div class="profilemain">
@@ -62,7 +63,7 @@
                                     <th>Time</th>
                                     <th>Purpose</th>
                                     <th>Status</th>
-                                    {% if role == 'lecturer' %}                                  
+                                    {% if role == 'teacher' %}                                  
                                     <th>Action</th>
                                     <th>Action</th>
                                     {% endif %}
@@ -80,7 +81,7 @@
                                     <td>{{ appointment['appointment_time'] }}</td>
                                     <td>{{ appointment['purpose'] }}</td>
                                     <td class="{{ appointment['status']}}">{{ appointment['status'] }}</td>
-                                    {% if role == "lecturer" %}
+                                    {% if role == "teacher" %}
                                     <td>
                                         <form method="post" action="/accept_booking">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
@@ -88,9 +89,9 @@
                                         </form>
                                     </td>
                                     <td>
-                                        <form method="post" action="/cancel_booking">
+                                        <form method="post" action="/reject_booking">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            <button type="submit" value="cancel">Cancel</button>
+                                            <button type="submit" value="reject">Reject</button>
                                         </form>
                                     </td>
                                     {% endif %}
@@ -125,5 +126,6 @@
         </footer>
     </div>
     <script src="../static/myscripts.js"></script>
+    
 </body>
 </html>
