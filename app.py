@@ -109,9 +109,9 @@ def signup():
         pin = request.form.get("pin")
 
         if role == "teacher":
-            if not email.endswith("@lecturer.mmu.edu.com"):
+            if not email.endswith("@mmu.edu.my"):
                 flash(
-                    "SIGN UP FAILED. Lecturers must use an @lecturer.mmu.edu.com email.",
+                    "SIGN UP FAILED. Lecturers must use an @mmu.edu.my email.",
                     "error",
                 )
                 return redirect("/signup")
@@ -122,9 +122,9 @@ def signup():
                 return redirect("/signup")
 
         elif role == "student":
-            if not email.endswith("@student.mmu.edu.com"):
+            if not email.endswith("@student.mmu.edu.my"):
                 flash(
-                    "SIGN UP FAILED. Students must use an @student.mmu.edu.com email.",
+                    "SIGN UP FAILED. Students must use an @student.mmu.edu.my email.",
                     "error",
                 )
                 return redirect("/signup")

@@ -108,13 +108,13 @@
         document.getElementById('studentRole').addEventListener('click', function() {
             document.getElementById('pinInput').style.display = 'none';
             document.getElementById('signupDetails').style.display = 'block';
-            document.getElementById('emailFormatNotice').innerText = 'Note: Students must use an @student.mmu.edu.com email address.';
+            document.getElementById('emailFormatNotice').innerText = 'Note: Students must use an @student.mmu.edu.my email address.';
         });
 
         document.getElementById('teacherRole').addEventListener('click', function() {
             document.getElementById('signupDetails').style.display = 'none';
             document.getElementById('pinInput').style.display = 'block';
-            document.getElementById('emailFormatNotice').innerText = 'Note: Teachers must use an @lecturer.mmu.edu.com email address.';
+            document.getElementById('emailFormatNotice').innerText = 'Note: Teachers must use an @mmu.edu.my email address.';
         });
 
         function validatePin() {
