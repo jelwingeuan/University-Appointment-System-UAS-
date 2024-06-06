@@ -137,6 +137,9 @@ def signup():
 
         cur.execute("SELECT * FROM users WHERE username = ?", (username,))
         user_username = cur.fetchone()
+        
+        cur.execute("SELECT * FROM users WHERE phone_number = ?", (phone_number,))
+        user_phone = cur.fetchone()
 
         if user_email:
             con.close()
@@ -145,6 +148,10 @@ def signup():
         elif user_username:
             con.close()
             flash("User with this username already exists", "error")
+            return redirect("/signup")
+        elif user_phone:
+            con.close()
+            flash("User with this phone number already exists", "error")
             return redirect("/signup")
         else:
             cur.execute(
@@ -161,6 +168,7 @@ def signup():
         faculties = cur.fetchall()
         con.close()
         return render_template("signup.html", faculties=faculties)
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
