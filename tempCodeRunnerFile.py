@@ -651,16 +651,14 @@ def update_home_content():
     return redirect("/adminpageeditor")
 
 
-@app.route("/changepin", methods=["POST"])
+@app.route("/change_teacher_pin", methods=["POST"])
 def change_teacher_pin():
-    new_pin = request.form.get("new_pin")
-    retype_new_pin = request.form.get("retype_new_pin")
+    teacher_pin = request.form.get("teacher_pin")
 
-    if new_pin != retype_new_pin:
-        return "New PIN and Retyped PIN do not match", 400
-
+    # Update pin.json
     with open("pin.json", "w") as pin_file:
-        json.dump({"pin": new_pin}, pin_file)
+        pin_data = {"pin": teacher_pin}
+        json.dump(pin_data, pin_file)
 
     return redirect("/adminpageeditor")
 
