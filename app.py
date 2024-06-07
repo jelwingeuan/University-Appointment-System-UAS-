@@ -137,7 +137,7 @@ def signup():
 
         cur.execute("SELECT * FROM users WHERE username = ?", (username,))
         user_username = cur.fetchone()
-        
+
         cur.execute("SELECT * FROM users WHERE phone_number = ?", (phone_number,))
         user_phone = cur.fetchone()
 
@@ -176,7 +176,11 @@ def login():
         email = request.form.get("email")
         password = request.form.get("password")
 
-        if email == "admin@example.com" and password == "123":
+        # Load admin credentials from admin.json
+        with open("admin.json", "r") as admin_file:
+            admin_data = json.load(admin_file)
+
+        if email == admin_data["email"] and password == admin_data["password"]:
             session["logged_in"] = True
             return redirect("/admin")
         else:
@@ -190,7 +194,7 @@ def login():
             ):
                 session["logged_in"] = True
                 session["id"] = user[0]
-                
+
                 return redirect("/")
             else:
                 return render_template(
@@ -300,7 +304,6 @@ def create_booking():
         return redirect("/invoice")
 
 
-
 # student
 @app.route("/invoice")
 def render_template_invoice():
@@ -336,7 +339,6 @@ def render_template_invoice():
         appointment=appointment,
         booking_id=appointment["booking_id"]
     )
-
 
 
 # student and lecturer
@@ -498,8 +500,6 @@ def check_availability():
 
     # Return availability status
     return jsonify({"availability": availability})
-
-
 
 
 # admin
