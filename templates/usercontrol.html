@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Control</title>
     <link rel="stylesheet" href="../static/style.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css'rel='stylesheet'>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../static/myscripts.js"></script>
 </head>
@@ -34,8 +34,8 @@
             <div class="table__header">
                 <h1>User Control</h1>
                 <div class="input-group">
-                    <input type="search" placeholder="Search Data...">
-                    <i class='bx bx-search'></i>
+                    <input type="search" id="search" placeholder="Search Data...">
+                    <i class='bx bx-search' onclick="searchData()"></i>
                 </div>
             </div>
             <div class="table__body">
@@ -50,7 +50,7 @@
                             <th> Action </th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="userTableBody">
                         {% for user in users %}
                         <form action="/delete_user" method="POST">
                             <tr>
@@ -67,11 +67,15 @@
                         </form>
                         {% endfor %}
                     </tbody>
-                    
                 </table>
             </div>
-            
         </div> 
     </div>
+    <script>
+        function searchData() {
+            const searchQuery = document.getElementById('search').value;
+            window.location.href = `/usercontrol?search=${searchQuery}`;
+        }
+    </script>
 </body>
 </html>

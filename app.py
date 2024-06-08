@@ -518,28 +518,21 @@ def appointment2():
 
 @app.route("/check_availability", methods=["POST"])
 def check_availability():
-    # Get form data
-    lecturer = request.form["lecturer"]
-    event_date = request.form["appointment_date"]
-    selected_time_slot = request.form["selected_time_slot"]
+    data = request.get_json()
+    lecturer = data.get("lecturer")
+    event_date = data.get("appointment_date")
+    selected_time_slot = data.get("selected_time_slot")
 
-    # Combine date and time slot to create event datetime
-    event_datetime = f"{event_date} {selected_time_slot}"
+    event_date = f"{event_date} {selected_time_slot}"
 
-    # Query the database to check for existing appointments within the time range
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM calendar WHERE lecturer = ? AND event_date = ?", (lecturer, event_date))
     existing_appointments = cursor.fetchall()
     conn.close()
 
-    # Check availability
-    if existing_appointments:
-        availability = "unavailable"
-    else:
-        availability = "available"
+    availability = "unavailable" if existing_appointments else "available"
 
-    # Return availability status
     return jsonify({"availability": availability})
 
 
@@ -548,17 +541,31 @@ def check_availability():
 # admin
 @app.route("/appointmentcontrol", methods=["GET", "POST"])
 def appointmentcontrol():
+    search_query = request.args.get('search', '')
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT id, lecturer, student, appointment_date, purpose, status, appointment_time FROM appointments"
-    )
-    appointments = cursor.fetchall()
 
+    if search_query:
+        cursor.execute(
+            """
+            SELECT id, lecturer, student, appointment_date, purpose, status, appointment_time 
+            FROM appointments 
+            WHERE lecturer LIKE ? OR student LIKE ? OR appointment_date LIKE ? OR purpose LIKE ? OR status LIKE ?
+            """, 
+            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
+        )
+    else:
+        cursor.execute(
+            "SELECT id, lecturer, student, appointment_date, purpose, status, appointment_time FROM appointments"
+        )
+
+    appointments = cursor.fetchall()
     cursor.close()
     conn.close()
 
     return render_template("appointment_control.html", appointments=appointments)
+
 
 
 # admin
@@ -595,7 +602,7 @@ def admin_dashboard():
     num_users = cursor.fetchone()[0]
 
     cursor.execute(
-        "SELECT lecturer, student, appointment_date, purpose, status, appointment_time FROM appointments"
+        "SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id FROM appointments"
     )
     appointments = cursor.fetchall()
 
@@ -615,13 +622,28 @@ def admin_dashboard():
 # admin
 @app.route("/usercontrol")
 def usercontrol():
+    search_query = request.args.get('search', '')
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users")
-    user_data = cursor.fetchall()
-    conn.close()
 
-    return render_template("usercontrol.html", users=user_data)
+    if search_query:
+        cursor.execute(
+            """
+            SELECT id, role, faculty, username, phone_number 
+            FROM users 
+            WHERE username LIKE ? OR role LIKE ? OR faculty LIKE ? OR phone_number LIKE ?
+            """, 
+            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
+        )
+    else:
+        cursor.execute("SELECT id, role, faculty, username, phone_number FROM users")
+
+    users = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("usercontrol.html", users=users)
+
 
 
 # admin
