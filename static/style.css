@@ -413,6 +413,12 @@ nav .dropbtn:not(:hover) i {
 }
 
 
+.slide .content button a {
+    text-decoration: none; /* Remove underline */
+}
+
+
+
 .slide .item:nth-child(3){
     left: 50%;
 }
@@ -1254,7 +1260,7 @@ header input[type="search"] {
     height: calc(200vh - 60px); /* Adjust sidebar height */
     width: 230px;
     position: absolute;
-    top: 60px; /* Adjust top position based on header height */
+    top: 50px; /* Adjust top position based on header height */
     left: 0;
     background-color: #333;
     padding-top: 20px;
@@ -1463,28 +1469,49 @@ td .accept, .cancel, .Pending {
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for 3D effect */
 }
 
-.accept {
+.Accepted{
     background-color: #86e49d;
     color: #006b21;
     margin-top: 27px;
-    padding: 8px 16px; 
-    border-radius: 12px; 
+    padding: 8px 16px;
+    border-radius: 12px;
     font-weight: bold;
     display: flex;
-    
+    justify-content: center;
+    align-items: center;
     text-align: center;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for 3D effect */
 }
 
-.cancel {
-    background-color: #d893a3;
-    color: #b30021;
+.Cancelled,.Rejected {
+    background-color: red;
+    color: white; /* Changed to ensure text color is readable */
+    margin-top: 27px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for 3D effect */
 }
 
-.Pending {
-    background-color: #6fcaea;
-    color: #005a8c; /* Ensure text color is readable */
+.pending {
+    background-color: orange;
+    color: white; /* Ensure text color is readable */
+    margin-top: 27px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for 3D effect */
 }
+
+
 
 
 .profilecontainer{
@@ -2059,4 +2086,11 @@ td .accept, .cancel, .Pending {
     display:flex;
     margin-right:60px;
     margin-top:10px;
+}
+
+.profiledata{
+    display:flex;
+    margin-left: 20px;
+    margin-top: 10px;
+    margin-bottom:10px;
 }

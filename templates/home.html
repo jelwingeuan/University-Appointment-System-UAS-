@@ -18,13 +18,7 @@
     <nav>
         <ul>
             <li><a href="/">Home</a></li>
-            <li class="dropdown">
-                <a href="#" class="dropbtn">About<i class='bx bx-chevron-down'></i></a>
-                <div class="dropdown-content">
-                    <a href="/about">About Us</a>
-                    <a href="/about">Faculty</a>
-                    <a href="/about">History</a>
-                </div>
+            <li><a href="/about">About</a></li>
             </li>
             <li><a href="/appointment">Make An Appointment</a></li>
             {% if session['logged_in'] == True %}
@@ -105,42 +99,48 @@
                 <div class="content">
                     <div class="itemname">Faculty of Computing and Informatic</div>
                     <div class="itemdes">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ab, eum!</div>
-                    <button>See More</button>
+                    <button><a href="https://www.mmu.edu.my/programmes-by-campus/programmes-cyberjaya/programmes-cyberjaya-undergraduate/programmes-cyberjaya-undergraduate-information-technology/">See More</a></button>
+
                 </div>
             </div>
             <div class="item" style="background-image: url(https://www.degreequery.com/wp-content/uploads/2020/04/What-is-the-Difference-Between-Multimedia-Design-and-Graphic-Design.jpg);">
                 <div class="content">
                     <div class="itemname">Faculty of Creative Multimedia</div>
                     <div class="itemdes">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ab, eum!</div>
-                    <button>See More</button>
+                    <button><a href="https://creative.mmu.edu.my/">See More</a></button>
+
                 </div>
             </div>
             <div class="item" style="background-image: url(https://live.staticflickr.com/1906/44033674115_e62fb10f3d_h.jpg);">
                 <div class="content">
                     <div class="itemname">Faculty of Cinematic Art</div>
                     <div class="itemdes">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ab, eum!</div>
-                    <button>See More</button>
+                    <button><a href="https://www.mmu.edu.my/programmes-by-campus/programmes-cyberjaya/programmes-cyberjaya-undergraduate/programmes-cyberjaya-undergraduate-cinematic-arts/">See More</a></button>
+
                 </div>
             </div>
             <div class="item" style="background-image: url(https://media.istockphoto.com/photos/young-confident-successful-business-people-discuss-and-analyze-work-picture-id1313264835?k=20&m=1313264835&s=612x612&w=0&h=L55FyMCGTU2bHwHavfTa2tqZGwp9XqTK5tt5cy7bH4o=);">
                 <div class="content">
                     <div class="itemname">Faculty of Management</div>
                     <div class="itemdes">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ab, eum!</div>
-                    <button>See More</button>
+                    <button><a href="https://www.mmu.edu.my/fom/">See More</a></button>
+
                 </div>
             </div>
             <div class="item" style="background-image: url(https://exploreengineering.ca/sites/default/files/2020-02/NEM_mechanical.jpg);">
                 <div class="content">
                     <div class="itemname">Faculty of Engineering</div>
                     <div class="itemdes">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ab, eum!</div>
-                    <button>See More</button>
+                    <button><a href="https://www.mmu.edu.my/programmes-by-faculty-all/programmes-by-faculty-foe/">See More</a></button>
+
                 </div>
             </div>
             <div class="item" style="background-image: url(https://dcfwfuaf91uza.cloudfront.net/residential/wp-content/uploads/Master-of-Arts-in-Communication-2.jpg);">
                 <div class="content">
                     <div class="itemname">Faculty of Applied Communication</div>
                     <div class="itemdes">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Ab, eum!</div>
-                    <button>See More</button>
+                    <button><a href="https://www.mmu.edu.my/programmes-by-faculty-all/programmes-by-faculty-fac/">See More</a></button>
+
                 </div>
             </div>
         </div>
@@ -154,8 +154,8 @@
             <h4>Universal Appointment Booking System</h4>
             <ul>
                 <li><a href="/about">About Us</a></li>
-                <li><a href="#">Our Services</a></li>
                 <li><a href="/appointment">Book Now</a></li>
+                <li><a href="/signup">Join Now</a></li>
             </ul>
         </div>
     </footer>

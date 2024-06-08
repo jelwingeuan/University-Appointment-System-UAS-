@@ -6,6 +6,61 @@
     <title>Booking History</title>
     <link rel="stylesheet" href="../static/style.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <style>
+        button {
+            border: none; /* Remove border */
+            padding: 10px 20px; /* Add padding */
+            text-align: center; /* Center the text */
+            text-decoration: none; /* Remove underline */
+            display: inline-block; /* Get the block to wrap content */
+            font-size: 16px; /* Increase font size */
+            margin: 4px 2px; /* Small margin */
+            cursor: pointer; /* Add a pointer cursor on hover */
+            border-radius: 12px; /* Rounded corners */
+            transition: transform 0.3s ease, background-color 0.3s ease; /* Smooth transition */
+        }
+
+        button.accept {
+            background-color: #86e49d;
+            color: #006b21;
+        }
+
+        button.accept:hover {
+            transform: translateY(-5px); /* Move up on hover */
+            background-color: #45a049; /* Darker green background */
+        }
+
+        button.reject {
+            background-color: red;
+            color: white; /* Changed to ensure text color is readable */
+        }
+
+        button.reject:hover {
+            transform: translateY(-5px); /* Move up on hover */
+            background-color: #d32f2f; /* Darker red background */
+        }
+
+        button.cancel {
+            background-color: red;
+            color: white; /* Changed to ensure text color is readable */
+        }
+
+        button.cancel:hover {
+            transform: translateY(-5px); /* Move up on hover */
+            background-color: #e68900; /* Darker orange background */
+        }
+
+        button.pending {
+            background-color: orange;
+            color: white; /* Ensure text color is readable */
+        }
+
+        button.pending:hover {
+            transform: translateY(-5px); /* Move up on hover */
+            background-color: #e68900; /* Darker orange background */
+        }
+    </style>
 </head>
 <body>
     <nav>
@@ -85,13 +140,13 @@
                                     <td>
                                         <form method="post" action="/accept_booking">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            <button type="submit" value="accept">Accept</button>
+                                            <button type="submit" value="accepted">Accept</button>
                                         </form>
                                     </td>
                                     <td>
                                         <form method="post" action="/reject_booking">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            <button type="submit" value="reject">Reject</button>
+                                            <button type="submit" value="rejected">Reject</button>
                                         </form>
                                     </td>
                                     {% endif %}
@@ -100,7 +155,7 @@
                                     <td>
                                         <form method="post" action="/cancel_booking">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            <button type="submit" value="cancel">Cancel</button>
+                                            <button type="submit" value="cancelled">Cancel</button>
                                         </form>
                                     </td>
                                     {% endif %}
@@ -119,8 +174,8 @@
                 <h4>Universal Appointment Booking System</h4>
                 <ul>
                     <li><a href="/aboutus">About us</a></li>
-                    <li><a href="#">Our services</a></li>
                     <li><a href="/appointment">Book now</a></li>
+                    <li><a href="/signup">Join Now</a></li>
                 </ul>
             </div>
         </footer>

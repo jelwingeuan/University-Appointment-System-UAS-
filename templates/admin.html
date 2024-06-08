@@ -62,12 +62,16 @@
             </div>
         </div>
     </div>
+    <input type="hidden" id="num_teachers" value="{{ num_teachers }}">
+    <input type="hidden" id="num_students" value="{{ num_students }}">
+    <input type="hidden" id="num_appointments" value="{{ num_appointments }}">
+    <input type="hidden" id="num_users" value="{{ num_users }}">
     <div class="graphcontainer">
         <div class="graph">
             <canvas id="barChart" ></canvas>
         </div>
         <div class="graph">
-            <canvas id="lineChart" ></canvas>
+            <canvas id="pieChart" style="height: 200px;"></canvas>
         </div>
     </div>
     <div class="table" id="customers_table">

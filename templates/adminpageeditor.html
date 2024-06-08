@@ -8,48 +8,16 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="../static/myscripts.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 10px 0;
-            text-align: center;
-        }
-        .sidebar {
-            width: 200px;
-            background: #333;
-            color: #fff;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            padding-top: 20px;
-        }
-        .sidebar ul {
-            list-style: none;
-            padding: 0;
-        }
-        .sidebar ul li {
-            padding: 10px;
-            text-align: left;
-        }
-        .sidebar ul li a {
-            color: #fff;
-            text-decoration: none;
-            display: block;
-        }
-        .sidebar ul li:hover {
-            background: #575757;
+        .adminbody{
+            display: flex;
+            flex-direction: column;
         }
         .admincontainer {
-            margin-left: 220px;
-            padding: 20px;
+        max-width: 800px; /* Set a maximum width */
+        margin: 0 auto; /* Center the container horizontally */
+        padding: 20px;
         }
+
         .subadmincontainer {
             background: #fff;
             padding: 20px;
@@ -57,6 +25,12 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             max-width: 600px;
             margin: 20px auto;
+            display: flex;
+            flex-direction: row;
+            margin-left: 15px;
+        }
+        .subadmincontainer1{
+            margin-right: 40px;
         }
         .form-group, .input-container {
             margin-bottom: 15px;
@@ -64,6 +38,7 @@
         .input-container label {
             display: block;
             margin-bottom: 5px;
+            margin-top: 5px;
             font-weight: bold;
         }
         .input-container input, .input-container textarea {
@@ -71,7 +46,13 @@
             padding: 8px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            
         }
+
+        textarea{
+            margin-top: 5px;;
+        }
+        
         button {
             background-color: #4CAF50;
             color: white;
@@ -100,64 +81,80 @@
             <li><i class='bx bx-cog'></i><a href="/logout">Signout</a></li>
         </ul>
     </div>
-    <div class="admincontainer">
-        <div class="subadmincontainer">
-            <h2>Edit Home Page Content</h2>
-            <form action="/adminpageeditor" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="home_content">Home Page Content</label>
-                    <textarea id="home_content" name="home_content" rows="4">{{ home_content }}</textarea>
+    <div class="adminbody">
+        <div class="admincontainer">
+            <div class="subadmincontainer">
+                <div class="subadmincontainer1">
+                    <h2>Edit Home Page Content</h2>
                 </div>
-                <div class="form-group">
-                    <label>Upload School Logo:</label>
-                    <input type="file" name="school_logo">
+                <div class="subadmincontainer2">
+                    <form action="/adminpageeditor" method="post" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="home_content">Home Page Content</label>
+                            <textarea id="home_content" name="home_content" rows="4">{{ home_content }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Upload School Logo:</label>
+                            <input type="file" name="school_logo">
+                        </div>
+                        <div class="form-group">
+                            <label>Enter School Name:</label>
+                            <textarea id="school_name" name="school_name" rows="2">{{ school_name }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Enter School Contact:</label>
+                            <textarea id="school_tel" name="school_tel" rows="2">{{ school_tel }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Enter School Email:</label>
+                            <textarea id="school_email" name="school_email" rows="2">{{ school_email }}</textarea>
+                        </div>
+                        <button type="submit">Save Changes</button>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label>Enter School Name:</label>
-                    <textarea id="school_name" name="school_name" rows="2">{{ school_name }}</textarea>
+            </div>
+            <div class="subadmincontainer">
+                <div class="subadmincontainer1">
+                    <h2>Change Teacher PIN</h2>
                 </div>
-                <div class="form-group">
-                    <label>Enter School Contact:</label>
-                    <textarea id="school_tel" name="school_tel" rows="2">{{ school_tel }}</textarea>
+                <div class="subadmincontainer2">
+                    <form action="/changepin" method="post">
+                        <div class="form-group">
+                            <label>Current Teacher PIN:</label>
+                            <input type="text" name="current_pin" value="{{ pin }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>New Teacher PIN:</label>
+                            <input type="password" name="new_pin" placeholder="Enter new PIN">
+                        </div>
+                        <div class="form-group">
+                            <label>Retype New Teacher PIN:</label>
+                            <input type="password" name="retype_new_pin" placeholder="Retype new PIN">
+                        </div>
+                        <button type="submit">Change PIN</button>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label>Enter School Email:</label>
-                    <textarea id="school_email" name="school_email" rows="2">{{ school_email }}</textarea>
-                </div>
-                <button type="submit">Save Changes</button>
-            </form>
+            </div>
         </div>
-        <div class="subadmincontainer">
-            <h2>Change Teacher PIN</h2>
-            <form action="/changepin" method="post">
-                <div class="form-group">
-                    <label>Current Teacher PIN:</label>
-                    <input type="text" name="current_pin" value="{{ pin }}" readonly>
+        <div class="admincontainer">
+            <div class="subadmincontainer">
+                <div class="subadmincontainer1">
+                    <h2>Change Admin Credentials</h2>
+                </div>  
+                <div class="subadmincontainer2">
+                    <form action="/change_admin_credentials" method="post">
+                        <div class="form-group">
+                            <label>Admin Email:</label>
+                            <input type="email" name="admin_email" value="{{ admin_email }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Admin Password:</label>
+                            <input type="password" name="admin_password" required>
+                        </div>
+                        <button type="submit">Change Credentials</button>
+                    </form>
                 </div>
-                <div class="form-group">
-                    <label>New Teacher PIN:</label>
-                    <input type="password" name="new_pin" placeholder="Enter new PIN">
-                </div>
-                <div class="form-group">
-                    <label>Retype New Teacher PIN:</label>
-                    <input type="password" name="retype_new_pin" placeholder="Retype new PIN">
-                </div>
-                <button type="submit">Change PIN</button>
-            </form>
-        </div>
-        <div class="subadmincontainer">
-            <h2>Change Admin Credentials</h2>
-            <form action="/change_admin_credentials" method="post">
-                <div class="form-group">
-                    <label>Admin Email:</label>
-                    <input type="email" name="admin_email" value="{{ admin_email }}" required>
-                </div>
-                <div class="form-group">
-                    <label>Admin Password:</label>
-                    <input type="password" name="admin_password" required>
-                </div>
-                <button type="submit">Change Credentials</button>
-            </form>
+            </div>
         </div>
     </div>
 </body>

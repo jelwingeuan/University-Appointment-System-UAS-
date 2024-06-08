@@ -6,6 +6,34 @@
     <title>Login</title>
     <link rel="stylesheet" href="../static/style.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <style>
+            /* CSS to style the edit container as a popup layer */
+    /* CSS to style the edit container as a popup layer */
+    .edit-container {
+    position: absolute;
+    top: 59%;
+    left: 57.5%;
+    transform: translate(-50%, -50%) scale(1); /* Start with normal scale */
+    background-color: white;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+    display: none; /* Hide the edit container by default */
+    transition: opacity 0.3s ease, transform 0.3s ease; /* Add transition for opacity and transform */
+    width: 700px;
+    height: 500px;
+    
+}
+
+/* Show the edit container when its display property changes */
+    .edit-container.active {
+        opacity: 1; /* Make the container fully visible */
+        transform: translate(-50%, -50%) scale(1.1); /* Increase scale for "float out" effect */
+    }
+
+
+    </style>
 </head>
 <body>
     <nav>
@@ -57,14 +85,20 @@
                     <h1>Account Setting</h1>
                     <div class="profileinput">
                         <div class="subprofileinput">
-                            <label>Name</label><input id="nameInput" class="profileinputdetails" type="text" placeholder="{{ username }}">
-                            <label>Email</label><input id="emailInput" class="profileinputdetails" type="email" placeholder="{{ email }}">
+                            <label>Name</label>
+                            <div id="nameDisplay" class="profiledata">{{ username }}</div>
+                            
+                            <label>Email</label>
+                            <div id="emailDisplay" class="profiledata">{{ email }}</div>
                         </div>
                         <div class="profileinput">
                             <h2>Faculty : {{ faculty }}</h2>
-                            <label>Phone Number</label><input id="phoneInput" class="profileinputdetails" type="text" placeholder="{{ phone_number }}">
-                            <h2>Role : {{ role }} </h2>
-                        </div>   
+                            
+                            <label>Phone Number</label>
+                            <div id="phoneDisplay" class="profiledata">{{ phone_number }}</div>
+                            
+                            <h2>Role : {{ role }}</h2>
+                        </div>  
                     </div>                       
                 </div>
             </div>
@@ -79,12 +113,15 @@
             
             <label for="username">Username:</label>
             <input type="text" id="usernameInput" name="username" value="{{ username }}">
-            
+            <br>
             <label for="email">Email:</label>
             <input type="email" id="emailInput" name="email" value="{{ email }}">
+            <br>
+            <br>
             
             <label for="phone_number">Phone Number:</label>
             <input type="text" id="phoneInput" name="phone_number" value="{{ phone_number }}">
+            <br>
             
             <div class="profilefooter">
                 <button id="updateButton" type="submit" >Update</button>
