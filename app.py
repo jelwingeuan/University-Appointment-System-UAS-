@@ -316,12 +316,6 @@ def render_template_invoice():
     user_data = cursor.fetchone()
     conn.close()
 
-    session["username"] = user_data["username"]
-    session["role"] = user_data["role"]
-    session["faculty"] = user_data["faculty"]
-    session["email"] = user_data["email"]
-    session["phone_number"] = user_data["phone_number"]
-
     appointment_id = session.get("appointment_id")
 
     conn = get_db_connection()
@@ -566,18 +560,29 @@ def appointment2():
 def check_availability():
     data = request.get_json()
     lecturer = data.get("lecturer")
-    event_date = data.get("appointment_date")
+    appointment_date = data.get("appointment_date")
     selected_time_slot = data.get("selected_time_slot")
 
-    event_date = f"{event_date} {selected_time_slot}"
+    # Convert the selected time slot to a datetime object
+    appointment_start = datetime.strptime(f"{appointment_date} {selected_time_slot}", "%Y-%m-%d %I:%M %p")
+    appointment_end = appointment_start + timedelta(hours=1)
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM calendar WHERE lecturer = ? AND event_date = ?", (lecturer, event_date))
+    cursor.execute("SELECT * FROM calendar WHERE lecturer = ? AND event_date LIKE ?", (lecturer, f"{appointment_date}%"))
     existing_appointments = cursor.fetchall()
     conn.close()
 
-    availability = "unavailable" if existing_appointments else "available"
+    availability = "available"
+
+    for appointment in existing_appointments:
+        existing_start = datetime.strptime(appointment['event_date'], "%Y-%m-%d %H:%M:%S")
+        existing_end = existing_start + timedelta(hours=1)
+        
+        # Check if the times overlap
+        if appointment_start < existing_end and appointment_end > existing_start:
+            availability = "unavailable"
+            break
 
     return jsonify({"availability": availability})
 
@@ -796,11 +801,6 @@ def delete_user_route():
 @app.route("/changepassword")
 def changepassword():
     return render_template("changepassword.html")
-
-
-@app.route("/history")
-def history():
-    return render_template("schedule.html")
 
 
 @app.route("/faculty")

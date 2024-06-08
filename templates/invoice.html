@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Invoice</title>
     <link rel="stylesheet" href="../static/style.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="../static/myscripts.js"></script>
@@ -50,7 +50,7 @@
                     <div class="hr"></div>
                     <div class="invoice-head-middle">
                         <div class="invoice-head-middle-left text-start">
-                            <p><span class="text-bold">Date</span>: {{ appointment_date }}</p>
+                            <p><span class="text-bold">Date</span>: {{ appointment[4] }}</p>
                         </div>
                         <div class="invoice-head-middle-right text-end">
                             <p><span class="text-bold">Booking ID:</span> {{ booking_id }}</p>
@@ -72,8 +72,8 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <td class="text-bold">Date</td>
-                                    <td class="text-bold">Booking Time</td>
+                                    <td class="text-bold">Purpose</td>
+                                    <td class="text-bold">Appointment Date</td>
                                     <td class="text-bold">Appointment Time</td>
                                     <td class="text-bold">Lecturer</td>
                                     <td class="text-bold">Faculty</td>
@@ -81,10 +81,10 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>{{ appointment[3] }}</td>
+                                    <td>{{ appointment[6] }}</td>
                                     <td>{{ appointment[4] }}</td>
                                     <td>{{ appointment[5] }}</td>
-                                    <td>{{ appointment[2] }}</td>
+                                    <td>{{ appointment[3] }}</td>
                                     <td>{{ faculty }}</td>
                                 </tr>
                             </tbody>
