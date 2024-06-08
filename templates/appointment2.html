@@ -94,45 +94,45 @@
     </form>
 
     <script>
-        $(document).ready(function() {
-            // Event listener for date change
-            $("#appointment-date").on("change", function() {
-                // Get the selected date
-                let appointmentDate = $(this).val();
-                let lecturer = $("select[name='lecturer']").val();
-        
-                // Loop through each time slot button
-                $("#time-slots button").each(function() {
-                    let timeSlot = $(this).val();
-                    // Make AJAX request to check availability
-                    $.ajax({
-                        type: "POST",
-                        url: "/check_availability",
-                        data: {
-                            lecturer: lecturer,
-                            appointment_date: appointmentDate,
-                            selected_time_slot: timeSlot
-                        },
-                        success: function(response) {
-                            if (response.availability === "unavailable") {
-                                $(this).addClass("unavailable").prop("disabled", true);
-                            } else {
-                                $(this).removeClass("unavailable").prop("disabled", false);
-                            }
-                        }.bind(this),
-                        error: function() {
-                            console.log("Error checking availability");
-                        }
-                    });
-                });
-            });
-        
-            // Event listener for lecturer change
-            $("select[name='lecturer']").on("change", function() {
-                // Trigger date change to check availability again
-                $("#appointment-date").trigger("change");
-            });
+    $(document).ready(function() {
+    function checkAvailability(lecturer, appointmentDate, timeSlot, button) {
+        $.ajax({
+            type: "POST",
+            url: "/check_availability",
+            contentType: "application/json",
+            data: JSON.stringify({
+                lecturer: lecturer,
+                appointment_date: appointmentDate,  // Corrected variable name
+                selected_time_slot: timeSlot  // Corrected variable name
+            }),
+            success: function(response) {
+                if (response.availability === "unavailable") {
+                    button.addClass("unavailable").prop("disabled", true);
+                } else {
+                    button.removeClass("unavailable").prop("disabled", false);
+                }
+            },
+            error: function() {
+                console.log("Error checking availability");
+            }
         });
+    }
+
+    // Event listener for date change
+    $("#appointment-date").on("change", function() {
+        let appointmentDate = $(this).val();
+        let lecturer = $("select[name='lecturer']").val();
+        $("#time-slots button").each(function() {
+            let timeSlot = $(this).val();
+            checkAvailability(lecturer, appointmentDate, timeSlot, $(this));
+        });
+    });
+
+    // Event listener for lecturer change
+    $("select[name='lecturer']").on("change", function() {
+        $("#appointment-date").trigger("change");
+    });
+    });
         </script>
         
 </body>
