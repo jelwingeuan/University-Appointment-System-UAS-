@@ -9,6 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ url_for('static', filename='myscripts.js') }}"></script>
     <style>
+        body{
+            overflow: hidden;
+        }
         .faculty-dropdown {
             margin-bottom: 20px;
         }
@@ -18,6 +21,9 @@
         }
         .faculty-details {
             display: none;
+            left: 38%;
+            position: relative;
+            top: 10%;
         }
         .faculty-details.active {
             display: block;
@@ -37,10 +43,7 @@
 <body>
     <header>
         <h2>Dashboard</h2>
-        <div class="profile-container">
-            <img src="{{ url_for('static', filename='profile.jpg') }}" class="profile-photo">
-            <h4>Admin</h4>
-        </div>
+        
     </header>
     <div class="sidebar">
         <ul>

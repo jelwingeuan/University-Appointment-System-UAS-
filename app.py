@@ -10,6 +10,7 @@ import random
 import os
 import json
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 
 app = Flask(__name__, static_folder="static")
@@ -366,7 +367,6 @@ def user_booking_history():
 
     return render_template("booking_history.html", appointments=appointments, display_role=display_role, role=role)
 
-
 # lecturer
 @app.route("/cancel_booking", methods=["POST"])
 def cancel_booking():
@@ -376,7 +376,7 @@ def cancel_booking():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("cancel", booking_id))
+        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Cancelled", booking_id))
         conn.commit()
     finally:
         conn.close()
@@ -391,7 +391,7 @@ def reject_booking():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("reject", booking_id))
+        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Rejected", booking_id))
         conn.commit()
     finally:
         conn.close()
@@ -406,68 +406,155 @@ def accept_booking():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("accept", booking_id))
+        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Accepted", booking_id))
         conn.commit()
     finally:
         conn.close()
 
     return redirect("/bookinghistory")
 
+# lecturer\
 
-# lecturer
-@app.route("/calendar", methods=["GET", "POST"])
+def calendar_repeat(event_title, repeat_type, repeat_count, event_date, start_time, end_time):
+    repeated_events = []
+
+    # Parse the event date
+    event_date = datetime.strptime(event_date, "%Y-%m-%d")
+
+    for i in range(repeat_count):
+        if repeat_type == "daily":
+            next_event_date = event_date + timedelta(days=i)
+        elif repeat_type == "weekly":
+            next_event_date = event_date + timedelta(weeks=i)
+        elif repeat_type == "monthly":
+            next_event_date = event_date + relativedelta(months=i)
+        elif repeat_type == "yearly":
+            next_event_date = event_date + relativedelta(years=i)
+        else:
+            continue
+
+        repeated_events.append({
+            "event_title": event_title,
+            "event_date": next_event_date.strftime("%Y-%m-%d"),  # Ensure date format is consistent
+            "start_time": start_time,
+            "end_time": end_time
+        })
+
+    return repeated_events
+
+def add_months(source_date, months):
+    month = source_date.month - 1 + months
+    year = source_date.year + month // 12
+    month = month % 12 + 1
+    day = min(source_date.day, [31, 29 if year % 4 == 0 and not year % 100 == 0 or year % 400 == 0 else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1])
+    return datetime(year, month, day)
+
+@app.route("/calendar_record", methods=["GET", "POST"])
 def create_calendar():
     if request.method == "POST":
-        lecturer = request.form["lecturer"]
         event_title = request.form["event_title"]
         event_date = request.form["event_date"]
         start_time = request.form["start_time"]
         end_time = request.form["end_time"]
+        repeat_type = request.form.get("repeat_type", "")
+        repeat_count = int(request.form.get("repeat_count", 1))
         
-        calendar_record(lecturer, event_title, event_date, start_time, end_time)
+        # Fetch lecturer name from the session
+        lecturer = session["username"]  # Assuming the lecturer name is stored in the session
         
-        return redirect(url_for("calendar"))
-    
+        repeated_events = calendar_repeat(event_title, repeat_type, repeat_count, event_date, start_time, end_time)
+
+        for event in repeated_events:
+            insert_event_into_db(event["event_title"], event["event_date"], event["start_time"], event["end_time"], repeat_type, lecturer)
+
+        return redirect("/calendar")
+
+    return render_template("calendar.html")
+
+@app.route("/calendar", methods=["GET", "POST"])
+def event():
     return render_template("calendar.html")
 
 
-@app.route("/calendar", methods=["GET", "POST"])
-def repeat_calendar():
-    if request.method == "POST":
-        event_title = request.form["event_title"]
-        repeat_type = request.form["repeat_type"]
-        repeat_interval = int(request.form["repeat_interval"])
-        repeat_count = int(request.form["repeat_count"])
+@app.route("/events", methods=["GET"])
+def get_events():
+        lecturer = session["username"]
         
-        if repeat_type not in ["No repeat", "Daily", "Weekly", "Monthly"]:
-            return render_template("calendar.html", message="Invalid repeat type. Must be No Repeat, Daily, Weekly, or Monthly.")
+        con = get_db_connection()
+        cur = con.cursor()
         
-        if repeat_count < 1:
-            return render_template("calendar.html", message="Repeat count must be at least 1.")
+        # Fetch events filtered by lecturer
+        cur.execute("SELECT * FROM calendar WHERE lecturer = ?", (lecturer,))
+        events = cur.fetchall()
         
-        result = calendar_repeat(event_title, repeat_type, repeat_interval, repeat_count)
-        
-        if result is None:
-            return render_template("calendar.html", message="Event not found or invalid date format.")
-        
-        return redirect(url_for("calendar"))
+        con.close()
 
+        events_list = []
+        for event in events:
+            events_list.append({
+                "title": event["event_title"],
+                "start": event["event_date"] + 'T' + event["start_time"],
+                "end": event["event_date"] + 'T' + event["end_time"],
+                "allDay": False if event["start_time"] and event["end_time"] else True
+            })
 
-@app.route("/calendar")
-def calendar():
+        return jsonify(events_list)
+
+def insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type, lecturer):
     con = get_db_connection()
     cur = con.cursor()
-    
-    cur.execute("SELECT * FROM calendar")
-    events = cur.fetchall()
+    cur.execute("""
+        INSERT INTO calendar (event_title, event_date, start_time, end_time, repeat_type, lecturer)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (event_title, event_date, start_time, end_time, repeat_type, lecturer))
+    con.commit()
     con.close()
-    
-    return render_template("calendar.html", events=events)
+    print(f"Inserted: {event_title} on {event_date} from {start_time} to {end_time}, Lecturer: {lecturer}")
+
+@app.route('/delete_event', methods=['POST'])
+def delete_event():
+    event_title = request.form.get('event_title')
+    if event_title:
+        if delete_event_from_db(event_title):
+            return jsonify({'status': 'success'}), 200
+        else:
+            return jsonify({'status': 'error', 'message': 'Event not found or deletion failed'}), 500
+    else:
+        return jsonify({'status': 'error', 'message': 'Invalid event title'}), 400
+
+def delete_event_from_db(event_title):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    try:
+        # Execute a SQL query to fetch the event ID based on its title
+        cursor.execute("SELECT id FROM calendar WHERE event_title=?", (event_title,))
+        event_row = cursor.fetchone()
+        
+        if event_row:  # If event exists
+            event_id = event_row[0]
+            cursor.execute("DELETE FROM calendar WHERE id=?", (event_id,))
+            conn.commit()
+            return True  # Return True if deletion is successful
+        else:
+            return False  # Return False if event not found
+    except sqlite3.Error as e:
+        print("SQLite error while deleting event:", e)
+        return False  # Return False if deletion fails
+    finally:
+        # Close the database connection
+        conn.close()
+
+
+
 
 
 @app.route("/appointment")
 def appointment():
-    return render_template("appointment.html")
+    if 'id' not in session:
+        return redirect('/login')  # Redirect to the login route if session ID is not found
+    else:
+        return render_template("appointment.html")
 
 
 @app.route("/appointment2")
