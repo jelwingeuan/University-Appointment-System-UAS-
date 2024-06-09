@@ -61,11 +61,11 @@
     <div class="profilecontainer">
         <div class="profilewrapper">
             <div class="profileheader">
-                <h3>Profiles</h3>
+                <h3 style="margin: 10px;font-size: 30px;">Profiles</h3>
             </div>
             <div class="profilesubwrapper">
                 <div class="profilesidebar">
-                    <h3>{{ session.username }}</h3>
+                    <h3 style="margin-top: 30px; font-size: 22px;">{{ session.username }}</h3>
                     <a class="listitem active" data-toggle="list" href="/profile">General</a>
                     <a class="listitem" data-toggle="list" href="/changepassword">Change password</a>
                     {% if session.role == 'teacher' %}
@@ -75,8 +75,8 @@
                     <a class="listitem" data-toggle="list" href="/logout">Log Out</a>
                 </div>
                 <div class="profilemain">
-                    <h1>Account Setting</h1>
-                    <div class="profileinput">
+                    <h1 style="margin-top: 20px;">Account Setting</h1>
+                    <div class="profileinput" style="margin-left: 20px;">
                         <div class="subprofileinput">
                             <label>Name</label>
                             <div id="nameDisplay" class="profiledata">{{ username }}</div>
@@ -126,9 +126,9 @@
             <div class="footer-col">
                 <h4>Universal Appointment Booking System</h4>
                 <ul>
-                    <li><a href="/aboutus">about us</a></li>
-                    <li><a href="#">our services</a></li>
-                    <li><a href="/appointment">book now</a></li>
+                    <li><a href="/about">About Us</a></li>
+                    <li><a href="/appointment">Book Now</a></li>
+                    <li><a href="/signup">Join Now</a></li>
                 </ul>
             </div>
         </footer>

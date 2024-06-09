@@ -528,14 +528,9 @@ def delete_event_from_db(event_title):
     cursor = conn.cursor()
 
     try:
-        # Execute a SQL query to fetch the event ID based on its title
-        cursor.execute("SELECT id FROM calendar WHERE event_title=?", (event_title,))
-        event_row = cursor.fetchone()
-        
-        if event_row:  # If event exists
-            event_id = event_row[0]
-            cursor.execute("DELETE FROM calendar WHERE id=?", (event_id,))
-            conn.commit()
+        cursor.execute("DELETE FROM calendar WHERE event_title=?", (event_title,))
+        conn.commit()
+        if cursor.rowcount > 0:
             return True  # Return True if deletion is successful
         else:
             return False  # Return False if event not found
@@ -543,7 +538,6 @@ def delete_event_from_db(event_title):
         print("SQLite error while deleting event:", e)
         return False  # Return False if deletion fails
     finally:
-        # Close the database connection
         conn.close()
 
 
@@ -677,37 +671,87 @@ def delete_booking():
 # admin
 @app.route("/admin")
 def admin_dashboard():
+    search_query = request.args.get('search')
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'teacher'")
-    num_teachers = cursor.fetchone()[0]
+    # Fetch the counts and appointments based on the search query if provided
+    if search_query:
+        cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE role = 'teacher'"
+        )
+        num_teachers = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'student'")
-    num_students = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE role = 'student'"
+        )
+        num_students = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM appointments")
-    num_appointments = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT COUNT(*) FROM appointments"
+        )
+        num_appointments = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM users")
-    num_users = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT COUNT(*) FROM users"
+        )
+        num_users = cursor.fetchone()[0]
 
-    cursor.execute(
-        "SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id FROM appointments"
-    )
-    appointments = cursor.fetchall()
+        cursor.execute(
+            """
+            SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id 
+            FROM appointments 
+            WHERE lecturer LIKE ? OR student LIKE ? OR appointment_date LIKE ? OR purpose LIKE ? OR status LIKE ?
+            """,
+            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
+        )
+        appointments = cursor.fetchall()
+    else:
+        cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE role = 'teacher'"
+        )
+        num_teachers = cursor.fetchone()[0]
+
+        cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE role = 'student'"
+        )
+        num_students = cursor.fetchone()[0]
+
+        cursor.execute(
+            "SELECT COUNT(*) FROM appointments"
+        )
+        num_appointments = cursor.fetchone()[0]
+
+        cursor.execute(
+            "SELECT COUNT(*) FROM users"
+        )
+        num_users = cursor.fetchone()[0]
+
+        cursor.execute(
+            """
+            SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id 
+            FROM appointments
+            """
+        )
+        appointments = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
+
+
     return render_template(
-        "admin.html",
-        appointments=appointments,
-        num_teachers=num_teachers,
-        num_students=num_students,
-        num_appointments=num_appointments,
-        num_users=num_users,
-    )
+    "admin.html",
+    appointments=appointments,
+    num_teachers=num_teachers,
+    num_students=num_students,
+    num_appointments=num_appointments,  # Remove one occurrence of num_appointments
+    num_users=num_users,
+    # num_appointments=json.dumps(num_appointments)  # Remove this line
+)
+
+
+    
 
 
 # admin
