@@ -551,40 +551,54 @@ def appointment():
         return render_template("appointment.html")
 
 
+def get_lecturers():
+    conn = sqlite3.connect('database.db')  # Connect to your database
+    cursor = conn.cursor()
+    cursor.execute("SELECT username FROM users WHERE role = 'teacher'")  # Adjust the query as needed
+    lecturers = cursor.fetchall()
+    conn.close()
+    return [lecturer[0] for lecturer in lecturers]
+
 @app.route("/appointment2")
 def appointment2():
-    return render_template("appointment2.html")
-
+    lecturers = get_lecturers()
+    return render_template("appointment2.html", lecturers=lecturers)
 
 @app.route("/check_availability", methods=["POST"])
 def check_availability():
     data = request.get_json()
-    lecturer = data.get("lecturer")
-    appointment_date = data.get("appointment_date")
-    selected_time_slot = data.get("selected_time_slot")
+    lecturer = data["lecturer"]
+    appointment_date = data["appointment_date"]
+    start_time = data["start_time"]
+    end_time = data["end_time"]
 
-    # Convert the selected time slot to a datetime object
-    appointment_start = datetime.strptime(f"{appointment_date} {selected_time_slot}", "%Y-%m-%d %I:%M %p")
-    appointment_end = appointment_start + timedelta(hours=1)
+    try:
+        with sqlite3.connect('database.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT 1 FROM calendar 
+                WHERE lecturer = ? 
+                  AND event_date = ? 
+                  AND (
+                      (start_time < ? AND end_time > ?) 
+                      OR 
+                      (start_time < ? AND end_time > ?)
+                  )
+                """, 
+                (lecturer, appointment_date, end_time, start_time, start_time, end_time)
+            )
+            count = cursor.fetchone()
+    except sqlite3.Error as e:
+        return jsonify({"error": str(e)}), 500
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM calendar WHERE lecturer = ? AND event_date LIKE ?", (lecturer, f"{appointment_date}%"))
-    existing_appointments = cursor.fetchall()
-    conn.close()
+    if count:
+        return jsonify({"availability": "unavailable"})
+    else:
+        return jsonify({"availability": "available"})
 
-    availability = "available"
 
-    for appointment in existing_appointments:
-        existing_start = datetime.strptime(appointment['event_date'], "%Y-%m-%d %H:%M:%S")
-        existing_end = existing_start + timedelta(hours=1)
-        
-        # Check if the times overlap
-        if appointment_start < existing_end and appointment_end > existing_start:
-            availability = "unavailable"
-            break
 
-    return jsonify({"availability": availability})
 
 
 # admin
