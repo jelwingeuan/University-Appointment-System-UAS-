@@ -10,11 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
     <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
         .calendar-container {
             display: flex;
             justify-content: center;
@@ -28,6 +23,54 @@
             position: absolute;
             padding-top: 10px;
         }
+
+        .button {
+        width: 120px;
+        height: 30px;
+        display: flex;
+        gap: 12px;
+        cursor: pointer;
+        border: 3px solid rgb(255, 239, 94);
+        background-color: rgb(255, 239, 94);
+        box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.137);
+        position: absolute;
+        left: 12%;
+        top: 2%;
+    }
+
+    .text {
+        width: 70%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgb(27, 27, 27);
+        color: white;
+    }
+
+    .arrow path {
+        fill: rgb(19, 19, 19);
+    }
+
+    .button:hover .arrow {
+        animation: slide-in-left 0.6s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+    }
+
+    @keyframes slide-in-left {
+        0% {
+            transform: translateX(-8px);
+            opacity: 0;
+        }
+
+        100% {
+            transform: translateX(0px);
+            opacity: 1;
+        }
+    }
+
+    .button:active {
+        transform: scale(0.97);
+    }
     </style>
 </head>
 <body>
@@ -72,10 +115,6 @@
                                 <option value="yearly">Yearly</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label for="eventRepeat">Repeat Period</label>
-                            <input type="number" class="form-control" name="repeat_period" id="period" max="12" min="1" required>
-                        </div>
                         <button type="submit" class="btn btn-primary">Save Event</button>
                     </form>
                 </div>
@@ -85,7 +124,14 @@
 
     <div class="calendar-container">
         <div id='calendar' class="calendar"></div>
+        <a href="/profile" class="button">
+            <span class="text">Back</span>
+            <svg class="arrow" viewBox="0 0 448 512" height="1em" xmlns="http://www.w3.org/2000/svg" style="margin-top: 4px;">
+                <path transform="rotate(180, 224, 256) translate(0, 5)" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path>
+            </svg>
+        </a>
     </div>
+    
 
     <script src='https://code.jquery.com/jquery-3.5.1.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js'></script>
@@ -103,68 +149,68 @@
       });
 
       document.addEventListener('DOMContentLoaded', function() {
-          var calendarEl = document.getElementById('calendar');
-          var currentView = 'dayGridMonth';
-          var selectedStart;
-          var selectedEnd;
+    var calendarEl = document.getElementById('calendar');
+    var currentView = 'dayGridMonth';
+    var selectedStart;
+    var selectedEnd;
 
-          var calendar = new FullCalendar.Calendar(calendarEl, {
-              initialView: currentView,
-              headerToolbar: {
-                  left: 'prev,next today',
-                  center: 'title',
-                  right: 'dayGridMonth,timeGridWeek,timeGridDay'
-              },
-              selectable: true,
-              selectHelper: true,
-              events: function(fetchInfo, successCallback, failureCallback) {
-                  $.ajax({
-                      url: '/events',
-                      method: 'GET',
-                      success: function(data) {
-                          successCallback(data);
-                      },
-                      error: function() {
-                          failureCallback();
-                      }
-                  });
-              },
-              select: function(info) {
-                  selectedStart = info.startStr;
-                  selectedEnd = info.endStr;
-                  document.getElementById('eventDate').value = info.startStr.split('T')[0];
-                  document.getElementById('startTime').value = info.startStr.split('T')[1] || '';
-                  document.getElementById('endTime').value = info.endStr.split('T')[1] || '';
-                  $('#eventModal').modal('show');
-              },
-              editable: true,
-              eventClick: function(info) {
-                if (confirm('Are you sure you want to delete this event?')) {
-                    $.ajax({
-                        url: '/delete_event',
-                        method: 'POST',
-                        data: {
-                        event_title: info.event.title 
-                        },
-                        success: function(response) {
-                            if (response.status === 'success') {
-                                info.event.remove();
-                            } else {
-                                alert(response.message);
-                            }
-                        },
-                        error: function() {
-                            alert('Failed to delete event.');
-                        }
-                    });
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: currentView,
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        selectable: true,
+        selectHelper: true,
+        events: function(fetchInfo, successCallback, failureCallback) {
+            $.ajax({
+                url: '/events',
+                method: 'GET',
+                success: function(data) {
+                    successCallback(data);
+                },
+                error: function() {
+                    failureCallback();
                 }
+            });
+        },
+        select: function(info) {
+            selectedStart = info.startStr;
+            selectedEnd = info.endStr;
+            document.getElementById('eventDate').value = info.startStr.split('T')[0];
+            document.getElementById('startTime').value = info.startStr.split('T')[1] || '';
+            document.getElementById('endTime').value = info.endStr.split('T')[1] || '';
+            $('#eventModal').modal('show');
+        },
+        editable: true,
+        eventClick: function(info) {
+            if (confirm('Are you sure you want to delete this event?')) {
+                $.ajax({
+                    url: '/delete_event',
+                    method: 'POST',
+                    data: {
+                        event_title: info.event.title
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            // Reload calendar or remove event from frontend
+                            calendar.refetchEvents();
+                        } else {
+                            alert('Failed to delete event: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to delete event. Please try again later.');
+                    }
+                });
             }
+        }
+    });
 
+    calendar.render();
+});
 
-          });
-
-          calendar.render();
-      });
   </script>
 </body>
 </html>

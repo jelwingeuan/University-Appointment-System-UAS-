@@ -271,7 +271,10 @@ def create_booking():
         purpose = request.form.get("purpose")
         appointment_date = request.form.get("appointment_date")
         appointment_time = request.form.get("selected_time_slot")
-        
+
+        if not appointment_time:
+            flash("Please select a valid time slot.", "danger")
+            return redirect("/appointment")
 
         try:
             conn = get_db_connection()
@@ -282,15 +285,19 @@ def create_booking():
             )
             appointment_id = cursor.lastrowid
             conn.commit()
+        except sqlite3.IntegrityError as e:
+            flash(f"An error occurred: {str(e)}", "danger")
+            return redirect("/appointment")
         finally:
             conn.close()
 
         session["appointment_id"] = appointment_id
 
-        start_time = datetime.strptime(appointment_time, "%I:%M %p")
+        start_time = datetime.strptime(appointment_time.split(" - ")[0], "%I:%M %p")
         end_time = (start_time + timedelta(hours=1)).strftime("%H:%M")
         start_time = start_time.strftime("%H:%M")
 
+        # Insert the appointment into the calendar table
         event_title = f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
         insert_event_into_db(
             event_title=event_title,
@@ -301,8 +308,10 @@ def create_booking():
             lecturer=lecturer
         )
 
+        # Redirect to the invoice page
         flash("Booking created successfully!", "success")
         return redirect("/invoice")
+
 
 
 # student
@@ -470,29 +479,55 @@ def event():
     return render_template("calendar.html")
 
 
+from datetime import datetime
+
 @app.route("/events", methods=["GET"])
 def get_events():
-        lecturer = session["username"]
-        
+    lecturer = session.get("username")
+
+    if lecturer:
         con = get_db_connection()
         cur = con.cursor()
-        
-        # Fetch events filtered by lecturer
-        cur.execute("SELECT * FROM calendar WHERE lecturer = ?", (lecturer,))
-        events = cur.fetchall()
-        
-        con.close()
 
-        events_list = []
-        for event in events:
-            events_list.append({
-                "title": event["event_title"],
-                "start": event["event_date"] + 'T' + event["start_time"],
-                "end": event["event_date"] + 'T' + event["end_time"],
-                "allDay": False if event["start_time"] and event["end_time"] else True
-            })
+        try:
+            # Fetch events from calendar table filtered by lecturer
+            cur.execute("SELECT event_title, event_date, start_time, end_time FROM calendar WHERE lecturer = ?", (lecturer,))
+            calendar_events = cur.fetchall()
 
-        return jsonify(events_list)
+            # Fetch events from appointments table where status is Accepted and lecturer is involved
+            cur.execute("SELECT purpose AS event_title, appointment_date AS event_date, appointment_time AS start_time, '' AS end_time FROM appointments WHERE lecturer = ? AND status = 'Accepted'", (lecturer,))
+            appointment_events = cur.fetchall()
+            print(appointment_events)
+            # Combine events from both tables into a single list
+            all_events = calendar_events + appointment_events
+
+            events_list = []
+            for event in all_events:
+                start_time = event["start_time"]
+                end_time = event["end_time"]
+
+                events_list.append({
+                    "title": event["event_title"],
+                    "start": f"{event['event_date']}T{start_time}",
+                    "end": f"{event['event_date']}T{end_time}" if end_time else None,
+                    "allDay": False if start_time and end_time else True
+                })
+
+            return jsonify(events_list)
+        except Exception as e:
+            # Handle any exceptions that might occur during data fetching
+            return jsonify({"error": str(e)}), 500
+        finally:
+            con.close()
+    else:
+        return jsonify({"error": "User not logged in"}), 401
+
+
+def parse_time(time_str):
+        # Try parsing with AM/PM specifier format
+    return datetime.strptime(time_str, "%I:%M%p").strftime("%H:%M")
+    
+
 
 def insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type, lecturer):
     con = get_db_connection()
@@ -521,14 +556,9 @@ def delete_event_from_db(event_title):
     cursor = conn.cursor()
 
     try:
-        # Execute a SQL query to fetch the event ID based on its title
-        cursor.execute("SELECT id FROM calendar WHERE event_title=?", (event_title,))
-        event_row = cursor.fetchone()
-        
-        if event_row:  # If event exists
-            event_id = event_row[0]
-            cursor.execute("DELETE FROM calendar WHERE id=?", (event_id,))
-            conn.commit()
+        cursor.execute("DELETE FROM calendar WHERE event_title=?", (event_title,))
+        conn.commit()
+        if cursor.rowcount > 0:
             return True  # Return True if deletion is successful
         else:
             return False  # Return False if event not found
@@ -536,7 +566,6 @@ def delete_event_from_db(event_title):
         print("SQLite error while deleting event:", e)
         return False  # Return False if deletion fails
     finally:
-        # Close the database connection
         conn.close()
 
 
@@ -551,40 +580,75 @@ def appointment():
         return render_template("appointment.html")
 
 
+def get_lecturers():
+    conn = sqlite3.connect('database.db')  # Connect to your database
+    cursor = conn.cursor()
+    cursor.execute("SELECT username FROM users WHERE role = 'teacher'")  # Adjust the query as needed
+    lecturers = cursor.fetchall()
+    conn.close()
+    return [lecturer[0] for lecturer in lecturers]
+
 @app.route("/appointment2")
 def appointment2():
-    return render_template("appointment2.html")
+    lecturers = get_lecturers()
+    return render_template("appointment2.html", lecturers=lecturers)
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+from datetime import datetime
 
 @app.route("/check_availability", methods=["POST"])
 def check_availability():
     data = request.get_json()
-    lecturer = data.get("lecturer")
-    appointment_date = data.get("appointment_date")
-    selected_time_slot = data.get("selected_time_slot")
+    lecturer = data["lecturer"]
+    appointment_date = data["appointment_date"]
+    start_time_str = data["start_time"]
+    end_time_str = data["end_time"]
 
-    # Convert the selected time slot to a datetime object
-    appointment_start = datetime.strptime(f"{appointment_date} {selected_time_slot}", "%Y-%m-%d %I:%M %p")
-    appointment_end = appointment_start + timedelta(hours=1)
+    logging.debug(f"Checking availability for {lecturer} on {appointment_date} from {start_time_str} to {end_time_str}")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM calendar WHERE lecturer = ? AND event_date LIKE ?", (lecturer, f"{appointment_date}%"))
-    existing_appointments = cursor.fetchall()
-    conn.close()
+    try:
+        start_time = datetime.strptime(start_time_str, "%I:%M %p").hour
+        end_time = datetime.strptime(end_time_str, "%I:%M %p").hour
+    except ValueError as e:
+        logging.error(f"Time parsing error: {str(e)}")
+        return jsonify({"error": "Invalid time format"}), 400
 
-    availability = "available"
+    unavailable_hours = []
 
-    for appointment in existing_appointments:
-        existing_start = datetime.strptime(appointment['event_date'], "%Y-%m-%d %H:%M:%S")
-        existing_end = existing_start + timedelta(hours=1)
-        
-        # Check if the times overlap
-        if appointment_start < existing_end and appointment_end > existing_start:
-            availability = "unavailable"
-            break
+    try:
+        with sqlite3.connect('database.db') as conn:
+            cursor = conn.cursor()
+            for hour in range(start_time, end_time + 1):
+                cursor.execute(
+                    """
+                    SELECT 1 FROM calendar 
+                    WHERE lecturer = ? 
+                    AND event_date = ? 
+                    AND (
+                        (start_time <= ? AND end_time > ?) OR
+                        (start_time < ? AND end_time >= ?)
+                    )
+                    """, 
+                    (lecturer, appointment_date, hour, hour, hour, hour)
+                )
+                conflict = cursor.fetchone()
+                logging.debug(f"Query result for hour {hour}: {conflict}")
+                if conflict:
+                    unavailable_hours.append(hour)
+    except sqlite3.Error as e:
+        logging.error(f"Database error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
-    return jsonify({"availability": availability})
+    if unavailable_hours:
+        logging.debug(f"Unavailable hours: {unavailable_hours}")
+        return jsonify({"availability": "unavailable", "hours": unavailable_hours})
+    else:
+        logging.debug("All hours available")
+        return jsonify({"availability": "available"})
+
 
 
 # admin
@@ -635,37 +699,87 @@ def delete_booking():
 # admin
 @app.route("/admin")
 def admin_dashboard():
+    search_query = request.args.get('search')
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'teacher'")
-    num_teachers = cursor.fetchone()[0]
+    # Fetch the counts and appointments based on the search query if provided
+    if search_query:
+        cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE role = 'teacher'"
+        )
+        num_teachers = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'student'")
-    num_students = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE role = 'student'"
+        )
+        num_students = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM appointments")
-    num_appointments = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT COUNT(*) FROM appointments"
+        )
+        num_appointments = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM users")
-    num_users = cursor.fetchone()[0]
+        cursor.execute(
+            "SELECT COUNT(*) FROM users"
+        )
+        num_users = cursor.fetchone()[0]
 
-    cursor.execute(
-        "SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id FROM appointments"
-    )
-    appointments = cursor.fetchall()
+        cursor.execute(
+            """
+            SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id 
+            FROM appointments 
+            WHERE lecturer LIKE ? OR student LIKE ? OR appointment_date LIKE ? OR purpose LIKE ? OR status LIKE ?
+            """,
+            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
+        )
+        appointments = cursor.fetchall()
+    else:
+        cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE role = 'teacher'"
+        )
+        num_teachers = cursor.fetchone()[0]
+
+        cursor.execute(
+            "SELECT COUNT(*) FROM users WHERE role = 'student'"
+        )
+        num_students = cursor.fetchone()[0]
+
+        cursor.execute(
+            "SELECT COUNT(*) FROM appointments"
+        )
+        num_appointments = cursor.fetchone()[0]
+
+        cursor.execute(
+            "SELECT COUNT(*) FROM users"
+        )
+        num_users = cursor.fetchone()[0]
+
+        cursor.execute(
+            """
+            SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id 
+            FROM appointments
+            """
+        )
+        appointments = cursor.fetchall()
 
     cursor.close()
     conn.close()
 
+
+
     return render_template(
-        "admin.html",
-        appointments=appointments,
-        num_teachers=num_teachers,
-        num_students=num_students,
-        num_appointments=num_appointments,
-        num_users=num_users,
-    )
+    "admin.html",
+    appointments=appointments,
+    num_teachers=num_teachers,
+    num_students=num_students,
+    num_appointments=num_appointments,  # Remove one occurrence of num_appointments
+    num_users=num_users,
+    # num_appointments=json.dumps(num_appointments)  # Remove this line
+)
+
+
+    
 
 
 # admin

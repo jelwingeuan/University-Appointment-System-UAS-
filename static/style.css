@@ -535,8 +535,8 @@ nav .dropbtn:not(:hover) i {
 /* About content wrapper */
 .aboutcontentwrapper {
     position: relative;
-    margin-bottom: 50px;
-    
+    margin-bottom: 80px;
+    margin-top: 20px;
 }
 
 .aboutcontent{
@@ -801,6 +801,8 @@ nav .dropbtn:not(:hover) i {
     flex-direction: row;
     justify-content: center;
 }
+
+
 
 .datepicker {
     text-align: center;
@@ -1257,7 +1259,7 @@ header input[type="search"] {
 }
 
 .sidebar {
-    height: calc(200vh - 60px); /* Adjust sidebar height */
+    height: calc(210vh - 60px); /* Adjust sidebar height */
     width: 230px;
     position: absolute;
     top: 50px; /* Adjust top position based on header height */
@@ -1358,7 +1360,6 @@ header h4 {
 }
 
 .graph{
-    width: 500px;
     margin-right: 15px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
     padding: 10px;
@@ -1672,42 +1673,19 @@ td .accept, .cancel, .Pending {
 .changecontainer{
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     width: 700px;
-    display: flex;
-    justify-content: start;
-    align-items: center;
-    flex-direction: column;
+    display:flex;
     
-
-}
-
-.changesub{
-    padding: 10px;
-    display: flex;
-    justify-content: start;
-    align-items: center;
-    flex-direction: column;
-    text-align: start;
-    margin-top: 100px;
-
 }
 
   
 .changesub h2{
-    font-weight: 400;
+    font-weight: 600;
     margin-bottom: 50px;
+    font-size: 24px;
     
 
 }
 
-.changesub input[type="password"], label{
-    font-size: 18px;
-    text-align: left;
-}
-
-.changesub input[type="password"]{
-    padding: 5px;
-    margin: 5px;
-}
 
 .changesub button {
     margin-top: 20px;

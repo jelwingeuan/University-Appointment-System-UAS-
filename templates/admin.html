@@ -68,18 +68,18 @@
     <input type="hidden" id="num_users" value="{{ num_users }}">
     <div class="graphcontainer">
         <div class="graph">
-            <canvas id="barChart" ></canvas>
+            <canvas id="barChart" width="500"></canvas>
         </div>
         <div class="graph">
-            <canvas id="pieChart" style="height: 200px;"></canvas>
+            <canvas id="pieChart" ></canvas>
         </div>
     </div>
     <div class="table" id="customers_table">
         <div class="table__header">
             <h1>Appointments List</h1>
             <div class="input-group">
-                <input type="search" placeholder="Search Data...">
-                <i class='bx bx-search'></i>
+                <input type="search" id="search" placeholder="Search Data...">
+                <i class='bx bx-search' onclick="searchData()"></i>
             </div>
         </div>
         <div class="table__body">
@@ -110,6 +110,13 @@
                 </tbody>                               
             </table>
         </div>
-    </div>   
+    </div>
+    <script>
+        function searchData() {
+            const searchQuery = document.getElementById('search').value;
+            window.location.href = `/admin?search=${searchQuery}`;
+        }
+    </script>
+     
 </body>
 </html>

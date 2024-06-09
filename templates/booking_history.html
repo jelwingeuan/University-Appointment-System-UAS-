@@ -66,22 +66,16 @@
     <nav>
         <ul>
             <li><a href="/">Home</a></li>
-            <li class="dropdown">
-                <a href="#" class="dropbtn">About<i class='bx bx-chevron-down'></i></a>
-                <div class="dropdown-content">
-                    <a href="/about">About Us</a>
-                    <a href="/about">Faculty</a>
-                    <a href="/about">History</a>
-                </div>
-            </li>
+            <li><a href="/about">About</a></li>
+            
             <li><a href="/appointment">Make An Appointment</a></li>
-            {% if session['logged_in'] %}
+            {% if session['logged_in'] == True %}
             <li class="dropdown">
                 <a href="/profile" class="dropbtn">Profile<i class='bx bx-chevron-down'></i></a>
                 <div class="dropdown-content">
                     <a href="/profile">View Profile</a>
                     <a href="/changepassword">Change Password</a>
-                    <a href="/history">Booking History</a>
+                    <a href="/bookinghistory">Booking History</a>
                 </div>
             </li>
             <li><a href="/logout">Logout</a></li>
@@ -94,11 +88,11 @@
     <div class="profilecontainer">
         <div class="profilewrapper">
             <div class="profileheader">
-                <h3>Booking History</h3>
+                <h3 style="margin: 10px;font-size: 30px;">Booking History</h3>
             </div>
             <div class="profilesubwrapper">
                 <div class="profilesidebar">
-                    <h3>{{ session.username }}</h3>
+                    <h3 style="margin-top: 30px; font-size: 22px;">{{ session.username }}</h3>
                     <a class="listitem active" data-toggle="list" href="/profile">General</a>
                     <a class="listitem" data-toggle="list" href="/changepassword">Change password</a>
                     {% if session.role == 'teacher' %}
@@ -140,13 +134,22 @@
                                     <td>
                                         <form method="post" action="/accept_booking">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            <button type="submit" value="accepted">Accept</button>
+                                            {% if appointment['status'] == 'Cancelled' or appointment['status'] == 'Rejected' %}
+                                                <button type="submit" disabled style="pointer-events: none;">Accept</button>
+                                            {% else %}
+                                                <button type="submit" value="Accepted">Accept</button>
+                                            {% endif %}
                                         </form>
                                     </td>
+                                    
                                     <td>
                                         <form method="post" action="/reject_booking">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            <button type="submit" value="rejected">Reject</button>
+                                            {% if appointment['status'] == 'Cancelled' or appointment['status'] == 'Rejected'%}
+                                                <button type="button" disabled style="pointer-events: none;">Reject</button>
+                                            {% else %}
+                                                <button type="submit" value="Rejected">Reject</button>
+                                            {% endif %}
                                         </form>
                                     </td>
                                     {% endif %}
@@ -155,7 +158,13 @@
                                     <td>
                                         <form method="post" action="/cancel_booking">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            <button type="submit" value="cancelled">Cancel</button>
+                                            {% if appointment['status'] == 'Rejected' or appointment['status'] == 'Cancelled' %}
+                                                <button type="button" disabled style="pointer-events: none;">Cancel</button>
+                                            {% elif appointment['status'] == 'cancelled' %}
+                                                <button type="button" disabled>Cancel</button>
+                                            {% else %}
+                                                <button type="submit" value="cancelled">Cancel</button>
+                                            {% endif %}
                                         </form>
                                     </td>
                                     {% endif %}
