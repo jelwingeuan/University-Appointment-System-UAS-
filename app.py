@@ -271,7 +271,10 @@ def create_booking():
         purpose = request.form.get("purpose")
         appointment_date = request.form.get("appointment_date")
         appointment_time = request.form.get("selected_time_slot")
-        
+
+        if not appointment_time:
+            flash("Please select a valid time slot.", "danger")
+            return redirect("/appointment")
 
         try:
             conn = get_db_connection()
@@ -282,12 +285,15 @@ def create_booking():
             )
             appointment_id = cursor.lastrowid
             conn.commit()
+        except sqlite3.IntegrityError as e:
+            flash(f"An error occurred: {str(e)}", "danger")
+            return redirect("/appointment")
         finally:
             conn.close()
 
         session["appointment_id"] = appointment_id
 
-        start_time = datetime.strptime(appointment_time, "%I:%M %p")
+        start_time = datetime.strptime(appointment_time.split(" - ")[0], "%I:%M %p")
         end_time = (start_time + timedelta(hours=1)).strftime("%H:%M")
         start_time = start_time.strftime("%H:%M")
 
@@ -303,6 +309,7 @@ def create_booking():
 
         flash("Booking created successfully!", "success")
         return redirect("/invoice")
+
 
 
 # student
@@ -564,40 +571,61 @@ def appointment2():
     lecturers = get_lecturers()
     return render_template("appointment2.html", lecturers=lecturers)
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+from datetime import datetime
+
 @app.route("/check_availability", methods=["POST"])
 def check_availability():
     data = request.get_json()
     lecturer = data["lecturer"]
     appointment_date = data["appointment_date"]
-    start_time = data["start_time"]
-    end_time = data["end_time"]
+    start_time_str = data["start_time"]
+    end_time_str = data["end_time"]
+
+    logging.debug(f"Checking availability for {lecturer} on {appointment_date} from {start_time_str} to {end_time_str}")
+
+    try:
+        start_time = datetime.strptime(start_time_str, "%I:%M %p").hour
+        end_time = datetime.strptime(end_time_str, "%I:%M %p").hour
+    except ValueError as e:
+        logging.error(f"Time parsing error: {str(e)}")
+        return jsonify({"error": "Invalid time format"}), 400
+
+    unavailable_hours = []
 
     try:
         with sqlite3.connect('database.db') as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                """
-                SELECT 1 FROM calendar 
-                WHERE lecturer = ? 
-                  AND event_date = ? 
-                  AND (
-                      (start_time < ? AND end_time > ?) 
-                      OR 
-                      (start_time < ? AND end_time > ?)
-                  )
-                """, 
-                (lecturer, appointment_date, end_time, start_time, start_time, end_time)
-            )
-            count = cursor.fetchone()
+            for hour in range(start_time, end_time + 1):
+                cursor.execute(
+                    """
+                    SELECT 1 FROM calendar 
+                    WHERE lecturer = ? 
+                    AND event_date = ? 
+                    AND (
+                        (start_time <= ? AND end_time > ?) OR
+                        (start_time < ? AND end_time >= ?)
+                    )
+                    """, 
+                    (lecturer, appointment_date, hour, hour, hour, hour)
+                )
+                conflict = cursor.fetchone()
+                logging.debug(f"Query result for hour {hour}: {conflict}")
+                if conflict:
+                    unavailable_hours.append(hour)
     except sqlite3.Error as e:
+        logging.error(f"Database error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-    if count:
-        return jsonify({"availability": "unavailable"})
+    if unavailable_hours:
+        logging.debug(f"Unavailable hours: {unavailable_hours}")
+        return jsonify({"availability": "unavailable", "hours": unavailable_hours})
     else:
+        logging.debug("All hours available")
         return jsonify({"availability": "available"})
-
-
 
 
 
