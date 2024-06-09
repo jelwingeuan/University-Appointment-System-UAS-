@@ -297,6 +297,7 @@ def create_booking():
         end_time = (start_time + timedelta(hours=1)).strftime("%H:%M")
         start_time = start_time.strftime("%H:%M")
 
+        # Insert the appointment into the calendar table
         event_title = f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
         insert_event_into_db(
             event_title=event_title,
@@ -307,6 +308,7 @@ def create_booking():
             lecturer=lecturer
         )
 
+        # Redirect to the invoice page
         flash("Booking created successfully!", "success")
         return redirect("/invoice")
 
@@ -477,29 +479,55 @@ def event():
     return render_template("calendar.html")
 
 
+from datetime import datetime
+
 @app.route("/events", methods=["GET"])
 def get_events():
-        lecturer = session["username"]
-        
+    lecturer = session.get("username")
+
+    if lecturer:
         con = get_db_connection()
         cur = con.cursor()
-        
-        # Fetch events filtered by lecturer
-        cur.execute("SELECT * FROM calendar WHERE lecturer = ?", (lecturer,))
-        events = cur.fetchall()
-        
-        con.close()
 
-        events_list = []
-        for event in events:
-            events_list.append({
-                "title": event["event_title"],
-                "start": event["event_date"] + 'T' + event["start_time"],
-                "end": event["event_date"] + 'T' + event["end_time"],
-                "allDay": False if event["start_time"] and event["end_time"] else True
-            })
+        try:
+            # Fetch events from calendar table filtered by lecturer
+            cur.execute("SELECT event_title, event_date, start_time, end_time FROM calendar WHERE lecturer = ?", (lecturer,))
+            calendar_events = cur.fetchall()
 
-        return jsonify(events_list)
+            # Fetch events from appointments table where status is Accepted and lecturer is involved
+            cur.execute("SELECT purpose AS event_title, appointment_date AS event_date, appointment_time AS start_time, '' AS end_time FROM appointments WHERE lecturer = ? AND status = 'Accepted'", (lecturer,))
+            appointment_events = cur.fetchall()
+            print(appointment_events)
+            # Combine events from both tables into a single list
+            all_events = calendar_events + appointment_events
+
+            events_list = []
+            for event in all_events:
+                start_time = event["start_time"]
+                end_time = event["end_time"]
+
+                events_list.append({
+                    "title": event["event_title"],
+                    "start": f"{event['event_date']}T{start_time}",
+                    "end": f"{event['event_date']}T{end_time}" if end_time else None,
+                    "allDay": False if start_time and end_time else True
+                })
+
+            return jsonify(events_list)
+        except Exception as e:
+            # Handle any exceptions that might occur during data fetching
+            return jsonify({"error": str(e)}), 500
+        finally:
+            con.close()
+    else:
+        return jsonify({"error": "User not logged in"}), 401
+
+
+def parse_time(time_str):
+        # Try parsing with AM/PM specifier format
+    return datetime.strptime(time_str, "%I:%M%p").strftime("%H:%M")
+    
+
 
 def insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type, lecturer):
     con = get_db_connection()
