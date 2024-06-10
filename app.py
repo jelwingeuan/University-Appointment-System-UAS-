@@ -955,74 +955,52 @@ def changepassword():
 
 @app.route("/faculty")
 def faculty():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
-    faculty_info = cursor.fetchall()
+        cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
+        faculty_info = cursor.fetchall()
 
-    faculty_data = []
-    if faculty_info:
-        for faculty in faculty_info:
-            cursor.execute(
-                "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
-                (faculty["faculty_name"],),
-            )
-            lecturers = cursor.fetchall()
+        faculty_data = []
+        if faculty_info:
+            for faculty in faculty_info:
+                cursor.execute(
+                    "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
+                    (faculty["faculty_name"],)
+                )
+                lecturers = cursor.fetchall() or []
 
-            cursor.execute(
-                "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
-                (faculty["faculty_name"],),
-            )
-            students = cursor.fetchall()
+                cursor.execute(
+                    "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
+                    (faculty["faculty_name"],)
+                )
+                students = cursor.fetchall() or []
 
-            faculty_data.append(
-                {
-                    "faculty_name": faculty["faculty_name"],
-                    "faculty_image": faculty["faculty_image"],
-                    "lecturers": [
-                        {"username": lecturer[0], "email": lecturer[1]}
-                        for lecturer in lecturers
-                    ],
-                    "students": [
-                        {"username": student[0], "email": student[1]}
-                        for student in students
-                    ],
-                }
-            )
+                faculty_data.append(
+                    {
+                        "faculty_name": faculty["faculty_name"],
+                        "faculty_image": faculty["faculty_image"],
+                        "lecturers": [
+                            {"username": lecturer[0], "email": lecturer[1]}
+                            for lecturer in lecturers
+                        ],
+                        "students": [
+                            {"username": student[0], "email": student[1]}
+                            for student in students
+                        ],
+                    }
+                )
 
-    conn.close()
+        conn.close()
+        return render_template("faculty.html", faculty_info=faculty_data)
+    except Exception as e:
+        app.logger.error(f"Error fetching faculty data: {e}")
+        return render_template("faculty.html", faculty_info=[])
 
-    return render_template("faculty.html", faculty_info=faculty_data)
 
 
 # admin
-@app.route("/facultyhub/<int:hub_id>", methods=["GET"])
-def faculty_hub_page(hub_id=None):
-    try:
-        if hub_id:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT name, image_path FROM facultyhub WHERE id = ?", (hub_id,)
-            )
-            faculty_hub = cursor.fetchone()
-            conn.close()
-
-            if faculty_hub:
-                return render_template("facultyhub.html", faculty_hub=faculty_hub)
-            else:
-                return render_template("error.html", message="Faculty Hub Not Found")
-        else:
-            return render_template(
-                "error.html", message="Please provide a valid Faculty Hub ID"
-            )
-    except Exception as e:
-        print("Error in faculty_hub_page:", e)
-        return render_template(
-            "error.html", message="An error occurred while processing your request"
-        )
-
 
 @app.route("/createfacultyhub", methods=["GET", "POST"])
 def create_faculty_hub():
