@@ -190,20 +190,19 @@ def login():
             cur = con.cursor()
             cur.execute("SELECT * FROM users WHERE email = ?", (email,))
             user = cur.fetchone()
+            con.close()
 
             if user and bcrypt.checkpw(
                 password.encode("utf-8"), user["password"].encode("utf-8")
             ):
                 session["logged_in"] = True
-                session["id"] = user[0]
-
+                session["id"] = user["id"]  # Assuming the ID is in the "id" field
                 return redirect("/")
             else:
-                flash("Invalid email or password")  
+                flash("Invalid email or password")
                 return render_template("login.html")
     else:
         return render_template("login.html")
-
 
 
 # student and lecturer
@@ -991,8 +990,6 @@ def faculty():
 
         conn.close()
         return render_template("Faculty.html", faculty_info=faculty_data)
-
-
 
 
 # admin
