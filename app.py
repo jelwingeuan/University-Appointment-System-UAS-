@@ -199,9 +199,8 @@ def login():
 
                 return redirect("/")
             else:
-                return render_template(
-                    "login.html", message="Invalid email or password"
-                )
+                flash("Invalid email or password")  
+                return render_template("login.html")
     else:
         return render_template("login.html")
 
