@@ -24,6 +24,7 @@
             <li><i class='bx bx-user'></i><a href="/usercontrol">User Control</a></li>
             <li><i class='bx bx-cart'></i><a href="/appointmentcontrol">Booking Control</a></li>
             <li><i class='bx bx-plus'></i><a href="/faculty">My Faculty</a></li>
+            <li><i class='bx bx-plus'></i><a href="/createfacultyhub">Create Faculty</a></li>
             <li><i class='bx bx-edit' ></i><a href="/adminpageeditor">Page Editor</a></li>
             <li><i class='bx bx-cog' ></i><a href="/logout">Signout</a></li>
         </ul>
@@ -33,7 +34,7 @@
             <div class="add-header">
                 <h2>Faculty Information</h2>
             </div>
-            <form action="/createfacultyhub" method="post" >
+            <form action="/createfacultyhub" method="post" enctype="multipart/form-data">
                 <div class="faculty-info-update">
                     <h3>Faculty Profile Image</h3>
                     <input type="file" name="faculty_image" required>
@@ -44,7 +45,7 @@
                 </div>
                 <div class="add-footer">
                     <a href="/faculty">Cancel</a>
-                    <a href="/faculty"><button type="submit">Save and Publish</button></a>
+                    <a href="/facultyhub"><button type="submit">Save and Publish</button></a>
                 </div>
             </form>
         </div>
