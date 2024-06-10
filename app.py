@@ -966,15 +966,15 @@ def faculty():
         for faculty in faculty_info:
             cursor.execute(
                 "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
-                (faculty["faculty_name"],),
+                (faculty["faculty_name"],)
             )
-            lecturers = cursor.fetchall()
+            lecturers = cursor.fetchall() or []
 
             cursor.execute(
                 "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
-                (faculty["faculty_name"],),
+                (faculty["faculty_name"],)
             )
-            students = cursor.fetchall()
+            students = cursor.fetchall() or []
 
             faculty_data.append(
                 {
@@ -994,6 +994,7 @@ def faculty():
     conn.close()
 
     return render_template("faculty.html", faculty_info=faculty_data)
+
 
 
 # admin
