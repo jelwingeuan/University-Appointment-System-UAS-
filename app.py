@@ -1001,32 +1001,6 @@ def faculty():
 
 
 # admin
-@app.route("/facultyhub/<int:hub_id>", methods=["GET"])
-def faculty_hub_page(hub_id=None):
-    try:
-        if hub_id:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT name, image_path FROM facultyhub WHERE id = ?", (hub_id,)
-            )
-            faculty_hub = cursor.fetchone()
-            conn.close()
-
-            if faculty_hub:
-                return render_template("facultyhub.html", faculty_hub=faculty_hub)
-            else:
-                return render_template("error.html", message="Faculty Hub Not Found")
-        else:
-            return render_template(
-                "error.html", message="Please provide a valid Faculty Hub ID"
-            )
-    except Exception as e:
-        print("Error in faculty_hub_page:", e)
-        return render_template(
-            "error.html", message="An error occurred while processing your request"
-        )
-
 
 @app.route("/createfacultyhub", methods=["GET", "POST"])
 def create_faculty_hub():
