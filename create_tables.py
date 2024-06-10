@@ -1,6 +1,5 @@
 import sqlite3
 
-
 # Function to get database connection
 def get_db_connection():
         con = sqlite3.connect("database.db")
@@ -10,6 +9,7 @@ def get_db_connection():
 # Connect with db
 con = sqlite3.connect("database.db")
 cur = con.cursor()
+
 
 cur.execute(
     """CREATE TABLE IF NOT EXISTS users (
@@ -23,12 +23,13 @@ cur.execute(
         )"""
 )
 
+
 # Create "calendar" table
 cur.execute(
     """CREATE TABLE IF NOT EXISTS calendar (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         lecturer TEXT NOT NULL,
-        event_title TEXT NOT NULL UNIQUE,
+        event_title TEXT NOT NULL,
         event_date TEXT NOT NULL,
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL,
