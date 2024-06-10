@@ -9,6 +9,7 @@ import bcrypt
 import random
 import os
 import json
+import calendar as cal
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -459,14 +460,42 @@ def create_calendar():
         start_time = request.form["start_time"]
         end_time = request.form["end_time"]
         repeat_type = request.form.get("repeat_type", "")
+        repeat_count = int(request.form.get("repeat_count", 1))
         
         # Fetch lecturer name from the session
         lecturer = session["username"]  # Assuming the lecturer name is stored in the session
-        
-        # Insert the single event into the database
-        insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type, lecturer, "Pending", repeat_type)
+
+        print(f"Creating event: {event_title} on {event_date} with repeat {repeat_type} for {repeat_count} times")
+
+        if repeat_type == "weekly":
+            repeat_weekly(event_title, event_date, start_time, end_time, lecturer)
+        elif repeat_type == "monthly":
+            repeat_monthly(event_title, event_date, start_time, end_time, lecturer, repeat_count)
+        else:
+            insert_event_into_db(event_title, event_date, start_time, end_time, lecturer, "Pending", repeat_type, event_type='Work')
 
         return redirect("/calendar")
+
+def repeat_weekly(event_title, event_date, start_time, end_time, lecturer):
+    event_date = datetime.strptime(event_date, '%Y-%m-%d')
+    initial_month = event_date.month
+    while event_date.month == initial_month:
+        insert_event_into_db(event_title, event_date.strftime('%Y-%m-%d'), start_time, end_time, lecturer, "Pending", "weekly")
+        event_date += timedelta(weeks=1)
+
+def repeat_monthly(event_title, event_date, start_time, end_time, lecturer, repeat_count):
+    event_date = datetime.strptime(event_date, '%Y-%m-%d')
+    for _ in range(repeat_count):
+        insert_event_into_db(event_title, event_date.strftime('%Y-%m-%d'), start_time, end_time, lecturer, "Pending", "monthly")
+        year = event_date.year
+        month = event_date.month + 1
+        if month > 12:
+            month = 1
+            year += 1
+        day = min(event_date.day, cal.monthrange(year, month)[1])  # Ensure the day exists in the next month
+        event_date = event_date.replace(year=year, month=month, day=day)
+
+
 
 
 
@@ -527,18 +556,19 @@ def parse_time(time_str):
     
 
 
-def insert_event_into_db(event_title, event_date, start_time, end_time, event_type, lecturer, status, repeat_type):
+
+def insert_event_into_db(event_title, event_date, start_time, end_time, lecturer, status, repeat_type):
     con = get_db_connection()
     cur = con.cursor()
     try:
         cur.execute("""
             INSERT INTO calendar (event_title, event_date, start_time, end_time, event_type, lecturer, status, repeat_type)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (event_title, event_date, start_time, end_time, event_type, lecturer, status, repeat_type))
+        """, (event_title, event_date, start_time, end_time, repeat_type, lecturer, status, repeat_type))
         con.commit()
     finally:
         con.close()
-    print(f"Inserted: {event_title} on {event_date} from {start_time} to {end_time}, Lecturer: {lecturer}")
+    print(f"Inserted: {event_title} on {event_date} from {start_time} to {end_time}, Lecturer: {lecturer}, Repeat: {repeat_type}")
 
 
 

@@ -95,9 +95,17 @@
         <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/about">About</a></li>
+            </li>
             <li><a href="/appointment">Make An Appointment</a></li>
-            {% if session['logged_in'] %}
-            <li><a href="/profile">Profile</a></li>            
+            {% if session['logged_in'] == True %}
+            <li class="dropdown">
+                <a href="/profile" class="dropbtn">Profile<i class='bx bx-chevron-down'></i></a>
+                <div class="dropdown-content">
+                    <a href="/profile">View Profile</a>
+                    <a href="/changepassword">Change Password</a>
+                    <a href="/bookinghistory">Booking History</a>
+                </div>
+            </li>
             <li><a href="/logout">Logout</a></li>
             {% else %}
             <li><a href="/login">Login</a></li>
