@@ -45,6 +45,16 @@
         background-color: #bd2130;
         }
 
+        .subwrapper {
+        width: 600px;
+        height: 700px;
+        background: white;
+        border: 1px solid grey;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+        margin: auto;
+    
+        }
+
     </style>
 </head>
 <body>
@@ -62,78 +72,80 @@
             {% endif %}
         </ul>
     </nav>
-    <div class="wrapper" style="width: 600px; position: relative;">
-        <h1>Sign Up</h1>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <ul class="flashes">
-            {% for category, message in messages %}
-                <li class="{{ category }}" >{{ message }}</li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-        {% endwith %}
+    <div class="wrapper" style="width: 600px; height:800px ;position: absolute; left: 30%; margin-top: 20px;" >
+        <div class="subwrapper" >
+            <h1>Sign Up</h1>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flashes" style="margin-left: 50px;">
+                {% for category, message in messages %}
+                    <div class="{{ category }}" style="margin-left: 40px;" >{{ message }}</div>
+                {% endfor %}
+                </div>
+            {% endif %}
+            {% endwith %}
 
-        <!-- Notice for incorrect email format -->
-        <p id="emailFormatNotice" style="color: red;"></p>
-        <p id="emailNotice" style="color: red;"></p>
-        <form method="post" action="/signup">
-            <div class="role">
-                <label>Choose your role</label>
-                <div class="role-options">
-                    <input type="radio" name="role" value="student" id="studentRole">
-                    <label for="studentRole">Student</label>
-                    <input type="radio" name="role" value="teacher" id="teacherRole">
-                    <label for="teacherRole">Teacher</label>
+            <!-- Notice for incorrect email format -->
+            <p id="emailFormatNotice" style="color: red;"></p>
+            <p id="emailNotice" style="color: red;"></p>
+            <form method="post" action="/signup">
+                <div class="role">
+                    <label>Choose your role</label>
+                    <div class="role-options">
+                        <input type="radio" name="role" value="student" id="studentRole">
+                        <label for="studentRole">Student</label>
+                        <input type="radio" name="role" value="teacher" id="teacherRole">
+                        <label for="teacherRole">Teacher</label>
+                    </div>
                 </div>
-            </div>
-            <div id="pinInput" style="display: none; margin-bottom: 20px;">
-                <label for="pin">Enter PIN:</label>
-                <input type="password" name="pin" id="pin">
-                <button type="button" onclick="validatePin()">Submit PIN</button>
-                <button type="button" onclick="retractPin()">Retract</button>
-                <p id="pinMessage" style="color: red;"></p>
-            </div>
-            <div id="signupDetails" style="display: none;">
-                <div class="profileinput">
-                    <label>Faculty</label>
-                    <select class="profileinputdetails" name="faculty" required>
-                        {% for faculty in faculties %}
-                            <option value="{{ faculty['faculty_name'] }}">{{ faculty['faculty_name'] }}</option>
-                        {% endfor %}
-                    </select>
+                <div id="pinInput" style="display: none; margin-bottom: 20px;">
+                    <label for="pin">Enter PIN:</label>
+                    <input type="password" name="pin" id="pin">
+                    <button type="button" onclick="validatePin()">Submit PIN</button>
+                    <button type="button" onclick="retractPin()">Retract</button>
+                    <p id="pinMessage" style="color: red;"></p>
                 </div>
-                <div class="input_box">
-                    <input type="text" name="username" required>
-                    <span></span>
-                    <label>Full Name</label>
+                <div id="signupDetails" style="display: none;">
+                    <div class="profileinput">
+                        <label>Faculty</label>
+                        <select class="profileinputdetails" name="faculty" required>
+                            {% for faculty in faculties %}
+                                <option value="{{ faculty['faculty_name'] }}">{{ faculty['faculty_name'] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="input_box">
+                        <input type="text" name="username" required>
+                        <span></span>
+                        <label>Full Name</label>
+                    </div>
+                    <div class="input_box">
+                        <input type="email" name="email" required>
+                        <span></span>
+                        <label>Email</label>
+                    </div>
+                    <div class="input_box">
+                        <input type="tel" name="phone_number" required>
+                        <span></span>
+                        <label>Phone Number</label>
+                    </div>
+                    <div class="input_box">
+                        <input type="password" name="password" id="passwordField" minlength="8" required>
+                        <span></span>
+                        <label for="passwordField">Password</label>
+                    </div>
+                    <div class="input_box">
+                        <input type="password" name="confirm_password" id="confirmPasswordField" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" required>
+                        <span></span>
+                        <label for="confirmPasswordField">Confirm your password</label>
+                    </div>
+                    <input type="submit" value="Sign Up" style="margin-bottom: 40px;">
                 </div>
-                <div class="input_box">
-                    <input type="email" name="email" required>
-                    <span></span>
-                    <label>Email</label>
-                </div>
-                <div class="input_box">
-                    <input type="tel" name="phone_number" required>
-                    <span></span>
-                    <label>Phone Number</label>
-                </div>
-                <div class="input_box">
-                    <input type="password" name="password" id="passwordField" minlength="8" required>
-                    <span></span>
-                    <label for="passwordField">Password</label>
-                </div>
-                <div class="input_box">
-                    <input type="password" name="confirm_password" id="confirmPasswordField" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" required>
-                    <span></span>
-                    <label for="confirmPasswordField">Confirm your password</label>
-                </div>
-                <input type="submit" value="Sign Up" style="margin-bottom: 40px;">
             </div>
         </form>
     </div>
     <div class="footer-wrapper">
-        <footer class="footer" style="position: relative; bottom: 0;">
+        <footer class="footer" style="position: fixed; bottom: 0;">
             <div class="footer-col">
                 <h4>Universal Appointment Booking System</h4>
                 <ul>

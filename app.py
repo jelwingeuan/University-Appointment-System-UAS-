@@ -206,6 +206,7 @@ def login():
         return render_template("login.html")
 
 
+
 # student and lecturer
 @app.route("/update_user_info", methods=["POST"])
 def update_user():
