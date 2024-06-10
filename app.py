@@ -955,7 +955,6 @@ def changepassword():
 
 @app.route("/faculty")
 def faculty():
-    try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
@@ -969,14 +968,13 @@ def faculty():
                     "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
                     (faculty["faculty_name"],)
                 )
-                lecturers = cursor.fetchall() or []
+                lecturers = cursor.fetchall() 
 
                 cursor.execute(
                     "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
                     (faculty["faculty_name"],)
                 )
-                students = cursor.fetchall() or []
-
+                students = cursor.fetchall() 
                 faculty_data.append(
                     {
                         "faculty_name": faculty["faculty_name"],
@@ -993,10 +991,8 @@ def faculty():
                 )
 
         conn.close()
-        return render_template("faculty.html", faculty_info=faculty_data)
-    except Exception as e:
-        app.logger.error(f"Error fetching faculty data: {e}")
-        return render_template("faculty.html", faculty_info=[])
+        return render_template("Faculty.html", faculty_info=faculty_data)
+
 
 
 
