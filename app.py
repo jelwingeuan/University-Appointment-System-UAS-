@@ -199,7 +199,7 @@ def login():
                 session["id"] = user["id"]  # Assuming the ID is in the "id" field
                 return redirect("/")
             else:
-                flash("Invalid email or password")
+                flash("Invalid email or pord")
                 return render_template("login.html")
     else:
         return render_template("login.html")
