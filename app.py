@@ -954,45 +954,51 @@ def changepassword():
 
 @app.route("/faculty")
 def faculty():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
-    faculty_info = cursor.fetchall()
+        cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
+        faculty_info = cursor.fetchall()
 
-    faculty_data = []
-    if faculty_info:
-        for faculty in faculty_info:
-            cursor.execute(
-                "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
-                (faculty["faculty_name"],),
-            )
-            lecturers = cursor.fetchall()
+        faculty_data = []
+        if faculty_info:
+            for faculty in faculty_info:
+                cursor.execute(
+                    "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
+                    (faculty["faculty_name"],),
+                )
+                lecturers = cursor.fetchall()
 
-            cursor.execute(
-                "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
-                (faculty["faculty_name"],),
-            )
-            students = cursor.fetchall()
+                cursor.execute(
+                    "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
+                    (faculty["faculty_name"],),
+                )
+                students = cursor.fetchall()
 
-            faculty_data.append(
-                {
-                    "faculty_name": faculty["faculty_name"],
-                    "faculty_image": faculty["faculty_image"],
-                    "lecturers": [
-                        {"username": lecturer[0], "email": lecturer[1]}
-                        for lecturer in lecturers
-                    ],
-                    "students": [
-                        {"username": student[0], "email": student[1]}
-                        for student in students
-                    ],
-                }
-            )
+                faculty_data.append(
+                    {
+                        "faculty_name": faculty["faculty_name"],
+                        "faculty_image": faculty["faculty_image"],
+                        "lecturers": [
+                            {"username": lecturer["username"], "email": lecturer["email"]}
+                            for lecturer in lecturers
+                        ],
+                        "students": [
+                            {"username": student["username"], "email": student["email"]}
+                            for student in students
+                        ],
+                    }
+                )
 
-    conn.close()
+        conn.close()
 
-    return render_template("faculty.html", faculty_info=faculty_data)
+        return render_template("faculty.html", faculty_info=faculty_data)
+    
+    except Exception as e:
+        # Log the error, you can use logging module instead of print for production
+        print(f"An error occurred: {e}")
+        return "Internal Server Error", 500
 
 
 # admin
