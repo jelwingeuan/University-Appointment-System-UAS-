@@ -314,8 +314,6 @@ def create_booking():
         return redirect("/invoice")
 
 
-
-
 # student
 @app.route("/invoice")
 def render_template_invoice():
@@ -496,10 +494,6 @@ def repeat_monthly(event_title, event_date, start_time, end_time, lecturer):
         event_date = event_date.replace(year=year, month=month, day=day)
 
 
-
-
-
-
 @app.route("/calendar", methods=["GET", "POST"])
 def event():
     return render_template("calendar.html")
@@ -549,13 +543,9 @@ def get_events():
         return jsonify({"error": "User not logged in"}), 401
 
 
-
-
 def parse_time(time_str):
         # Try parsing with AM/PM specifier format
     return datetime.strptime(time_str, "%I:%M%p").strftime("%H:%M")
-    
-
 
 
 def insert_event_into_db(event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type):
@@ -571,8 +561,6 @@ def insert_event_into_db(event_title, event_date, start_time, end_time, lecturer
         print(f"An error occurred: {str(e)}")
     finally:
         conn.close()
-
-
 
 
 def update_calendar_status(booking_id, status):
@@ -703,7 +691,6 @@ def check_availability():
         return jsonify({"availability": "available"})
 
 
-
 # admin
 @app.route("/appointmentcontrol", methods=["GET", "POST"])
 def appointmentcontrol():
@@ -731,7 +718,6 @@ def appointmentcontrol():
     conn.close()
 
     return render_template("appointment_control.html", appointments=appointments)
-
 
 
 # admin
@@ -832,9 +818,6 @@ def admin_dashboard():
 )
 
 
-    
-
-
 # admin
 @app.route("/usercontrol")
 def usercontrol():
@@ -859,7 +842,6 @@ def usercontrol():
     cursor.close()
     conn.close()
     return render_template("usercontrol.html", users=users)
-
 
 
 # admin
@@ -979,33 +961,34 @@ def faculty():
     faculty_info = cursor.fetchall()
 
     faculty_data = []
-    for faculty in faculty_info:
-        cursor.execute(
-            "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
-            (faculty["faculty_name"],),
-        )
-        lecturers = cursor.fetchall()
+    if faculty_info:
+        for faculty in faculty_info:
+            cursor.execute(
+                "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
+                (faculty["faculty_name"],),
+            )
+            lecturers = cursor.fetchall()
 
-        cursor.execute(
-            "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
-            (faculty["faculty_name"],),
-        )
-        students = cursor.fetchall()
+            cursor.execute(
+                "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
+                (faculty["faculty_name"],),
+            )
+            students = cursor.fetchall()
 
-        faculty_data.append(
-            {
-                "faculty_name": faculty["faculty_name"],
-                "faculty_image": faculty["faculty_image"],
-                "lecturers": [
-                    {"username": lecturer[0], "email": lecturer[1]}
-                    for lecturer in lecturers
-                ],
-                "students": [
-                    {"username": student[0], "email": student[1]}
-                    for student in students
-                ],
-            }
-        )
+            faculty_data.append(
+                {
+                    "faculty_name": faculty["faculty_name"],
+                    "faculty_image": faculty["faculty_image"],
+                    "lecturers": [
+                        {"username": lecturer[0], "email": lecturer[1]}
+                        for lecturer in lecturers
+                    ],
+                    "students": [
+                        {"username": student[0], "email": student[1]}
+                        for student in students
+                    ],
+                }
+            )
 
     conn.close()
 
