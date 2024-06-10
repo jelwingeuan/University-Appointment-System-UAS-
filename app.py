@@ -1029,7 +1029,7 @@ def create_faculty_hub():
             conn.commit()
             conn.close()
 
-            return redirect(url_for("create_faculty_hub"))
+            return redirect('/faculty')
         except Exception as e:
             print("Error occurred:", e)
             return render_template(
