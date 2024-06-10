@@ -206,6 +206,7 @@ def login():
         return render_template("login.html")
 
 
+
 # student and lecturer
 @app.route("/update_user_info", methods=["POST"])
 def update_user():
@@ -957,7 +958,12 @@ def faculty():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
+        cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
+        faculty_info = cursor.fetchall()
         cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
         faculty_info = cursor.fetchall()
 

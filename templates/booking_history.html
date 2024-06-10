@@ -9,57 +9,59 @@
 
     <style>
         button {
-            border: none; /* Remove border */
-            padding: 10px 20px; /* Add padding */
-            text-align: center; /* Center the text */
-            text-decoration: none; /* Remove underline */
-            display: inline-block; /* Get the block to wrap content */
-            font-size: 16px; /* Increase font size */
-            margin: 4px 2px; /* Small margin */
-            cursor: pointer; /* Add a pointer cursor on hover */
-            border-radius: 12px; /* Rounded corners */
-            transition: transform 0.3s ease, background-color 0.3s ease; /* Smooth transition */
-        }
+        border: none; /* Remove border */
+        padding: 10px 20px; /* Add padding */
+        text-align: center; /* Center the text */
+        text-decoration: none; /* Remove underline */
+        display: inline-block; /* Get the block to wrap content */
+        font-size: 16px; /* Increase font size */
+        margin: 4px 2px; /* Small margin */
+        cursor: pointer; /* Add a pointer cursor on hover */
+        border-radius: 12px; /* Rounded corners */
+        transition: transform 0.3s ease, background-color 0.3s ease; /* Smooth transition */
+    }
 
-        button.accept {
-            background-color: #86e49d;
-            color: #006b21;
-        }
+    button:hover {
+        transform: translateY(-5px); /* Move up on hover */
+    }
 
-        button.accept:hover {
-            transform: translateY(-5px); /* Move up on hover */
-            background-color: #45a049; /* Darker green background */
-        }
+    button.accept {
+        background-color: #86e49d;
+        color: #006b21;
+    }
 
-        button.reject {
-            background-color: red;
-            color: white; /* Changed to ensure text color is readable */
-        }
+    button.accept:hover {
+        background-color: #45a049; /* Darker green background */
+        
+    }
 
-        button.reject:hover {
-            transform: translateY(-5px); /* Move up on hover */
-            background-color: #d32f2f; /* Darker red background */
-        }
+    button.reject {
+        background-color: red;
+        color: white; /* Changed to ensure text color is readable */
+    }
 
-        button.cancel {
-            background-color: red;
-            color: white; /* Changed to ensure text color is readable */
-        }
+    button.reject:hover {
+        background-color: #d32f2f; /* Darker red background */
+    }
 
-        button.cancel:hover {
-            transform: translateY(-5px); /* Move up on hover */
-            background-color: #e68900; /* Darker orange background */
-        }
+    button.cancel {
+        background-color: red;
+        color: white; /* Changed to ensure text color is readable */
+    }
 
-        button.pending {
-            background-color: orange;
-            color: white; /* Ensure text color is readable */
-        }
+    button.cancel:hover {
+        background-color: #e68900; /* Darker orange background */
+    }
 
-        button.pending:hover {
-            transform: translateY(-5px); /* Move up on hover */
-            background-color: #e68900; /* Darker orange background */
-        }
+    button.pending {
+        background-color: orange;
+        color: white; /* Ensure text color is readable */
+    }
+
+    button.pending:hover {
+        background-color: #e68900; /* Darker orange background */
+    }
+
     </style>
 </head>
 <body>
@@ -91,7 +93,7 @@
                 <h3 style="margin: 10px;font-size: 30px;">Booking History</h3>
             </div>
             <div class="profilesubwrapper">
-                <div class="profilesidebar">
+                <div class="profilesidebar" style="width: 200px; margin-left: 20px;">
                     <h3 style="margin-top: 30px; font-size: 22px;">{{ session.username }}</h3>
                     <a class="listitem active" data-toggle="list" href="/profile">General</a>
                     <a class="listitem" data-toggle="list" href="/changepassword">Change password</a>
@@ -101,7 +103,7 @@
                     <a class="listitem" data-toggle="list" href="/bookinghistory">Booking History</a>
                     <a class="listitem" data-toggle="list" href="/logout">Log Out</a>
                 </div>
-                <div class="profilemain">
+                <div class="profilemain" style="width: 800px;">
                     <div class="table__body">
                         <table>
                             <thead>
