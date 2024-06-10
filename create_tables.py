@@ -11,7 +11,6 @@ def get_db_connection():
 con = sqlite3.connect("database.db")
 cur = con.cursor()
 
-# Create "users" table
 cur.execute(
     """CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -33,6 +32,9 @@ cur.execute(
         event_date TEXT NOT NULL,
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL,
+        status TEXT NOT NULL,
+        repeat_type TEXT NOT NULL,
+        event_type TEXT NOT NULL,
         FOREIGN KEY (lecturer) REFERENCES users(username)
     )"""
 )

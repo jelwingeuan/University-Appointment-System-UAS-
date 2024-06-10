@@ -272,10 +272,6 @@ def create_booking():
         appointment_date = request.form.get("appointment_date")
         appointment_time = request.form.get("selected_time_slot")
 
-        if not appointment_time:
-            flash("Please select a valid time slot.", "danger")
-            return redirect("/appointment")
-
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
@@ -297,20 +293,25 @@ def create_booking():
         end_time = (start_time + timedelta(hours=1)).strftime("%H:%M")
         start_time = start_time.strftime("%H:%M")
 
+        update_calendar_status(booking_id, status="Pending")
+
         # Insert the appointment into the calendar table
         event_title = f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
         insert_event_into_db(
             event_title=event_title,
             event_date=appointment_date,
             start_time=start_time,
+            event_type = "appointment",
             end_time=end_time,
             repeat_type="", 
-            lecturer=lecturer
+            lecturer=lecturer,
+            status="Pending"
         )
 
         # Redirect to the invoice page
         flash("Booking created successfully!", "success")
         return redirect("/invoice")
+
 
 
 
@@ -371,16 +372,27 @@ def user_booking_history():
     return render_template("booking_history.html", appointments=appointments, display_role=display_role, role=role)
 
 # lecturer
+
 @app.route("/cancel_booking", methods=["POST"])
 def cancel_booking():
-
-    booking_id = request.form.get("id")
+    appointment_id = request.form.get("id")
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Cancelled", booking_id))
+        
+        # Get the booking_id from the appointments table
+        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
+        booking_id = cursor.fetchone()["booking_id"]
+        
+        # Update the status in the appointments table
+        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Cancelled", appointment_id))
         conn.commit()
+        
+        # Debug: print a message indicating appointment status update
+        print(f"Appointment ID {appointment_id} status updated to 'Cancelled'")
+        
+        update_calendar_status(booking_id, "Cancelled")
     finally:
         conn.close()
 
@@ -388,69 +400,56 @@ def cancel_booking():
 
 @app.route("/reject_booking", methods=["POST"])
 def reject_booking():
-
-    booking_id = request.form.get("id")
+    appointment_id = request.form.get("id")
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Rejected", booking_id))
+        
+        # Get the booking_id from the appointments table
+        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
+        booking_id = cursor.fetchone()["booking_id"]
+        
+        # Update the status in the appointments table
+        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Rejected", appointment_id))
         conn.commit()
+        
+        # Debug: print a message indicating appointment status update
+        print(f"Appointment ID {appointment_id} status updated to 'Rejected'")
+        
+        update_calendar_status(booking_id, "Rejected")
     finally:
         conn.close()
 
     return redirect("/bookinghistory")
 
-# lecturer
 @app.route("/accept_booking", methods=["POST"])
 def accept_booking():
-    booking_id = request.form.get("id")
+    appointment_id = request.form.get("id")
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Accepted", booking_id))
+        
+        # Get the booking_id from the appointments table
+        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
+        booking_id = cursor.fetchone()["booking_id"]
+        
+        # Update the status in the appointments table
+        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Accepted", appointment_id))
         conn.commit()
+        
+        # Debug: print a message indicating appointment status update
+        print(f"Appointment ID {appointment_id} status updated to 'Accepted'")
+        
+        update_calendar_status(booking_id, "Accepted")
     finally:
         conn.close()
 
     return redirect("/bookinghistory")
 
+
 # lecturer\
-
-def calendar_repeat(event_title, repeat_type, repeat_count, event_date, start_time, end_time):
-    repeated_events = []
-
-    # Parse the event date
-    event_date = datetime.strptime(event_date, "%Y-%m-%d")
-
-    for i in range(repeat_count):
-        if repeat_type == "daily":
-            next_event_date = event_date + timedelta(days=i)
-        elif repeat_type == "weekly":
-            next_event_date = event_date + timedelta(weeks=i)
-        elif repeat_type == "monthly":
-            next_event_date = event_date + relativedelta(months=i)
-        elif repeat_type == "yearly":
-            next_event_date = event_date + relativedelta(years=i)
-        else:
-            continue
-
-        repeated_events.append({
-            "event_title": event_title,
-            "event_date": next_event_date.strftime("%Y-%m-%d"),  # Ensure date format is consistent
-            "start_time": start_time,
-            "end_time": end_time
-        })
-
-    return repeated_events
-
-def add_months(source_date, months):
-    month = source_date.month - 1 + months
-    year = source_date.year + month // 12
-    month = month % 12 + 1
-    day = min(source_date.day, [31, 29 if year % 4 == 0 and not year % 100 == 0 or year % 400 == 0 else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1])
-    return datetime(year, month, day)
 
 @app.route("/calendar_record", methods=["GET", "POST"])
 def create_calendar():
@@ -460,26 +459,20 @@ def create_calendar():
         start_time = request.form["start_time"]
         end_time = request.form["end_time"]
         repeat_type = request.form.get("repeat_type", "")
-        repeat_count = int(request.form.get("repeat_count", 1))
         
         # Fetch lecturer name from the session
         lecturer = session["username"]  # Assuming the lecturer name is stored in the session
         
-        repeated_events = calendar_repeat(event_title, repeat_type, repeat_count, event_date, start_time, end_time)
-
-        for event in repeated_events:
-            insert_event_into_db(event["event_title"], event["event_date"], event["start_time"], event["end_time"], repeat_type, lecturer)
+        # Insert the single event into the database
+        insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type, lecturer, "Pending", repeat_type)
 
         return redirect("/calendar")
 
-    return render_template("calendar.html")
+
 
 @app.route("/calendar", methods=["GET", "POST"])
 def event():
     return render_template("calendar.html")
-
-
-from datetime import datetime
 
 @app.route("/events", methods=["GET"])
 def get_events():
@@ -491,27 +484,30 @@ def get_events():
 
         try:
             # Fetch events from calendar table filtered by lecturer
-            cur.execute("SELECT event_title, event_date, start_time, end_time FROM calendar WHERE lecturer = ?", (lecturer,))
+            cur.execute("SELECT event_title, event_date, start_time, end_time, status, event_type FROM calendar WHERE lecturer = ?", (lecturer,))
             calendar_events = cur.fetchall()
 
-            # Fetch events from appointments table where status is Accepted and lecturer is involved
-            cur.execute("SELECT purpose AS event_title, appointment_date AS event_date, appointment_time AS start_time, '' AS end_time FROM appointments WHERE lecturer = ? AND status = 'Accepted'", (lecturer,))
-            appointment_events = cur.fetchall()
-            print(appointment_events)
-            # Combine events from both tables into a single list
-            all_events = calendar_events + appointment_events
-
             events_list = []
-            for event in all_events:
+            for event in calendar_events:
                 start_time = event["start_time"]
                 end_time = event["end_time"]
-
-                events_list.append({
-                    "title": event["event_title"],
-                    "start": f"{event['event_date']}T{start_time}",
-                    "end": f"{event['event_date']}T{end_time}" if end_time else None,
-                    "allDay": False if start_time and end_time else True
-                })
+                if event["event_type"] == "appointment":
+                    if event["status"] == "Accepted":
+                        events_list.append({
+                            "title": event["event_title"],
+                            "start": f"{event['event_date']}T{start_time}",
+                            "end": f"{event['event_date']}T{end_time}" if end_time else None,
+                            "allDay": False if start_time and end_time else True,
+                            "status": event["status"]
+                        })
+                else:
+                    events_list.append({
+                        "title": event["event_title"],
+                        "start": f"{event['event_date']}T{start_time}",
+                        "end": f"{event['event_date']}T{end_time}" if end_time else None,
+                        "allDay": False if start_time and end_time else True,
+                        "status": event["status"]
+                    })
 
             return jsonify(events_list)
         except Exception as e:
@@ -523,22 +519,50 @@ def get_events():
         return jsonify({"error": "User not logged in"}), 401
 
 
+
+
 def parse_time(time_str):
         # Try parsing with AM/PM specifier format
     return datetime.strptime(time_str, "%I:%M%p").strftime("%H:%M")
     
 
 
-def insert_event_into_db(event_title, event_date, start_time, end_time, repeat_type, lecturer):
+def insert_event_into_db(event_title, event_date, start_time, end_time, event_type, lecturer, status, repeat_type):
     con = get_db_connection()
     cur = con.cursor()
-    cur.execute("""
-        INSERT INTO calendar (event_title, event_date, start_time, end_time, repeat_type, lecturer)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (event_title, event_date, start_time, end_time, repeat_type, lecturer))
-    con.commit()
-    con.close()
+    try:
+        cur.execute("""
+            INSERT INTO calendar (event_title, event_date, start_time, end_time, event_type, lecturer, status, repeat_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (event_title, event_date, start_time, end_time, event_type, lecturer, status, repeat_type))
+        con.commit()
+    finally:
+        con.close()
     print(f"Inserted: {event_title} on {event_date} from {start_time} to {end_time}, Lecturer: {lecturer}")
+
+
+
+
+def update_calendar_status(booking_id, status):
+    con = get_db_connection()
+    cur = con.cursor()
+    
+    try:
+        # Debug: print the status and booking ID being updated
+        print(f"Updating calendar status to '{status}' for booking ID: {booking_id}")
+        
+        # Update the status in the calendar table
+        cur.execute("UPDATE calendar SET status = ? WHERE event_title LIKE ?", (status, f'%Booking ID: {booking_id}%'))
+        
+        # Debug: print the number of rows updated
+        print(f"Number of rows updated: {cur.rowcount}")
+        
+        con.commit()
+    except sqlite3.Error as e:
+        print("Error updating calendar status:", e)
+    finally:
+        con.close()
+
 
 @app.route('/delete_event', methods=['POST'])
 def delete_event():
@@ -567,9 +591,6 @@ def delete_event_from_db(event_title):
         return False  # Return False if deletion fails
     finally:
         conn.close()
-
-
-
 
 
 @app.route("/appointment")
