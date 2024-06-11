@@ -69,6 +69,11 @@ def save_content(content):
     with open("content.json", "w") as f:
         json.dump(content, f)
 
+def get_current_admin_credentials():
+    with open("admin.json", "r") as admin_file:
+        admin_data = json.load(admin_file)
+        return admin_data.get("email"), admin_data.get("password")
+
 
 content_data = load_content()
 home_content = content_data["home_content"]
@@ -855,6 +860,7 @@ def delete_user(id):
 @app.route("/adminpageeditor", methods=["GET", "POST"])
 def admin_page_editor():
     content = load_content()
+    current_admin_email, current_admin_password = get_current_admin_credentials()
 
     if request.method == "POST":
         home_content = request.form.get("home_content")
@@ -896,22 +902,17 @@ def admin_page_editor():
 
         return redirect(url_for("admin_page_editor"))
 
-    return render_template("adminpageeditor.html", **content, pin=load_pin())
-
+    return render_template(
+        "adminpageeditor.html",
+        **content,
+        pin=load_pin(),
+        current_admin_email=current_admin_email,
+        current_admin_password=current_admin_password,
+    )
 
 @app.route("/getpin", methods=["GET"])
 def get_pin():
     return jsonify({"pin": load_pin()})
-
-
-@app.route("/update_home_content", methods=["POST"])
-def update_home_content():
-    content = load_content()
-    home_content = request.form["home_content"]
-    content["home_content"] = home_content
-    save_content(content)
-    return redirect("/adminpageeditor")
-
 
 @app.route("/changepin", methods=["POST"])
 def change_teacher_pin():
@@ -921,19 +922,17 @@ def change_teacher_pin():
     if new_pin != retype_new_pin:
         return "New PIN and Retyped PIN do not match", 400
 
-    with open("pin.json", "w") as pin_file:
-        json.dump({"pin": new_pin}, pin_file)
+    save_pin(new_pin)
 
     return redirect("/adminpageeditor")
-
 
 @app.route("/change_admin_credentials", methods=["POST"])
 def change_admin_credentials():
     admin_email = request.form.get("admin_email")
     admin_password = request.form.get("admin_password")
 
+    admin_data = {"email": admin_email, "password": admin_password}
     with open("admin.json", "w") as admin_file:
-        admin_data = {"email": admin_email, "password": admin_password}
         json.dump(admin_data, admin_file)
 
     return redirect("/adminpageeditor")
