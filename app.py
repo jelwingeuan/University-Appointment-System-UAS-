@@ -300,7 +300,6 @@ def create_booking():
 
         update_calendar_status(booking_id, status="Pending")
 
-        # Insert the appointment into the calendar table
         event_title = f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
         insert_event_into_db(
             event_title=event_title,
@@ -313,7 +312,7 @@ def create_booking():
             status="Pending"
         )
 
-        # Redirect to the invoice page
+
         flash("Booking created successfully!", "success")
         return redirect("/invoice")
 
