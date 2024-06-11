@@ -157,37 +157,49 @@
         </footer>
     </div>
     <script>
-        document.getElementById('studentRole').addEventListener('click', function() {
-            document.getElementById('pinInput').style.display = 'none';
-            document.getElementById('signupDetails').style.display = 'block';
-            document.getElementById('emailFormatNotice').innerText = 'Note: Students must use an @student.mmu.edu.my email address.';
-        });
+        // Function to handle click event when student role is selected
+    document.getElementById('studentRole').addEventListener('click', function() {
+        // Hide PIN input, display signup details, and update email format notice for students
+        document.getElementById('pinInput').style.display = 'none';
+        document.getElementById('signupDetails').style.display = 'block';
+        document.getElementById('emailFormatNotice').innerText = 'Note: Students must use an @student.mmu.edu.my email address.';
+    });
 
-        document.getElementById('teacherRole').addEventListener('click', function() {
-            document.getElementById('signupDetails').style.display = 'none';
-            document.getElementById('pinInput').style.display = 'block';
-            document.getElementById('emailFormatNotice').innerText = 'Note: Teachers must use an @mmu.edu.my email address.';
-        });
+    // Function to handle click event when teacher role is selected
+    document.getElementById('teacherRole').addEventListener('click', function() {
+        // Hide signup details, display PIN input, and update email format notice for teachers
+        document.getElementById('signupDetails').style.display = 'none';
+        document.getElementById('pinInput').style.display = 'block';
+        document.getElementById('emailFormatNotice').innerText = 'Note: Teachers must use an @mmu.edu.my email address.';
+    });
 
-        function validatePin() {
-            const pin = document.getElementById('pin').value;
-            fetch('/getpin')
-                .then(response => response.json())
-                .then(data => {
-                    if (pin === data.pin) {
-                        document.getElementById('pinInput').style.display = 'none';
-                        document.getElementById('signupDetails').style.display = 'block';
-                    } else {
-                        document.getElementById('pinMessage').innerText = 'PIN is incorrect';
-                    }
-                });
-        }
+    // Function to validate PIN entered by the user
+    function validatePin() {
+        const pin = document.getElementById('pin').value;
+        // Fetch the correct PIN from the server
+        fetch('/getpin')
+            .then(response => response.json())
+            .then(data => {
+                // Compare user input with correct PIN
+                if (pin === data.pin) {
+                    // If PIN is correct, hide PIN input and display signup details
+                    document.getElementById('pinInput').style.display = 'none';
+                    document.getElementById('signupDetails').style.display = 'block';
+                } else {
+                    // If PIN is incorrect, display error message
+                    document.getElementById('pinMessage').innerText = 'PIN is incorrect';
+                }
+            });
+    }
 
-        function retractPin() {
-            document.getElementById('pinInput').style.display = 'none';
-            document.getElementById('signupDetails').style.display = 'none';
-            document.getElementById('teacherRole').checked = false;
-        }
+    // Function to retract selection of teacher role
+    function retractPin() {
+        // Hide both PIN input and signup details, and uncheck teacher role checkbox
+        document.getElementById('pinInput').style.display = 'none';
+        document.getElementById('signupDetails').style.display = 'none';
+        document.getElementById('teacherRole').checked = false;
+    }
+
     </script>
 </body>
 </html>

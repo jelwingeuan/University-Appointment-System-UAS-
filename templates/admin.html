@@ -112,11 +112,15 @@
         </div>
     </div>
     <script>
+        // Define a function named searchData
         function searchData() {
+            // Get the value of the input field with the id 'search'
             const searchQuery = document.getElementById('search').value;
+            // Construct a URL with the search query and navigate to it
             window.location.href = `/admin?search=${searchQuery}`;
         }
     </script>
+    
      
 </body>
 </html>

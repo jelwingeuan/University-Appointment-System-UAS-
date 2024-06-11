@@ -1,40 +1,40 @@
 document.addEventListener("DOMContentLoaded", function () {
     const passwordField = document.getElementById("passwordField");
     const showPasswordCheckbox = document.getElementById("showPasswordCheckbox");
-  
+
+    // Toggle the visibility of the password field when the checkbox is changed
     showPasswordCheckbox.addEventListener("change", function () {
-      if (showPasswordCheckbox.checked) {
-        passwordField.type = "text";
-      } else {
-        passwordField.type = "password";
-      }
+        if (showPasswordCheckbox.checked) {
+            passwordField.type = "text"; // Show password
+        } else {
+            passwordField.type = "password"; // Hide password
+        }
     });
-  });
-  
-  function printInvoice() {
-      var printContent = document.getElementById("print-area").innerHTML; // Get the HTML content of the print area
-      var originalContents = document.body.innerHTML; // Store the original HTML content of the body
-      document.body.innerHTML = printContent; // Replace the body content with the print area content
-      window.print(); // Print the document
-      document.body.innerHTML = originalContents; // Restore the original body content
-  }
-  
-  
-  
-  document.addEventListener("DOMContentLoaded", function() {
+});
+
+function printInvoice() {
+    var printContent = document.getElementById("print-area").innerHTML; // Get the HTML content of the print area
+    var originalContents = document
+    body.innerHTML; // Store the original HTML content of the body
+    document.body.innerHTML = printContent; // Replace the body content with the print area content
+    window.print(); // Print the document
+    document.body.innerHTML = originalContents; // Restore the original body content
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Activate the message container after a short delay
     setTimeout(function() {
         document.querySelector(".messagecontainer").classList.add("active");
     }, 100); // Adjust the delay as needed
-  });
-  
-  
-  //Graph for admin
-  document.addEventListener("DOMContentLoaded", function() {
+});
+
+// Graph for admin
+document.addEventListener("DOMContentLoaded", function() {
     // Set a timeout for the message container to add the 'active' class
     setTimeout(function() {
         document.querySelector(".messagecontainer").classList.add("active");
     }, 100); // Adjust the delay as needed
-  
+
     // Retrieve data from hidden elements
     const numTeachers = parseInt(document.getElementById('num_teachers').value);
     const numStudents = parseInt(document.getElementById('num_students').value);
@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
             data: [numStudents, numTeachers, numAppointments, numUsers]
         }]
     };
-  
+
     // Additional chart configuration options for the bar chart
     const barChartOptions = {
         scales: {
@@ -69,18 +69,18 @@ document.addEventListener("DOMContentLoaded", function () {
             }]
         }
     };
-  
+
     // Get the canvas element for the bar chart
     const barChartCanvas = document.getElementById('barChart');
-  
+
     // Initialize the bar chart
     new Chart(barChartCanvas, {
         type: 'bar',
         data: barChartData,
         options: barChartOptions
     });
-  
-    // Data for the line chart
+
+    // Data for the pie chart
     const pieChartData = {
         labels: ['Student', 'Lecturer', 'Appointment', 'User'],
         datasets: [{
@@ -97,15 +97,15 @@ document.addEventListener("DOMContentLoaded", function () {
             data: [numStudents, numTeachers, numAppointments, numUsers]
         }]
     };
-  
+
     // Additional chart configuration options for the pie chart
     const pieChartOptions = {
         // Add any specific options for the pie chart here
     };
-  
+
     // Get the canvas element for the pie chart
     const pieChartCanvas = document.getElementById('pieChart');
-  
+
     // Initialize the pie chart
     new Chart(pieChartCanvas, {
         type: 'pie',
@@ -114,24 +114,24 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-  
-  
-  document.addEventListener('DOMContentLoaded', function() {
-      let next = document.querySelector('.next');
-      let prev = document.querySelector('.prev');
-  
-      next.addEventListener('click', function() {
-          let items = document.querySelectorAll('.item');
-          document.querySelector('.slide').appendChild(items[0]);
-      });
-  
-      prev.addEventListener('click', function() {
-          let items = document.querySelectorAll('.item');
-          document.querySelector('.slide').prepend(items[items.length - 1]);
-      });
-  });
-  
-  document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', function() {
+    let next = document.querySelector('.next');
+    let prev = document.querySelector('.prev');
+
+    // Event listener for the next button
+    next.addEventListener('click', function() {
+        let items = document.querySelectorAll('.item');
+        document.querySelector('.slide').appendChild(items[0]); // Move first item to the end
+    });
+
+    // Event listener for the previous button
+    prev.addEventListener('click', function() {
+        let items = document.querySelectorAll('.item');
+        document.querySelector('.slide').prepend(items[items.length - 1]); // Move last item to the beginning
+    });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
     const editButton = document.getElementById("editButton");
     const cancelButton = document.getElementById("cancelButton");
     const profileEditContainer = document.getElementById("profileEditContainer");
@@ -147,39 +147,41 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-  
-  window.onclick = function(event) {
-      if (!event.target.matches('.dropbtn')) {
+window.onclick = function(event) {
+    if (!event.target.matches('.dropbtn')) {
         var dropdowns = document.getElementsByClassName("dropdown-content");
         var i;
         for (i = 0; i < dropdowns.length; i++) {
-          var openDropdown = dropdowns[i];
-          if (openDropdown.style.display === "block") {
-            openDropdown.style.display = "none";
-          }
+            var openDropdown = dropdowns[i];
+            if (openDropdown.style.display === "block") {
+                openDropdown.style.display = "none"; // Hide the dropdown menu if the user clicks outside
+            }
         }
-      }
     }
-    //Display Pin Input
-    document.addEventListener('DOMContentLoaded', function () {
-      var teacherRole = document.getElementById('teacherRole');
-      var pinInput = document.getElementById('pinInput');
-  
-      teacherRole.addEventListener('change', function () {
-          if (teacherRole.checked) {
-              pinInput.style.display = 'flex';
-          } else {
-              pinInput.style.display = 'none';
-          }
-      });
-  });
+}
 
-//flash message
+// Display Pin Input
+document.addEventListener('DOMContentLoaded', function () {
+    var teacherRole = document.getElementById('teacherRole');
+    var pinInput = document.getElementById('pinInput');
+
+    // Event listener to show or hide the pin input based on checkbox status
+    teacherRole.addEventListener('change', function () {
+        if (teacherRole.checked) {
+            pinInput.style.display = 'flex';
+        } else {
+            pinInput.style.display = 'none';
+        }
+    });
+});
+
+// Flash message display function
 async function displayFlashMessages() {
     try {
-        const response = await fetch('/get_flash_messages');
-        const messages = await response.json();
+        const response = await fetch('/get_flash_messages'); // Fetch flash messages from the server
+        const messages = await response.json(); // Parse the response as JSON
         
+        // Display each message in an alert
         messages.forEach(([message, category]) => {
             window.alert(`${category.toUpperCase()}: ${message}`);
         });
@@ -190,8 +192,3 @@ async function displayFlashMessages() {
 
 // Call the function to display flash messages when the page loads
 window.onload = displayFlashMessages;
-  
-  
-  
-  
-  
