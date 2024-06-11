@@ -94,18 +94,26 @@
     </div>
     <script>
         function showFacultyDetails() {
-            var select = document.getElementById('facultySelect');
-            var selectedValue = select.value;
-            var details = document.querySelectorAll('.faculty-details');
+    // Get the select element with the id 'facultySelect'
+    var select = document.getElementById('facultySelect');
+    // Get the currently selected value from the select element
+    var selectedValue = select.value;
+    // Get all elements with the class 'faculty-details'
+    var details = document.querySelectorAll('.faculty-details');
 
-            details.forEach(function(detail) {
-                detail.classList.remove('active');
-            });
+    // Iterate over each element with the class 'faculty-details'
+    details.forEach(function(detail) {
+        // Remove the 'active' class from each element
+        detail.classList.remove('active');
+    });
 
-            if (selectedValue) {
-                document.getElementById(selectedValue).classList.add('active');
-            }
-        }
+    // If a faculty member is selected
+    if (selectedValue) {
+        // Get the element with the id matching the selected value and add the 'active' class to it
+        document.getElementById(selectedValue).classList.add('active');
+    }
+}
+
     </script>
 </body>
 </html>
