@@ -9,7 +9,8 @@ import bcrypt
 import random
 import os
 import json
-import calendar as cal
+from supabase import create_client, Client
+import calendar
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import logging
@@ -28,6 +29,10 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 # Define a User class that inherits from UserMixin provided by Flask-Login
 class User(UserMixin):
@@ -35,24 +40,21 @@ class User(UserMixin):
         self.id = id
         self.username = username
 
-# Function to establish a connection to the SQLite database
-def get_db_connection():
-    con = sqlite3.connect("database.db")  # Connect to the database
-    con.row_factory = sqlite3.Row        # Set row factory to sqlite3.Row for dictionary-like row access
-    return con                           # Return the database connection
+    @staticmethod
+    def from_dict(user_dict):
+        return User(user_dict['id'], user_dict['username'])
 
 # Function to load a user from the database, used by Flask-Login
 @login_manager.user_loader
 def load_user(id):
-    con = get_db_connection()            # Get a connection to the database
-    cur = con.cursor()                   # Create a cursor object
-    cur.execute("SELECT * FROM users WHERE id = ?", (id,))  # Execute a query to find the user by id
-    user = cur.fetchone()                # Fetch the user record
-    con.close()                          # Close the database connection
-    if user:                             # If user is found
-        return User(user['id'], user['username'])  # Create and return a User object
+    response = supabase.table('users').select('*').eq('id', id).execute()
+    user_data = response.data
+    
+    if user_data:
+        user = user_data[0]  # Get the first user record
+        return User.from_dict(user)  # Create and return a User object
+    return None
 
-    return None                          # Return None if user is not found
 
 def load_pin():
     with open("pin.json", "r") as file:
@@ -145,45 +147,37 @@ def signup():
 
         hashed_password = hash_password(password)
 
-        con = get_db_connection()
-        cur = con.cursor()
-
-        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user_email = cur.fetchone()
-
-        cur.execute("SELECT * FROM users WHERE username = ?", (username,))
-        user_username = cur.fetchone()
-
-        cur.execute("SELECT * FROM users WHERE phone_number = ?", (phone_number,))
-        user_phone = cur.fetchone()
+        # Check if the user already exists
+        user_email = supabase.table('users').select('*').eq('email', email).execute().data
+        user_username = supabase.table('users').select('*').eq('username', username).execute().data
+        user_phone = supabase.table('users').select('*').eq('phone_number', phone_number).execute().data
 
         if user_email:
-            con.close()
             flash("User with this email already exists", "error")
             return redirect("/signup")
         elif user_username:
-            con.close()
             flash("User with this username already exists", "error")
             return redirect("/signup")
         elif user_phone:
-            con.close()
             flash("User with this phone number already exists", "error")
             return redirect("/signup")
         else:
-            cur.execute(
-                "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
-                (role, faculty, username, email, phone_number, hashed_password),
-            )
-            con.commit()
-            con.close()
+            # Insert the new user into the database
+            supabase.table('users').insert({
+                'role': role,
+                'faculty': faculty,
+                'username': username,
+                'email': email,
+                'phone_number': phone_number,
+                'password': hashed_password
+            }).execute()
             return redirect("/login")
     else:
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute("SELECT faculty_name FROM hub")
-        faculties = cur.fetchall()
-        con.close()
+        # Fetch faculties from the hub table
+        response = supabase.table('hub').select('faculty_name').execute()
+        faculties = response.data
         return render_template("signup.html", faculties=faculties)
+
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -200,18 +194,19 @@ def login():
             session["logged_in"] = True
             return redirect("/admin")
         else:
-            con = get_db_connection()
-            cur = con.cursor()
-            cur.execute("SELECT * FROM users WHERE email = ?", (email,))
-            user = cur.fetchone()
-            con.close()
+            # Query the Supabase users table for a user with the matching email
+            response = supabase.table('users').select('*').eq('email', email).execute()
+            user_data = response.data
 
-            if user and bcrypt.checkpw(
-                password.encode("utf-8"), user["password"].encode("utf-8")
-            ):
-                session["logged_in"] = True
-                session["id"] = user["id"]  # Assuming the ID is in the "id" field
-                return redirect("/")
+            if user_data:
+                user = user_data[0]  # Get the first user record
+                if bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8")):
+                    session["logged_in"] = True
+                    session["id"] = user["id"]  # Assuming the ID is in the "id" field
+                    return redirect("/")
+                else:
+                    flash("Invalid email or password")
+                    return redirect("/login")
             else:
                 flash("Invalid email or password")
                 return redirect("/login")
@@ -226,11 +221,13 @@ def update_user():
         username = request.form.get("username")
         email = request.form.get("email")
         phone_number = request.form.get("phone_number")
-        update_user_info(session["id"], username, email, phone_number)
-
+        response = supabase.table('users').update({
+            'username': username,
+            'email': email,
+            'phone_number': phone_number
+        }).eq('id', session['id']).execute()
         return redirect("/profile")
 
-# student and lecturer
 @app.route("/change_password", methods=["GET", "POST"])
 def change_password():
     if request.method == "POST":
@@ -243,66 +240,40 @@ def change_password():
                 "profile.html", message="New password and confirm password do not match"
             )
 
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute("SELECT password FROM users WHERE id = ?", (session["id"],))
-        user_data = cur.fetchone()
+        # Query the current user's password from Supabase
+        response = supabase.table('users').select('password').eq('id', session['id']).execute()
+        user_data = response.data
 
         if not user_data or not bcrypt.checkpw(
-            current_password.encode("utf-8"), user_data["password"].encode("utf-8")
+            current_password.encode("utf-8"), user_data[0]['password'].encode("utf-8")
         ):
             return render_template("profile.html", message="Incorrect current password")
 
-
         hashed_new_password = hash_password(new_password)
-        cur.execute(
-            "UPDATE users SET password = ? WHERE id = ?",
-            (hashed_new_password, session["id"]),
-        )
-        con.commit()
-        con.close()
+        supabase.table('users').update({
+            'password': hashed_new_password
+        }).eq('id', session['id']).execute()
 
         return redirect("/profile")
     else:
         return render_template("profile.html")
 
 
+
 # student
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
-    """
-    Create a booking for an appointment.
-    
-    Steps:
-    1. Fetch the current user's data from the database using their session ID.
-    2. Store the username in the session.
-    3. If the request method is POST, process the form data to create a booking.
-    4. Generate a random booking ID.
-    5. Retrieve and store the form data for the booking.
-    6. Insert the booking data into the appointments table in the database.
-    7. Handle any database integrity errors and flash a message if an error occurs.
-    8. Store the appointment ID in the session.
-    9. Calculate the start and end times for the appointment.
-    10. Update the calendar status for the booking.
-    11. Insert the event into the events table in the database.
-    12. Flash a success message and redirect to the invoice page.
-    """
-    
-    # Step 1: Fetch the current user's data from the database using their session ID
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
-    user_data = cursor.fetchone()
-    conn.close()
+    # Fetch the current user's data from Supabase using their session ID
+    user_data = supabase.from_('users').select('*').eq('id', session["id"]).execute().get('data')[0]
 
-    # Step 2: Store the username in the session
+    # Store the username in the session
     session["username"] = user_data["username"]
 
     if request.method == "POST":
-        # Step 4: Generate a random booking ID
+        # Generate a random booking ID
         booking_id = random.randint(100000, 999999)
         
-        # Step 5: Retrieve and store the form data for the booking
+        # Retrieve and store the form data for the booking
         student = session["username"]
         lecturer = request.form.get("lecturer")
         purpose = request.form.get("purpose")
@@ -310,36 +281,36 @@ def create_booking():
         appointment_time = request.form.get("selected_time_slot")
 
         try:
-            # Step 6: Insert the booking data into the appointments table in the database
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO appointments (booking_id, student, lecturer, purpose, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (booking_id, student, lecturer, purpose, appointment_date, appointment_time, "Pending"),
-            )
-            appointment_id = cursor.lastrowid
-            conn.commit()
-        except sqlite3.IntegrityError as e:
-            # Step 7: Handle any database integrity errors and flash a message if an error occurs
+            # Insert the booking data into the appointments table in Supabase
+            response = supabase.from_('appointments').insert([{
+                'booking_id': booking_id,
+                'student': student,
+                'lecturer': lecturer,
+                'purpose': purpose,
+                'appointment_date': appointment_date,
+                'appointment_time': appointment_time,
+                'status': 'Pending'
+            }]).execute()
+            appointment_id = response.get('data')[0]['id']
+        except Exception as e:
+            # Handle any database errors and flash a message if an error occurs
             flash(f"An error occurred: {str(e)}", "danger")
             return redirect("/appointment")
-        finally:
-            conn.close()
 
-        # Step 8: Store the appointment ID in the session
+        # Store the appointment ID in the session
         session["appointment_id"] = appointment_id
 
-        # Step 9: Calculate the start and end times for the appointment
+        # Calculate the start and end times for the appointment
         start_time = datetime.strptime(appointment_time.split(" - ")[0], "%I:%M %p")
         end_time = (start_time + timedelta(hours=1)).strftime("%H:%M")
         start_time = start_time.strftime("%H:%M")
 
-        # Step 10: Update the calendar status for the booking
+        # Update the calendar status for the booking
         update_calendar_status(booking_id, status="Pending")
 
-        # Step 11: Insert the event into the events table in the database
+        # Insert the event into the events table in Supabase
         event_title = f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
-        insert_event_into_db(
+        insert_event_into_supabase(
             event_title=event_title,
             event_date=appointment_date,
             start_time=start_time,
@@ -350,9 +321,10 @@ def create_booking():
             status="Pending"
         )
 
-        # Step 12: Flash a success message and redirect to the invoice page
+        # Flash a success message and redirect to the invoice page
         flash("Booking created successfully!", "success")
         return redirect("/invoice")
+
 
 
 # student
@@ -360,19 +332,15 @@ def create_booking():
 def render_template_invoice():
     user_id = session.get("id")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    user_data = cursor.fetchone()
-    conn.close()
+    # Fetch user data from Supabase
+    response = supabase.table('users').select('*').eq('id', user_id).execute()
+    user_data = response.data[0]
 
     appointment_id = session.get("appointment_id")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM appointments WHERE id = ?", (appointment_id,))
-    appointment = cursor.fetchone()
-    conn.close()
+    # Fetch appointment data from Supabase
+    response = supabase.table('appointments').select('*').eq('id', appointment_id).execute()
+    appointment = response.data[0]
 
     return render_template(
         "invoice.html",
@@ -385,31 +353,28 @@ def render_template_invoice():
         booking_id=appointment["booking_id"]
     )
 
-
-# student and lecturer
 @app.route("/bookinghistory")
 def user_booking_history():
     username = session.get("username")
     role = session.get("role")
 
-    conn = get_db_connection()
     try:
-        cursor = conn.cursor()
-
         if role == "student":
-            cursor.execute("SELECT * FROM appointments WHERE student = ?", (username,))
+            response = supabase.table('appointments').select('*').eq('student', username).execute()
             display_role = "lecturer"
             role = 'student'
         else:
-            cursor.execute("SELECT * FROM appointments WHERE lecturer = ?", (username,))
+            response = supabase.table('appointments').select('*').eq('lecturer', username).execute()
             display_role = "student"
             role = 'teacher'
 
-        appointments = cursor.fetchall()
-    finally:
-        conn.close()
+        appointments = response.data
+    except Exception as e:
+        flash(f"An error occurred: {str(e)}", "danger")
+        return redirect("/")
 
     return render_template("booking_history.html", appointments=appointments, display_role=display_role, role=role)
+
 
 # lecturer
 
@@ -418,24 +383,19 @@ def cancel_booking():
     appointment_id = request.form.get("id")
 
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
         # Get the booking_id from the appointments table
-        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
-        booking_id = cursor.fetchone()["booking_id"]
+        response = supabase.table('appointments').select('booking_id').eq('id', appointment_id).execute()
+        booking_id = response.data[0]["booking_id"]
         
         # Update the status in the appointments table
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Cancelled", appointment_id))
-        conn.commit()
+        supabase.table('appointments').update({'status': 'Cancelled'}).eq('id', appointment_id).execute()
         
         # Debug: print a message indicating appointment status update
         print(f"Appointment ID {appointment_id} status updated to 'Cancelled'")
         
         update_calendar_status(booking_id, "Cancelled")
-    finally:
-        conn.close()
-
+    except Exception as e:
+        flash(f"An error occurred: {str(e)}", "danger")
     return redirect("/bookinghistory")
 
 @app.route("/reject_booking", methods=["POST"])
@@ -443,24 +403,19 @@ def reject_booking():
     appointment_id = request.form.get("id")
 
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
         # Get the booking_id from the appointments table
-        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
-        booking_id = cursor.fetchone()["booking_id"]
+        response = supabase.table('appointments').select('booking_id').eq('id', appointment_id).execute()
+        booking_id = response.data[0]["booking_id"]
         
         # Update the status in the appointments table
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Rejected", appointment_id))
-        conn.commit()
+        supabase.table('appointments').update({'status': 'Rejected'}).eq('id', appointment_id).execute()
         
         # Debug: print a message indicating appointment status update
         print(f"Appointment ID {appointment_id} status updated to 'Rejected'")
         
         update_calendar_status(booking_id, "Rejected")
-    finally:
-        conn.close()
-
+    except Exception as e:
+        flash(f"An error occurred: {str(e)}", "danger")
     return redirect("/bookinghistory")
 
 @app.route("/accept_booking", methods=["POST"])
@@ -468,25 +423,22 @@ def accept_booking():
     appointment_id = request.form.get("id")
 
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
         # Get the booking_id from the appointments table
-        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
-        booking_id = cursor.fetchone()["booking_id"]
+        response = supabase.table('appointments').select('booking_id').eq('id', appointment_id).execute()
+        booking_id = response.data[0]["booking_id"]
         
         # Update the status in the appointments table
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Accepted", appointment_id))
-        conn.commit()
+        supabase.table('appointments').update({'status': 'Accepted'}).eq('id', appointment_id).execute()
         
         # Debug: print a message indicating appointment status update
         print(f"Appointment ID {appointment_id} status updated to 'Accepted'")
         
         update_calendar_status(booking_id, "Accepted")
-    finally:
-        conn.close()
-
+    except Exception as e:
+        flash(f"An error occurred: {str(e)}", "danger")
     return redirect("/bookinghistory")
+
+
 
 
 # lecturer\
@@ -510,7 +462,7 @@ def create_calendar():
         elif repeat_type == "monthly":
             repeat_monthly(event_title, event_date, start_time, end_time, lecturer)
         else:
-            insert_event_into_db(event_title, event_date, start_time, end_time, lecturer, "Pending", repeat_type, event_type='Work')
+            insert_event_into_supabase(event_title, event_date, start_time, end_time, lecturer, "Pending", repeat_type, event_type='Work')
 
         return redirect("/calendar")
 
@@ -532,8 +484,8 @@ def repeat_weekly(event_title, event_date, start_time, end_time, lecturer):
     
     # Loop to insert events weekly within the same month
     while event_date.month == initial_month:
-        # Insert the event into the database
-        insert_event_into_db(
+        # Insert the event into Supabase
+        insert_event_into_supabase(
             event_title, 
             event_date.strftime('%Y-%m-%d'), 
             start_time, 
@@ -545,6 +497,7 @@ def repeat_weekly(event_title, event_date, start_time, end_time, lecturer):
         )
         # Increment the event date by one week
         event_date += timedelta(weeks=1)
+
 
 def repeat_monthly(event_title, event_date, start_time, end_time, lecturer):
     """
@@ -562,8 +515,8 @@ def repeat_monthly(event_title, event_date, start_time, end_time, lecturer):
     
     # Loop to insert events monthly within the same year
     while event_date.year == datetime.now().year:
-        # Insert the event into the database
-        insert_event_into_db(
+        # Insert the event into Supabase
+        insert_event_into_supabase(
             event_title, 
             event_date.strftime('%Y-%m-%d'), 
             start_time, 
@@ -582,8 +535,9 @@ def repeat_monthly(event_title, event_date, start_time, end_time, lecturer):
             year += 1
         
         # Ensure the day exists in the next month
-        day = min(event_date.day, cal.monthrange(year, month)[1])
+        day = min(event_date.day, calendar.monthrange(year, month)[1])
         event_date = event_date.replace(year=year, month=month, day=day)
+
 
 
 @app.route("/calendar", methods=["GET", "POST"])
@@ -593,7 +547,7 @@ def event():
 @app.route("/events", methods=["GET"])
 def get_events():
     """
-    Retrieve events for the currently logged-in lecturer from the calendar table.
+    Retrieve events for the currently logged-in lecturer from the events table.
     
     Returns:
     - JSON list of events with titles, start/end times, all-day flags, and statuses.
@@ -604,18 +558,12 @@ def get_events():
     lecturer = session.get("username")
 
     if lecturer:
-        # Establish a connection to the database
-        con = get_db_connection()
-        cur = con.cursor()
-
         try:
-            # Fetch events from the calendar table filtered by lecturer's username
-            cur.execute("SELECT event_title, event_date, start_time, end_time, status, event_type FROM calendar WHERE lecturer = ?", (lecturer,))
-            calendar_events = cur.fetchall()
-
-            # Initialize an empty list to hold the event details
+            # Fetch events from the events table filtered by lecturer's username
+            response = supabase.table('events').select('event_title', 'event_date', 'start_time', 'end_time', 'status', 'event_type').eq('lecturer', lecturer).execute()
             events_list = []
-            for event in calendar_events:
+
+            for event in response.data:
                 start_time = event["start_time"]
                 end_time = event["end_time"]
                 
@@ -644,9 +592,6 @@ def get_events():
         except Exception as e:
             # Handle any exceptions that might occur during data fetching
             return jsonify({"error": str(e)}), 500
-        finally:
-            # Ensure the database connection is closed
-            con.close()
     else:
         # Return an error response if the user is not logged in
         return jsonify({"error": "User not logged in"}), 401
@@ -667,69 +612,61 @@ def parse_time(time_str):
 
 
 
-def insert_event_into_db(event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "INSERT INTO calendar (event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type)
-        )
-        conn.commit()
-    except sqlite3.IntegrityError as e:
-        print(f"An error occurred: {str(e)}")
-    finally:
-        conn.close()
+def insert_event_into_supabase(event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type):
+    response = supabase.table('events').insert([
+        {
+            "event_title": event_title,
+            "event_date": event_date,
+            "start_time": start_time,
+            "end_time": end_time,
+            "lecturer": lecturer,
+            "status": status,
+            "repeat_type": repeat_type,
+            "event_type": event_type
+        }
+    ]).execute()
+
+    if response.error:
+        print(f"An error occurred: {response.error}")
+    else:
+        print("Event inserted successfully")
 
 
 def update_calendar_status(booking_id, status):
-    con = get_db_connection()
-    cur = con.cursor()
-    
-    try:
-        # Debug: print the status and booking ID being updated
-        print(f"Updating calendar status to '{status}' for booking ID: {booking_id}")
-        
-        # Update the status in the calendar table
-        cur.execute("UPDATE calendar SET status = ? WHERE event_title LIKE ?", (status, f'%Booking ID: {booking_id}%'))
-        
-        # Debug: print the number of rows updated
-        print(f"Number of rows updated: {cur.rowcount}")
-        
-        con.commit()
-    except sqlite3.Error as e:
-        print("Error updating calendar status:", e)
-    finally:
-        con.close()
+    response = supabase.table('events').update({
+        "status": status
+    }, f"event_title LIKE '%Booking ID: {booking_id}%'").execute()
+
+    if response.error:
+        print(f"Error updating calendar status: {response.error}")
+    else:
+        print(f"Calendar status updated to '{status}' for booking ID: {booking_id}")
+        print(f"Number of rows updated: {len(response.data)}")
+
 
 
 @app.route('/delete_event', methods=['POST'])
 def delete_event():
     event_title = request.form.get('event_title')
     if event_title:
-        if delete_event_from_db(event_title):
+        if delete_event_from_supabase(event_title):
             return jsonify({'status': 'success'}), 200
         else:
             return jsonify({'status': 'error', 'message': 'Event not found or deletion failed'}), 500
     else:
         return jsonify({'status': 'error', 'message': 'Invalid event title'}), 400
 
-def delete_event_from_db(event_title):
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
 
-    try:
-        cursor.execute("DELETE FROM calendar WHERE event_title=?", (event_title,))
-        conn.commit()
-        if cursor.rowcount > 0:
-            return True  # Return True if deletion is successful
-        else:
-            return False  # Return False if event not found
-    except sqlite3.Error as e:
-        print("SQLite error while deleting event:", e)
-        return False  # Return False if deletion fails
-    finally:
-        conn.close()
+def delete_event_from_supabase(event_title):
+    response = supabase.table('events').delete().eq('event_title', event_title).execute()
+
+    if response.error:
+        print(f"Error deleting event: {response.error}")
+        return False
+    else:
+        print(f"Event '{event_title}' deleted successfully")
+        return True
+
 
 
 @app.route("/appointment")
@@ -741,12 +678,15 @@ def appointment():
 
 
 def get_lecturers():
-    conn = sqlite3.connect('database.db')  # Connect to your database
-    cursor = conn.cursor()
-    cursor.execute("SELECT username FROM users WHERE role = 'teacher'")  # Adjust the query as needed
-    lecturers = cursor.fetchall()
-    conn.close()
-    return [lecturer[0] for lecturer in lecturers]
+    response = supabase.table('users').select('username').eq('role', 'teacher').execute()
+
+    if response.error:
+        print(f"Error fetching lecturers: {response.error}")
+        return []
+    else:
+        lecturers = response.data
+        return [lecturer['username'] for lecturer in lecturers]
+
 
 @app.route("/appointment2")
 def appointment2():
@@ -780,34 +720,28 @@ def check_availability():
     unavailable_hours = []
 
     try:
-        # Connect to the database and create a cursor
-        with sqlite3.connect('database.db') as conn:
-            cursor = conn.cursor()
-            # Iterate over each hour in the specified time range
-            for hour in range(start_time, end_time + 1):
-                # Execute a query to check for any calendar events overlapping with the specified hour
-                cursor.execute(
-                    """
-                    SELECT 1 FROM calendar 
-                    WHERE lecturer = ? 
-                    AND event_date = ? 
-                    AND (
-                        (start_time <= ? AND end_time > ?) OR
-                        (start_time < ? AND end_time >= ?)
-                    )
-                    """, 
-                    (lecturer, appointment_date, hour, hour, hour, hour)
-                )
-                # Fetch the result of the query
-                conflict = cursor.fetchone()
-                # Log the query result for debugging purposes
-                logging.debug(f"Query result for hour {hour}: {conflict}")
-                # If there's a conflict (i.e., event overlapping with the hour), add the hour to unavailable_hours
-                if conflict:
-                    unavailable_hours.append(hour)
-    except sqlite3.Error as e:
-        # Handle any database errors and return a 500 Internal Server Error response
-        logging.error(f"Database error: {str(e)}")
+        # Fetch events from the calendar table filtered by lecturer's username, appointment date, and overlapping time range
+        response = supabase.table('calendar').select('start_time', 'end_time').eq('lecturer', lecturer).eq('event_date', appointment_date).execute()
+
+        if response.error:
+            # Handle any errors that might occur during data fetching and return a 500 Internal Server Error response
+            logging.error(f"Supabase error: {response.error}")
+            return jsonify({"error": str(response.error)}), 500
+
+        # Extract events data from the response
+        events = response.data
+
+        # Iterate over each hour in the specified time range
+        for hour in range(start_time, end_time + 1):
+            # Check for any calendar events overlapping with the specified hour
+            overlapping_events = [event for event in events if event['start_time'] <= hour < event['end_time']]
+            # If there are overlapping events, add the hour to unavailable_hours
+            if overlapping_events:
+                unavailable_hours.append(hour)
+
+    except Exception as e:
+        # Handle any other exceptions and return a 500 Internal Server Error response
+        logging.error(f"Error occurred: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
     # If there are unavailable hours, return them along with the availability status
@@ -821,42 +755,59 @@ def check_availability():
 
 
 
+
 # admin
 @app.route("/appointmentcontrol", methods=["GET", "POST"])
 def appointmentcontrol():
     search_query = request.args.get('search', '')
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
+    # Fetch appointments based on search query
     if search_query:
-        cursor.execute(
-            """
+        query = f"""
             SELECT id, lecturer, student, appointment_date, purpose, status, appointment_time 
             FROM appointments 
-            WHERE lecturer LIKE ? OR student LIKE ? OR appointment_date LIKE ? OR purpose LIKE ? OR status LIKE ?
-            """, 
-            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
-        )
+            WHERE lecturer ILIKE '%{search_query}%' 
+            OR student ILIKE '%{search_query}%' 
+            OR appointment_date ILIKE '%{search_query}%' 
+            OR purpose ILIKE '%{search_query}%' 
+            OR status ILIKE '%{search_query}%'
+        """
     else:
-        cursor.execute(
-            "SELECT id, lecturer, student, appointment_date, purpose, status, appointment_time FROM appointments"
-        )
+        query = """
+            SELECT id, lecturer, student, appointment_date, purpose, status, appointment_time 
+            FROM appointments
+        """
 
-    appointments = cursor.fetchall()
-    cursor.close()
-    conn.close()
+    # Execute the query
+    response = supabase.query(query)
+
+    if response['error']:
+        # Handle any errors
+        return render_template("error.html", error=response['error'])
+
+    # Fetch the results
+    appointments = response['data']
 
     return render_template("appointment_control.html", appointments=appointments)
 
 
 # admin
 def delete_appointment(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM appointments WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
+    # Connect to Supabase
+    supabase = supabase.Client(SUPABASE_URL, SUPABASE_KEY)
+
+    # Construct the deletion query
+    query = f"DELETE FROM appointments WHERE id = {id}"
+
+    # Execute the query
+    response = supabase.query(query)
+
+    if response['error']:
+        # Handle any errors
+        print(f"Error deleting appointment: {response['error']}")
+    else:
+        print("Appointment deleted successfully")
+
 
 # admin
 @app.route("/delete_booking", methods=["POST"])
@@ -869,83 +820,73 @@ def delete_booking():
 @app.route("/admin")
 def admin_dashboard():
     search_query = request.args.get('search')
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    
+    # Connect to Supabase
+    supabase = supabase.Client(SUPABASE_URL, SUPABASE_KEY)
+    
+    # Initialize counts and appointments variables
+    num_teachers = 0
+    num_students = 0
+    num_appointments = 0
+    num_users = 0
+    appointments = []
 
     # Fetch the counts and appointments based on the search query if provided
     if search_query:
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'teacher'"
-        )
-        num_teachers = cursor.fetchone()[0]
+        # Fetch counts of teachers, students, appointments, and users
+        response = supabase.from_('users').select('COUNT(*)').eq('role', 'teacher').execute()
+        num_teachers = response['count']
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'student'"
-        )
-        num_students = cursor.fetchone()[0]
+        response = supabase.from_('users').select('COUNT(*)').eq('role', 'student').execute()
+        num_students = response['count']
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM appointments"
-        )
-        num_appointments = cursor.fetchone()[0]
+        response = supabase.from_('appointments').select('COUNT(*)').execute()
+        num_appointments = response['count']
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM users"
-        )
-        num_users = cursor.fetchone()[0]
+        response = supabase.from_('users').select('COUNT(*)').execute()
+        num_users = response['count']
 
-        cursor.execute(
-            """
-            SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id 
-            FROM appointments 
-            WHERE lecturer LIKE ? OR student LIKE ? OR appointment_date LIKE ? OR purpose LIKE ? OR status LIKE ?
-            """,
-            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
-        )
-        appointments = cursor.fetchall()
-    else:
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'teacher'"
-        )
-        num_teachers = cursor.fetchone()[0]
-
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'student'"
-        )
-        num_students = cursor.fetchone()[0]
-
-        cursor.execute(
-            "SELECT COUNT(*) FROM appointments"
-        )
-        num_appointments = cursor.fetchone()[0]
-
-        cursor.execute(
-            "SELECT COUNT(*) FROM users"
-        )
-        num_users = cursor.fetchone()[0]
-
-        cursor.execute(
-            """
-            SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id 
+        # Fetch appointments based on the search query
+        query = f"""
+            SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id
             FROM appointments
-            """
-        )
-        appointments = cursor.fetchall()
+            WHERE lecturer ILIKE '%{search_query}%' OR student ILIKE '%{search_query}%'
+            OR appointment_date ILIKE '%{search_query}%' OR purpose ILIKE '%{search_query}%'
+            OR status ILIKE '%{search_query}%'
+        """
+        response = supabase.sql(query).execute()
+        appointments = response['data']
+    else:
+        # Fetch counts of teachers, students, appointments, and users
+        response = supabase.from_('users').select('COUNT(*)').eq('role', 'teacher').execute()
+        num_teachers = response['count']
 
-    cursor.close()
-    conn.close()
+        response = supabase.from_('users').select('COUNT(*)').eq('role', 'student').execute()
+        num_students = response['count']
 
+        response = supabase.from_('appointments').select('COUNT(*)').execute()
+        num_appointments = response['count']
 
+        response = supabase.from_('users').select('COUNT(*)').execute()
+        num_users = response['count']
+
+        # Fetch all appointments
+        query = """
+            SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id
+            FROM appointments
+        """
+        response = supabase.sql(query).execute()
+        appointments = response['data']
 
     return render_template(
-    "admin.html",
-    appointments=appointments,
-    num_teachers=num_teachers,
-    num_students=num_students,
-    num_appointments=num_appointments,  # Remove one occurrence of num_appointments
-    num_users=num_users,
-    # num_appointments=json.dumps(num_appointments)  # Remove this line
-)
+        "admin.html",
+        appointments=appointments,
+        num_teachers=num_teachers,
+        num_students=num_students,
+        num_appointments=num_appointments,
+        num_users=num_users,
+    )
+
 
 
 # admin
@@ -953,34 +894,47 @@ def admin_dashboard():
 def usercontrol():
     search_query = request.args.get('search', '')
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    # Connect to Supabase
+    supabase = supabase.Client(SUPABASE_URL, SUPABASE_KEY)
+    
+    # Initialize users variable
+    users = []
 
+    # Fetch users based on the search query if provided
     if search_query:
-        cursor.execute(
-            """
+        # Fetch users based on the search query
+        query = f"""
             SELECT id, role, faculty, username, phone_number 
             FROM users 
-            WHERE username LIKE ? OR role LIKE ? OR faculty LIKE ? OR phone_number LIKE ?
-            """, 
-            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
-        )
+            WHERE username ILIKE '%{search_query}%' OR role ILIKE '%{search_query}%'
+            OR faculty ILIKE '%{search_query}%' OR phone_number ILIKE '%{search_query}%'
+        """
+        response = supabase.sql(query).execute()
+        users = response['data']
     else:
-        cursor.execute("SELECT id, role, faculty, username, phone_number FROM users")
+        # Fetch all users
+        response = supabase.from_('users').select('id, role, faculty, username, phone_number').execute()
+        users = response['data']
 
-    users = cursor.fetchall()
-    cursor.close()
-    conn.close()
     return render_template("usercontrol.html", users=users)
+
 
 
 # admin
 def delete_user(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
+    # Connect to Supabase
+    supabase = supabase.Client(SUPABASE_URL, SUPABASE_KEY)
+    
+    # Delete the user with the specified id
+    response = supabase.from_('users').delete().eq('id', id).execute()
+
+    if response['error']:
+        print(f"Error deleting user: {response['error']}")
+        return False
+    else:
+        print(f"User with id {id} deleted successfully.")
+        return True
+
 
 
 @app.route("/adminpageeditor", methods=["GET", "POST"])
@@ -1078,43 +1032,30 @@ def changepassword():
 
 @app.route("/faculty")
 def faculty():
-        conn = get_db_connection()
-        cursor = conn.cursor()
+    # Connect to Supabase
+    supabase = supabase.Client(SUPABASE_URL, SUPABASE_KEY)
 
-        cursor.execute("SELECT faculty_name, faculty_image FROM hub")
-        faculty_info = cursor.fetchall()
+    # Fetch faculty information from the 'hub' table
+    faculty_info = supabase.from_('hub').select('faculty_name, faculty_image').execute().get('data')
 
-        faculty_data = []
-        if faculty_info:
-            for faculty in faculty_info:
-                cursor.execute(
-                    "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
-                    (faculty["faculty_name"],)
-                )
-                lecturers = cursor.fetchall() 
+    faculty_data = []
+    if faculty_info:
+        for faculty in faculty_info:
+            # Fetch lecturers for the current faculty
+            lecturers = supabase.from_('users').select('username, email').eq('faculty', faculty['faculty_name']).eq('role', 'teacher').execute().get('data')
 
-                cursor.execute(
-                    "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
-                    (faculty["faculty_name"],)
-                )
-                students = cursor.fetchall() 
-                faculty_data.append(
-                    {
-                        "faculty_name": faculty["faculty_name"],
-                        "faculty_image": faculty["faculty_image"],
-                        "lecturers": [
-                            {"username": lecturer[0], "email": lecturer[1]}
-                            for lecturer in lecturers
-                        ],
-                        "students": [
-                            {"username": student[0], "email": student[1]}
-                            for student in students
-                        ],
-                    }
-                )
+            # Fetch students for the current faculty
+            students = supabase.from_('users').select('username, email').eq('faculty', faculty['faculty_name']).eq('role', 'student').execute().get('data')
 
-        conn.close()
-        return render_template("Faculty.html", faculty_info=faculty_data)
+            faculty_data.append({
+                "faculty_name": faculty["faculty_name"],
+                "faculty_image": faculty["faculty_image"],
+                "lecturers": lecturers if lecturers else [],
+                "students": students if students else [],
+            })
+
+    return render_template("Faculty.html", faculty_info=faculty_data)
+
 
 
 # admin
@@ -1126,69 +1067,65 @@ def create_faculty_hub():
         faculty_image = request.files.get("faculty_image")
 
         if not faculty_name or not faculty_image:
-            return render_template(
-                "createhub.html", message="Missing required fields"
-            )
+            return render_template("createhub.html", message="Missing required fields")
 
         try:
             filename = secure_filename(faculty_image.filename)
             image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-
- 
             faculty_image.save(image_path)
-
             print(f"Saved file to {image_path}")
 
-            relative_image_path = filename
+            # Upload image to Supabase Storage
+            image_upload_response = supabase.storage.from_path(filename, image_path).upload()
 
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO hub (faculty_name, faculty_image) VALUES (?, ?)",
-                (faculty_name, relative_image_path),
-            )
-            conn.commit()
-            conn.close()
+            if image_upload_response['data']:
+                # Get the URL of the uploaded image
+                relative_image_path = image_upload_response['data']['RelativeUrl']
 
-            return redirect('/faculty')
+                # Insert faculty hub information into the 'hub' table
+                insert_result = supabase.from_('hub').insert([{'faculty_name': faculty_name, 'faculty_image': relative_image_path}]).execute()
+
+                if insert_result['data']:
+                    return redirect('/faculty')
+                else:
+                    return render_template("createhub.html", message="Failed to insert faculty hub information")
+            else:
+                return render_template("createhub.html", message="Failed to upload image")
         except Exception as e:
             print("Error occurred:", e)
-            return render_template(
-                "createhub.html",
-                message="An error occurred while creating faculty hub",
-            )
+            return render_template("createhub.html", message="An error occurred while creating faculty hub")
     else:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM hub")
-        faculty_hubs = cursor.fetchall()
-        conn.close()
+        # Fetch existing faculty hubs from Supabase
+        faculty_hubs = supabase.from_('hub').select('*').execute().get('data')
         return render_template("createhub.html", faculty_hubs=faculty_hubs)
 
 
 # admin
 @app.route("/profile")
 def profile():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
-    user_data = cursor.fetchone()
-    conn.close()
+    # Fetch user data from Supabase
+    user_data_response = supabase.from_('users').select('*').eq('id', session["id"]).execute()
 
-    session["username"] = user_data[3]
-    session["role"] = user_data[1]
-    session["faculty"] = user_data[2]
-    session["email"] = user_data[4]
-    session["phone_number"] = user_data[5]
+    if user_data_response['data']:
+        user_data = user_data_response['data'][0]
 
-    return render_template(
-        "profile.html",
-        username=user_data["username"],
-        email=user_data["email"],
-        faculty=user_data["faculty"],
-        phone_number=user_data["phone_number"],
-        role=user_data["role"],
-    )
+        # Update session with user data
+        session["username"] = user_data["username"]
+        session["role"] = user_data["role"]
+        session["faculty"] = user_data["faculty"]
+        session["email"] = user_data["email"]
+        session["phone_number"] = user_data["phone_number"]
+
+        return render_template(
+            "profile.html",
+            username=user_data["username"],
+            email=user_data["email"],
+            faculty=user_data["faculty"],
+            phone_number=user_data["phone_number"],
+            role=user_data["role"],
+        )
+    else:
+        return "User not found"  # Handle case where user data is not found
 
 
 @app.route("/logout")
