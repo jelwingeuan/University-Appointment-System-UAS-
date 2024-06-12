@@ -180,7 +180,7 @@ def signup():
     else:
         con = get_db_connection()
         cur = con.cursor()
-        cur.execute("SELECT faculty_name FROM facultyhub")
+        cur.execute("SELECT faculty_name FROM hub")
         faculties = cur.fetchall()
         con.close()
         return render_template("signup.html", faculties=faculties)
@@ -1081,7 +1081,7 @@ def faculty():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
+        cursor.execute("SELECT faculty_name, faculty_image FROM hub")
         faculty_info = cursor.fetchall()
 
         faculty_data = []
@@ -1119,7 +1119,7 @@ def faculty():
 
 # admin
 
-@app.route("/createfacultyhub", methods=["GET", "POST"])
+@app.route("/createhub", methods=["GET", "POST"])
 def create_faculty_hub():
     if request.method == "POST":
         faculty_name = request.form.get("faculty_name")
@@ -1127,7 +1127,7 @@ def create_faculty_hub():
 
         if not faculty_name or not faculty_image:
             return render_template(
-                "createfacultyhub.html", message="Missing required fields"
+                "createhub.html", message="Missing required fields"
             )
 
         try:
@@ -1144,7 +1144,7 @@ def create_faculty_hub():
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO facultyhub (faculty_name, faculty_image) VALUES (?, ?)",
+                "INSERT INTO hub (faculty_name, faculty_image) VALUES (?, ?)",
                 (faculty_name, relative_image_path),
             )
             conn.commit()
@@ -1154,16 +1154,16 @@ def create_faculty_hub():
         except Exception as e:
             print("Error occurred:", e)
             return render_template(
-                "createfacultyhub.html",
+                "createhub.html",
                 message="An error occurred while creating faculty hub",
             )
     else:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM facultyhub")
+        cursor.execute("SELECT * FROM hub")
         faculty_hubs = cursor.fetchall()
         conn.close()
-        return render_template("createfacultyhub.html", faculty_hubs=faculty_hubs)
+        return render_template("createhub.html", faculty_hubs=faculty_hubs)
 
 
 # admin

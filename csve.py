@@ -27,9 +27,9 @@ def export_to_csv():
         writer.writerow([i[0] for i in cur.description])  # Write headers
         writer.writerows(cur.fetchall())
 
-    # Export 'facultyhub' table to CSV
-    cur.execute("SELECT * FROM facultyhub")
-    with open("facultyhub.csv", "w", newline="") as f:
+    # Export 'hub' table to CSV
+    cur.execute("SELECT * FROM hub")
+    with open("hub.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([i[0] for i in cur.description])  # Write headers
         writer.writerows(cur.fetchall())
