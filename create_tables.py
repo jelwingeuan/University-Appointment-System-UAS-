@@ -57,14 +57,15 @@ cur.execute(
     )"""
 )
 
-# Create "facultyhub" table
+# Create "hub" table
 cur.execute(
-    """CREATE TABLE IF NOT EXISTS facultyhub (
+    """CREATE TABLE IF NOT EXISTS hub (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         faculty_name TEXT NOT NULL,
         faculty_image TEXT NOT NULL
         )"""
 )
+
 
 con.commit()
 con.close()
