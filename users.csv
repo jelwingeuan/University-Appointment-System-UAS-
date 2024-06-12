@@ -1,0 +1,3 @@
+id,role,faculty,username,email,phone_number,password
+2,student,FCI,Logan Sargeant,logan@student.mmu.edu.my,1234567890,$2b$12$MCUvE8jJWn6MY.vdBkG1Du9M/lyvmwM9CDx2NL.jJFJY8uTSQ0yjS
+3,teacher,FCI,Willie Poh,willie@mmu.edu.my,987654321,$2b$12$TCam.OJ9RtD8U20JzqV4NOGTqhJ7.xVCKo762BrsfvcCZxZzDngd.
