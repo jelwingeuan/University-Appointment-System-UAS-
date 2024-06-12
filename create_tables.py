@@ -9,7 +9,7 @@ def get_db_connection():
 # Connect with db
 con = sqlite3.connect("database.db")
 cur = con.cursor()
-
+d
 
 cur.execute(
     """CREATE TABLE IF NOT EXISTS users (
