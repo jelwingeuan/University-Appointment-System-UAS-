@@ -1,70 +1,98 @@
-from flask import Flask, render_template, request, redirect, url_for
-from flask import session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_login import LoginManager, UserMixin, login_required, current_user
-from create_tables import get_db_connection
-import sqlite3
-import bcrypt
-import random
+from dotenv import load_dotenv
+from supabase import create_client
 import os
 
+load_dotenv()
+
+url = os.environ.get("SUPABASE_URL")
+key = os.environ.get("SUPABASE_KEY")
+
+supabase = create_client(url, key)
 
 app = Flask(__name__)
 
+
 # Function for updating student info
 def update_user_info(id, username, email, phone_number):
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute("""UPDATE users SET username=?, email=?, phone_number=? WHERE id=?""",
-                (username, email, phone_number, id))
-        con.commit()
-        con.close()
+    response = (
+        supabase.table("users")
+        .update({"username": username, "email": email, "phone_number": phone_number})
+        .eq("id", id)
+        .execute()
+    )
+
+    if response.error:
+        flash("Error updating user information: " + response.error["message"], "error")
+    else:
         flash("User information updated successfully", "success")
 
 
-# Function to create a new appointment 
-def create_appointment(student, lecturer, appointment_date, appointment_time, purpose, status="Pending"):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-        "INSERT INTO appointments (student_id, lecturer_id, appointment_date, appointment_time, purpose, status) VALUES (?, ?, ?, ?, ?, ?)",
-        (student, lecturer, appointment_date, appointment_time, purpose, status)
+# Function to create a new appointment
+def create_appointment(
+    student, lecturer, appointment_date, appointment_time, purpose, status="Pending"
+):
+    response = (
+        supabase.table("appointments")
+        .insert(
+            {
+                "student_id": student,
+                "lecturer_id": lecturer,
+                "appointment_date": appointment_date,
+                "appointment_time": appointment_time,
+                "purpose": purpose,
+                "status": status,
+            }
         )
-        conn.commit()
-        conn.close()
+        .execute()
+    )
+
+    if response.error:
+        flash("Error creating appointment: " + response.error["message"], "error")
+    else:
+        flash("Appointment created successfully", "success")
 
 
 # Function to retrieve appointments for a student
 def get_appointments(student):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-        "SELECT * FROM appointments WHERE student= ?",
-        (student,)
-        )
-        appointments = cursor.fetchall()
-        conn.close()
-        return appointments
+    response = (
+        supabase.table("appointments").select("*").eq("student_id", student).execute()
+    )
+
+    if response.error:
+        flash("Error retrieving appointments: " + response.error["message"], "error")
+        return []
+    else:
+        return response.data
 
 
 # Function to update an existing appointment
 def update_appointment(appointment_id, new_date, new_time, new_purpose):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-        "UPDATE appointments SET appointment_date = ?, appointment_time = ?, purpose = ? WHERE id = ?",
-        (new_date, new_time, new_purpose, appointment_id)
+    response = (
+        supabase.table("appointments")
+        .update(
+            {
+                "appointment_date": new_date,
+                "appointment_time": new_time,
+                "purpose": new_purpose,
+            }
         )
-        conn.commit()
-        conn.close()
+        .eq("id", appointment_id)
+        .execute()
+    )
+
+    if response.error:
+        flash("Error updating appointment: " + response.error["message"], "error")
+    else:
+        flash("Appointment updated successfully", "success")
 
 
 # Function to delete an appointment
 def delete_appointment(id):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-        "DELETE FROM appointments WHERE id = ?",
-        (id,)
-        )
-        conn.commit()
-        conn.close()
+    response = supabase.table("appointments").delete().eq("id", id).execute()
+
+    if response.error:
+        flash("Error deleting appointment: " + response.error["message"], "error")
+    else:
+        flash("Appointment deleted successfully", "success")
