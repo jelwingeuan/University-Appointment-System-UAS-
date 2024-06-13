@@ -224,5 +224,17 @@
             </div>
         </div>
     </div>
+    <script>
+        // Your other JavaScript functions and scripts
+        
+        function printInvoice() {
+            var printContent = document.getElementById("print-area").innerHTML; // Get the HTML content of the print area
+            var originalContents = document.body.innerHTML; // Store the original HTML content of the body
+            document.body.innerHTML = printContent; // Replace the body content with the print area content
+            window.print(); // Print the document
+            document.body.innerHTML = originalContents; // Restore the original body content
+        }
+
+    </script>
 </body>
 </html>

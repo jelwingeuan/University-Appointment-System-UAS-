@@ -11,6 +11,8 @@ con = sqlite3.connect("database.db")
 cur = con.cursor()
 
 
+
+
 cur.execute(
     """CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -30,15 +32,21 @@ cur.execute(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         lecturer TEXT NOT NULL,
         event_title TEXT NOT NULL,
-        event_date TEXT NOT NULL,
+        event_date DATE,
+        end_date DATE,
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL,
         status TEXT NOT NULL,
         repeat_type TEXT NOT NULL,
         event_type TEXT NOT NULL,
+        slot_size INTEGER,
         FOREIGN KEY (lecturer) REFERENCES users(username)
     )"""
 )
+
+
+
+
 
 
 # Create "appointments" table
