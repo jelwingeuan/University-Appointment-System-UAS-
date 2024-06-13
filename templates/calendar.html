@@ -128,85 +128,64 @@
     </div>
     
 
-    <!-- jQuery: A fast, small, and feature-rich JavaScript library. It simplifies things like HTML document traversing, event handling, animating, and Ajax interactions for rapid web development. -->
     <script src='https://code.jquery.com/jquery-3.5.1.min.js'></script>
-
-    <!-- Popper.js: A library used for positioning poppers (pop-up elements) in web development. It helps in creating tooltips, dropdowns, and popovers that dynamically reposition themselves based on available space. -->
     <script src='https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js'></script>
-
-    <!-- Bootstrap: A popular front-end framework for developing responsive and mobile-first websites. It provides CSS and JavaScript components for layouts, forms, buttons, navigation, and other UI elements. -->
     <script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js'></script>
-
-    <!-- Bootstrap Datepicker: An extension for Bootstrap that provides a flexible datepicker widget. It allows users to select dates from a calendar interface easily. -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-
-    <!-- FullCalendar Scheduler: An extension for FullCalendar, a JavaScript event calendar library, which adds resource management and timeline views to FullCalendar. It's useful for scheduling and managing events in complex scenarios. -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.13/index.global.min.js'></script>
-
-    <!-- RRule: A JavaScript library for working with recurrence rules, such as those used in recurring events like weekly meetings or monthly reminders. It's often used in conjunction with calendar libraries to handle recurring events efficiently. -->
     <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/rrule@6.1.13/index.global.min.js'></script>
-
     <script>
       $(document).ready(function() {
-    // Initialize the datepicker with specified options
-    $('#eventDate').datepicker({
-        format: 'yyyy-mm-dd',
-        autoclose: true,
-        todayHighlight: true
-    });
-});
+          $('#eventDate').datepicker({
+              format: 'yyyy-mm-dd',
+              autoclose: true,
+              todayHighlight: true
+          });
+      });
 
-document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
-    var currentView = 'dayGridMonth'; // Set the default view of the calendar
+    var currentView = 'dayGridMonth';
     var selectedStart;
     var selectedEnd;
 
-    // Initialize FullCalendar with the specified options
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: currentView,
         headerToolbar: {
-            left: 'prev,next today', // Controls on the left side of the toolbar
-            center: 'title',         // Title in the center
-            right: 'dayGridMonth,timeGridWeek,timeGridDay' // View options on the right side
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        selectable: true, // Allow selecting time slots
-        selectHelper: true, // Display a placeholder while selecting
+        selectable: true,
+        selectHelper: true,
         events: function(fetchInfo, successCallback, failureCallback) {
-            // Fetch events from the server
             $.ajax({
-                url: '/events', // URL to fetch events from
+                url: '/events',
                 method: 'GET',
                 success: function(data) {
-                    // Pass fetched events to FullCalendar
                     successCallback(data);
                 },
                 error: function() {
-                    // Handle errors while fetching events
                     failureCallback();
                 }
             });
         },
         select: function(info) {
-            // Handle selection of time slots
-            selectedStart = info.startStr; // Get selected start time
-            selectedEnd = info.endStr;     // Get selected end time
-            // Populate the form fields with selected date and times
+            selectedStart = info.startStr;
+            selectedEnd = info.endStr;
             document.getElementById('eventDate').value = info.startStr.split('T')[0];
             document.getElementById('startTime').value = info.startStr.split('T')[1] || '';
             document.getElementById('endTime').value = info.endStr.split('T')[1] || '';
-            // Show the modal for adding/editing events
             $('#eventModal').modal('show');
         },
-        editable: true, // Allow events to be editable
+        editable: true,
         eventClick: function(info) {
-            // Handle clicking on an event to delete it
             if (confirm('Are you sure you want to delete this event?')) {
                 $.ajax({
-                    url: '/delete_event', // URL to delete the event
+                    url: '/delete_event',
                     method: 'POST',
                     data: {
-                        event_title: info.event.title // Send the event title to delete
+                        event_title: info.event.title
                     },
                     success: function(response) {
                         if (response.status === 'success') {
@@ -224,10 +203,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Render the calendar
     calendar.render();
 });
-
 
   </script>
 </body>

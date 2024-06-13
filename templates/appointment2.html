@@ -161,11 +161,10 @@
 
     <script>
         $(document).ready(function() {
-    // Function to check the availability of a lecturer for a given date and time slot
     function checkAvailability(lecturer, appointmentDate, startTime, endTime, button) {
         $.ajax({
             type: "POST",
-            url: "/check_availability", // URL to check availability
+            url: "/check_availability",
             contentType: "application/json",
             data: JSON.stringify({
                 lecturer: lecturer,
@@ -175,10 +174,8 @@
             }),
             success: function(response) {
                 if (response.availability === "unavailable") {
-                    // Mark the button as unavailable and disable it
                     button.addClass("unavailable").prop("disabled", true);
                 } else {
-                    // Ensure the button is enabled and remove the unavailable class
                     button.removeClass("unavailable").prop("disabled", false);
                 }
             },
@@ -188,46 +185,39 @@
         });
     }
 
-    // Function to update the availability of all time slots based on the selected date and lecturer
     function updateAvailability() {
-        let appointmentDate = $("#appointment-date").val(); // Get selected appointment date
-        let lecturer = $("select[name='lecturer']").val(); // Get selected lecturer
+        let appointmentDate = $("#appointment-date").val();
+        let lecturer = $("select[name='lecturer']").val();
         if (appointmentDate && lecturer) {
-            // Iterate through each time slot button to check its availability
             $("#time-slots button").each(function() {
-                let timeSlot = $(this).data("time"); // Get time slot data
-                let [startTime, endTime] = timeSlot.split(" - "); // Split time slot into start and end times
-                checkAvailability(lecturer, appointmentDate, startTime, endTime, $(this)); // Check availability for this slot
+                let timeSlot = $(this).data("time");
+                let [startTime, endTime] = timeSlot.split(" - ");
+                checkAvailability(lecturer, appointmentDate, startTime, endTime, $(this));
             });
         }
     }
 
-    // Event listener for date change to update availability
+    // Event listener for date change
     $("#appointment-date").on("change", updateAvailability);
 
-    // Event listener for lecturer change to update availability
+    // Event listener for lecturer change
     $("select[name='lecturer']").on("change", updateAvailability);
 
-    // Event listener for button click to select a time slot
+    // Event listener for button click to select time slot
     $("#time-slots button").on("click", function() {
         if (!$(this).hasClass("unavailable")) {
-            // Deselect any previously selected time slot
             $("#time-slots button").removeClass("selected");
-            // Select the clicked time slot
             $(this).addClass("selected");
-            // Remove any previously added hidden input for the selected time slot
             $("#appointment-form").find("input[name='selected_time_slot']").remove();
-            // Add a hidden input to the form with the selected time slot
             $("#appointment-form").append('<input type="hidden" name="selected_time_slot" value="' + $(this).data("time") + '">');
         }
     });
 
-    // Trigger update availability on page load if the appointment date is pre-filled
+    // Trigger update availability on page load if date is pre-filled
     if ($("#appointment-date").val()) {
         updateAvailability();
     }
 });
-
 
 
     </script>

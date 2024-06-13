@@ -12,9 +12,6 @@ import json
 import calendar as cal
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
 
 
 app = Flask(__name__, static_folder="static")
@@ -29,30 +26,30 @@ if not os.path.exists(UPLOAD_FOLDER):
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
-# Define a User class that inherits from UserMixin provided by Flask-Login
 class User(UserMixin):
     def __init__(self, id, username):
         self.id = id
         self.username = username
 
-# Function to establish a connection to the SQLite database
-def get_db_connection():
-    con = sqlite3.connect("database.db")  # Connect to the database
-    con.row_factory = sqlite3.Row        # Set row factory to sqlite3.Row for dictionary-like row access
-    return con                           # Return the database connection
 
-# Function to load a user from the database, used by Flask-Login
+def get_db_connection():
+    con = sqlite3.connect("database.db")
+    con.row_factory = sqlite3.Row
+    return con
+
+
 @login_manager.user_loader
 def load_user(id):
-    con = get_db_connection()            # Get a connection to the database
-    cur = con.cursor()                   # Create a cursor object
-    cur.execute("SELECT * FROM users WHERE id = ?", (id,))  # Execute a query to find the user by id
-    user = cur.fetchone()                # Fetch the user record
-    con.close()                          # Close the database connection
-    if user:                             # If user is found
-        return User(user['id'], user['username'])  # Create and return a User object
+    con = get_db_connection()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM users WHERE id = ?", (id,))
+    user = cur.fetchone()
+    con.close()
+    if user:
+        return User(user['id'], user['username'])
 
-    return None                          # Return None if user is not found
+    return None
+
 
 def load_pin():
     with open("pin.json", "r") as file:
@@ -103,13 +100,7 @@ def about():
 
 
 def hash_password(password):
-    # Encode the password to a byte string as bcrypt requires bytes input
-    encoded_password = password.encode("utf-8")
-    
-    # Generate a salt and hash the password with the salt
-    hashed_password = bcrypt.hashpw(encoded_password, bcrypt.gensalt())
-    
-    # Decode the hashed password back to a UTF-8 string and return it
+    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
     return hashed_password.decode("utf-8")
 
 
@@ -270,39 +261,16 @@ def change_password():
 # student
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
-    """
-    Create a booking for an appointment.
-    
-    Steps:
-    1. Fetch the current user's data from the database using their session ID.
-    2. Store the username in the session.
-    3. If the request method is POST, process the form data to create a booking.
-    4. Generate a random booking ID.
-    5. Retrieve and store the form data for the booking.
-    6. Insert the booking data into the appointments table in the database.
-    7. Handle any database integrity errors and flash a message if an error occurs.
-    8. Store the appointment ID in the session.
-    9. Calculate the start and end times for the appointment.
-    10. Update the calendar status for the booking.
-    11. Insert the event into the events table in the database.
-    12. Flash a success message and redirect to the invoice page.
-    """
-    
-    # Step 1: Fetch the current user's data from the database using their session ID
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
     user_data = cursor.fetchone()
     conn.close()
 
-    # Step 2: Store the username in the session
     session["username"] = user_data["username"]
 
     if request.method == "POST":
-        # Step 4: Generate a random booking ID
         booking_id = random.randint(100000, 999999)
-        
-        # Step 5: Retrieve and store the form data for the booking
         student = session["username"]
         lecturer = request.form.get("lecturer")
         purpose = request.form.get("purpose")
@@ -310,7 +278,6 @@ def create_booking():
         appointment_time = request.form.get("selected_time_slot")
 
         try:
-            # Step 6: Insert the booking data into the appointments table in the database
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
@@ -320,37 +287,32 @@ def create_booking():
             appointment_id = cursor.lastrowid
             conn.commit()
         except sqlite3.IntegrityError as e:
-            # Step 7: Handle any database integrity errors and flash a message if an error occurs
             flash(f"An error occurred: {str(e)}", "danger")
             return redirect("/appointment")
         finally:
             conn.close()
 
-        # Step 8: Store the appointment ID in the session
         session["appointment_id"] = appointment_id
 
-        # Step 9: Calculate the start and end times for the appointment
         start_time = datetime.strptime(appointment_time.split(" - ")[0], "%I:%M %p")
         end_time = (start_time + timedelta(hours=1)).strftime("%H:%M")
         start_time = start_time.strftime("%H:%M")
 
-        # Step 10: Update the calendar status for the booking
         update_calendar_status(booking_id, status="Pending")
 
-        # Step 11: Insert the event into the events table in the database
         event_title = f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
         insert_event_into_db(
             event_title=event_title,
             event_date=appointment_date,
             start_time=start_time,
-            event_type="appointment",
+            event_type = "appointment",
             end_time=end_time,
             repeat_type="", 
             lecturer=lecturer,
             status="Pending"
         )
 
-        # Step 12: Flash a success message and redirect to the invoice page
+
         flash("Booking created successfully!", "success")
         return redirect("/invoice")
 
@@ -516,73 +478,22 @@ def create_calendar():
 
 
 def repeat_weekly(event_title, event_date, start_time, end_time, lecturer):
-    """
-    Schedule an event to repeat weekly within the same month.
-
-    Parameters:
-    - event_title: The title of the event.
-    - event_date: The start date of the event in 'YYYY-MM-DD' format.
-    - start_time: The start time of the event.
-    - end_time: The end time of the event.
-    - lecturer: The lecturer associated with the event.
-    """
-    # Parse the initial event date from string to datetime object
     event_date = datetime.strptime(event_date, '%Y-%m-%d')
     initial_month = event_date.month
-    
-    # Loop to insert events weekly within the same month
     while event_date.month == initial_month:
-        # Insert the event into the database
-        insert_event_into_db(
-            event_title, 
-            event_date.strftime('%Y-%m-%d'), 
-            start_time, 
-            end_time, 
-            lecturer, 
-            "Pending", 
-            "weekly", 
-            event_type='Work'
-        )
-        # Increment the event date by one week
+        insert_event_into_db(event_title, event_date.strftime('%Y-%m-%d'), start_time, end_time, lecturer, "Pending", "weekly", event_type='Work')
         event_date += timedelta(weeks=1)
 
 def repeat_monthly(event_title, event_date, start_time, end_time, lecturer):
-    """
-    Schedule an event to repeat monthly within the same year.
-
-    Parameters:
-    - event_title: The title of the event.
-    - event_date: The start date of the event in 'YYYY-MM-DD' format.
-    - start_time: The start time of the event.
-    - end_time: The end time of the event.
-    - lecturer: The lecturer associated with the event.
-    """
-    # Parse the initial event date from string to datetime object
     event_date = datetime.strptime(event_date, '%Y-%m-%d')
-    
-    # Loop to insert events monthly within the same year
     while event_date.year == datetime.now().year:
-        # Insert the event into the database
-        insert_event_into_db(
-            event_title, 
-            event_date.strftime('%Y-%m-%d'), 
-            start_time, 
-            end_time, 
-            lecturer, 
-            "Pending", 
-            "monthly", 
-            event_type='Work'
-        )
-        
-        # Calculate the next month and year
+        insert_event_into_db(event_title, event_date.strftime('%Y-%m-%d'), start_time, end_time, lecturer, "Pending", "monthly", event_type='Work')
         year = event_date.year
         month = event_date.month + 1
         if month > 12:
             month = 1
             year += 1
-        
-        # Ensure the day exists in the next month
-        day = min(event_date.day, cal.monthrange(year, month)[1])
+        day = min(event_date.day, cal.monthrange(year, month)[1])  # Ensure the day exists in the next month
         event_date = event_date.replace(year=year, month=month, day=day)
 
 
@@ -592,34 +503,21 @@ def event():
 
 @app.route("/events", methods=["GET"])
 def get_events():
-    """
-    Retrieve events for the currently logged-in lecturer from the calendar table.
-    
-    Returns:
-    - JSON list of events with titles, start/end times, all-day flags, and statuses.
-    - HTTP 401 if the user is not logged in.
-    - HTTP 500 if an error occurs during data fetching.
-    """
-    # Get the username of the logged-in lecturer from the session
     lecturer = session.get("username")
 
     if lecturer:
-        # Establish a connection to the database
         con = get_db_connection()
         cur = con.cursor()
 
         try:
-            # Fetch events from the calendar table filtered by lecturer's username
+            # Fetch events from calendar table filtered by lecturer
             cur.execute("SELECT event_title, event_date, start_time, end_time, status, event_type FROM calendar WHERE lecturer = ?", (lecturer,))
             calendar_events = cur.fetchall()
 
-            # Initialize an empty list to hold the event details
             events_list = []
             for event in calendar_events:
                 start_time = event["start_time"]
                 end_time = event["end_time"]
-                
-                # Check if the event type is "appointment" and the status is "Accepted"
                 if event["event_type"] == "appointment":
                     if event["status"] == "Accepted":
                         events_list.append({
@@ -630,7 +528,6 @@ def get_events():
                             "status": event["status"]
                         })
                 else:
-                    # For other event types, directly append to the events list
                     events_list.append({
                         "title": event["event_title"],
                         "start": f"{event['event_date']}T{start_time}",
@@ -639,32 +536,19 @@ def get_events():
                         "status": event["status"]
                     })
 
-            # Return the list of events as a JSON response
             return jsonify(events_list)
         except Exception as e:
             # Handle any exceptions that might occur during data fetching
             return jsonify({"error": str(e)}), 500
         finally:
-            # Ensure the database connection is closed
             con.close()
     else:
-        # Return an error response if the user is not logged in
         return jsonify({"error": "User not logged in"}), 401
 
 
 def parse_time(time_str):
-    """
-    Parse a time string in 12-hour format with AM/PM to 24-hour format.
-
-    Parameters:
-    - time_str: Time string in 12-hour format (e.g., "02:30PM")
-
-    Returns:
-    - Parsed time string in 24-hour format (e.g., "14:30")
-    """
-    # Parse the input time string from 12-hour format to a datetime object, then format it to 24-hour format
+        # Try parsing with AM/PM specifier format
     return datetime.strptime(time_str, "%I:%M%p").strftime("%H:%M")
-
 
 
 def insert_event_into_db(event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type):
@@ -753,39 +637,35 @@ def appointment2():
     lecturers = get_lecturers()
     return render_template("appointment2.html", lecturers=lecturers)
 
+import logging
 
+logging.basicConfig(level=logging.DEBUG)
+
+from datetime import datetime
 
 @app.route("/check_availability", methods=["POST"])
 def check_availability():
-    # Extract data from the request's JSON payload
     data = request.get_json()
     lecturer = data["lecturer"]
     appointment_date = data["appointment_date"]
     start_time_str = data["start_time"]
     end_time_str = data["end_time"]
 
-    # Log a debug message with the provided data for availability check
     logging.debug(f"Checking availability for {lecturer} on {appointment_date} from {start_time_str} to {end_time_str}")
 
     try:
-        # Parse start and end times from string to hour format
         start_time = datetime.strptime(start_time_str, "%I:%M %p").hour
         end_time = datetime.strptime(end_time_str, "%I:%M %p").hour
     except ValueError as e:
-        # Handle any parsing errors and return a 400 Bad Request response
         logging.error(f"Time parsing error: {str(e)}")
         return jsonify({"error": "Invalid time format"}), 400
 
-    # Initialize a list to store unavailable hours
     unavailable_hours = []
 
     try:
-        # Connect to the database and create a cursor
         with sqlite3.connect('database.db') as conn:
             cursor = conn.cursor()
-            # Iterate over each hour in the specified time range
             for hour in range(start_time, end_time + 1):
-                # Execute a query to check for any calendar events overlapping with the specified hour
                 cursor.execute(
                     """
                     SELECT 1 FROM calendar 
@@ -798,27 +678,20 @@ def check_availability():
                     """, 
                     (lecturer, appointment_date, hour, hour, hour, hour)
                 )
-                # Fetch the result of the query
                 conflict = cursor.fetchone()
-                # Log the query result for debugging purposes
                 logging.debug(f"Query result for hour {hour}: {conflict}")
-                # If there's a conflict (i.e., event overlapping with the hour), add the hour to unavailable_hours
                 if conflict:
                     unavailable_hours.append(hour)
     except sqlite3.Error as e:
-        # Handle any database errors and return a 500 Internal Server Error response
         logging.error(f"Database error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-    # If there are unavailable hours, return them along with the availability status
     if unavailable_hours:
         logging.debug(f"Unavailable hours: {unavailable_hours}")
         return jsonify({"availability": "unavailable", "hours": unavailable_hours})
     else:
-        # If all hours are available, return the availability status
         logging.debug("All hours available")
         return jsonify({"availability": "available"})
-
 
 
 # admin

@@ -1788,121 +1788,104 @@ td .accept, .cancel, .Pending {
     margin: 20px;
 }
 
-/* Styling for buttons within .profilefooter */
 .profilefooter button {
-    /* Custom properties for button appearance */
     --border-color: linear-gradient(-45deg, #ffae00, #7e03aa, #00fffb);
     --border-width: 0.125em;
     --curve-size: 0.5em;
     --blur: 30px;
     --bg: #080312;
     --color: #afffff;
-  
-    /* Button text color */
     color: var(--color);
-    
-    /* Cursor style */
     cursor: pointer;
-    
-    /* Positioning and layout */
+    /* use position: relative; so that BG is only for .btn */
     position: relative;
     isolation: isolate;
     display: inline-grid;
     place-content: center;
-    
-    /* Spacing and size */
     padding: 0.5em 1.5em;
     font-size: 17px;
     border: 0;
-    
-    /* Text formatting */
     text-transform: uppercase;
-    
-    /* Box shadow */
     box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.6);
-    
-    /* Clip path for button shape */
     clip-path: polygon(
-      0% var(--curve-size),
+      /* Top-left */ 0% var(--curve-size),
       var(--curve-size) 0,
-      100% 0,
+      /* top-right */ 100% 0,
       100% calc(100% - var(--curve-size)),
-      calc(100% - var(--curve-size)) 100%,
-      0 100%
+      /* bottom-right 1 */ calc(100% - var(--curve-size)) 100%,
+      /* bottom-right 2 */ 0 100%
     );
-    
-    /* Color transition */
     transition: color 250ms;
-    
-    /* Margin */
     margin-right: 20px;
   }
   
-  /* Pseudo-elements for button background effects */
-  .profilefooter button::after,
-  .profilefooter button::before {
+.profilefooter button::after,
+.profilefooter button::before {
     content: "";
     position: absolute;
     inset: 0;
   }
   
-  /* Animation for background gradient */
-  .profilefooter button::before {
+.profilefooter button::before {
     background: var(--border-color);
     background-size: 300% 300%;
     animation: move-bg7234 5s ease infinite;
     z-index: -2;
   }
   
-  /* Keyframes for background gradient animation */
-  @keyframes move-bg7234 {
+@keyframes move-bg7234 {
     0% {
       background-position: 31% 0%;
     }
+  
     50% {
       background-position: 70% 100%;
     }
+  
     100% {
       background-position: 31% 0%;
     }
   }
   
-  /* Pseudo-element for button background */
-  .profilefooter button::after {
+.profilefooter button::after {
     background: var(--bg);
     z-index: -1;
-    /* Clip path for button shape */
     clip-path: polygon(
-      var(--border-width) calc(var(--curve-size) + var(--border-width) * 0.5),
+      /* Top-left */ var(--border-width)
+        calc(var(--curve-size) + var(--border-width) * 0.5),
       calc(var(--curve-size) + var(--border-width) * 0.5) var(--border-width),
-      calc(100% - var(--border-width)) var(--border-width),
-      calc(100% - var(--border-width)) calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)),
-      calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)) calc(100% - var(--border-width)),
-      var(--border-width) calc(100% - var(--border-width))
+      /* top-right */ calc(100% - var(--border-width)) var(--border-width),
+      calc(100% - var(--border-width))
+        calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)),
+      /* bottom-right 1 */
+        calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5))
+        calc(100% - var(--border-width)),
+      /* bottom-right 2 */ var(--border-width) calc(100% - var(--border-width))
     );
-    /* Transition for clip path */
     transition: clip-path 500ms;
   }
   
-  /* Button hover/focus effect */
-  .profilefooter button:where(:hover, :focus)::after {
+.profilefooter button:where(:hover, :focus)::after {
     clip-path: polygon(
-      calc(100% - var(--border-width)) calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)),
+      /* Top-left */ calc(100% - var(--border-width))
+        calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)),
       calc(100% - var(--border-width)) var(--border-width),
-      calc(100% - var(--border-width)) var(--border-width),
-      calc(100% - var(--border-width)) calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)),
-      calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)) calc(100% - var(--border-width)),
-      calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)) calc(100% - var(--border-width))
+      /* top-right */ calc(100% - var(--border-width)) var(--border-width),
+      calc(100% - var(--border-width))
+        calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5)),
+      /* bottom-right 1 */
+        calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5))
+        calc(100% - var(--border-width)),
+      /* bottom-right 2 */
+        calc(100% - calc(var(--curve-size) + var(--border-width) * 0.5))
+        calc(100% - var(--border-width))
     );
-    /* Transition for clip path */
     transition: 200ms;
   }
   
-  /* Button hover/focus text color */
-  .profilefooter button:where(:hover, :focus) {
+.profilefooter button:where(:hover, :focus) {
     color: #fff;
   }
-  
 
 
 .dropdown {
@@ -1945,73 +1928,70 @@ td .accept, .cancel, .Pending {
     /* resize for demo */
   }
   
-/* Style for the hidden checkbox input that acts as the toggle switch */
 .toggle-checkbox {
-    appearance: none; /* Remove default checkbox appearance */
-    position: absolute; /* Position absolutely for overlay */
-    z-index: 1; /* Ensure checkbox is above other elements */
-    border-radius: inherit; /* Inherit border radius from container */
-    width: 100%; /* Take up full width of container */
-    height: 100%; /* Take up full height of container */
-    font: inherit; /* Inherit font from parent */
-    opacity: 0; /* Make the checkbox invisible */
-    cursor: pointer; /* Set cursor to pointer for interaction */
+    appearance: none;
+    position: absolute;
+    z-index: 1;
+    border-radius: inherit;
+    width: 100%;
+    height: 100%;
+    /* fix em sizing */
+    font: inherit;
+    opacity: 0;
+    cursor: pointer;
   }
   
-  /* Container for the toggle switch */
-  .toggle-container {
-    display: flex; /* Use flexbox for layout */
-    align-items: center; /* Center items vertically */
-    position: relative; /* Position relative for absolute positioning of children */
-    border-radius: 0.375em; /* Rounded corners */
-    width: 3em; /* Width of the toggle */
-    height: 1.5em; /* Height of the toggle */
-    box-shadow: inset 0 0 0.0625em 0.125em rgb(255 255 255 / 0.2), inset 0 0.0625em 0.125em rgb(0 0 0 / 0.4); /* Box shadow for depth */
-    transition: background-color 0.4s linear; /* Smooth transition for background color change */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    border-radius: 0.375em;
+    width: 3em;
+    height: 1.5em;
+    box-shadow: inset 0 0 0.0625em 0.125em rgb(255 255 255 / 0.2),
+      inset 0 0.0625em 0.125em rgb(0 0 0 / 0.4);
+    transition: background-color 0.4s linear;
   }
   
-  /* Change container background color when checkbox is checked */
-  .toggle-checkbox:checked + .toggle-container {
+.toggle-checkbox:checked + .toggle-container {
     background-color: lime;
   }
   
-  /* Button part of the toggle switch */
-  .toggle-button {
-    display: flex; /* Use flexbox for centering */
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
-    position: absolute; /* Position absolutely within container */
-    left: 0.0625em; /* Initial position */
-    border-radius: 0.3125em; /* Rounded corners */
-    width: 1.375em; /* Width of the button */
-    height: 1.375em; /* Height of the button */
-    background-color: #e8e8e8; /* Background color of the button */
-    box-shadow: inset 0 -0.0625em 0.0625em 0.125em rgb(0 0 0 / 0.1), inset 0 -0.125em 0.0625em rgb(0 0 0 / 0.2), inset 0 0.1875em 0.0625em rgb(255 255 255 / 0.3), 0 0.125em 0.125em rgb(0 0 0 / 0.5); /* Box shadow for depth */
-    transition: left 0.4s; /* Smooth transition for left position change */
+.toggle-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    left: 0.0625em;
+    border-radius: 0.3125em;
+    width: 1.375em;
+    height: 1.375em;
+    background-color: #e8e8e8;
+    box-shadow: inset 0 -0.0625em 0.0625em 0.125em rgb(0 0 0 / 0.1),
+      inset 0 -0.125em 0.0625em rgb(0 0 0 / 0.2),
+      inset 0 0.1875em 0.0625em rgb(255 255 255 / 0.3),
+      0 0.125em 0.125em rgb(0 0 0 / 0.5);
+    transition: left 0.4s;
   }
   
-  /* Move button when checkbox is checked */
-  .toggle-checkbox:checked + .toggle-container > .toggle-button {
-    left: 1.5625em; /* New position when checked */
+.toggle-checkbox:checked + .toggle-container > .toggle-button {
+    left: 1.5625em;
   }
   
-  /* Container for the decorative circles on the button */
-  .toggle-button-circles-container {
-    display: grid; /* Use grid layout */
-    grid-template-columns: repeat(3, min-content); /* Three columns of minimum content width */
-    gap: 0.125em; /* Gap between circles */
-    position: absolute; /* Position absolutely within the button */
-    margin: 0 auto; /* Center horizontally */
+.toggle-button-circles-container {
+    display: grid;
+    grid-template-columns: repeat(3, min-content);
+    gap: 0.125em;
+    position: absolute;
+    margin: 0 auto;
   }
   
-  /* Style for the decorative circles on the button */
-  .toggle-button-circle {
-    border-radius: 50%; /* Circle shape */
-    width: 0.125em; /* Width of the circle */
-    height: 0.125em; /* Height of the circle */
-    background-image: radial-gradient(circle at 50% 0, #f5f5f5, #c4c4c4); /* Radial gradient for color */
+.toggle-button-circle {
+    border-radius: 50%;
+    width: 0.125em;
+    height: 0.125em;
+    background-image: radial-gradient(circle at 50% 0, #f5f5f5, #c4c4c4);
   }
-  
   
 .schedule-main {
     position: relative;
