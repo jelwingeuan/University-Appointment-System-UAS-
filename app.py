@@ -807,11 +807,11 @@ def get_calendar_details():
                 "slot_size": slot_size
             })
         else:
-            return jsonify({"error": "No calendar details found for the selected lecturer and date"}), 404
+            return jsonify({"error": "Lecturer didnt open consultation hour for today"}), 404
 
     except sqlite3.Error as e:
-        print("Error fetching calendar details:", e)
-        return jsonify({"error": "Database error occurred"}), 500
+        print("Lecturer didnt open consultation hour for today:", e)
+        return jsonify({"error": "Lecturer didnt open consultation hour for today"}), 500
 
     finally:
         conn.close()
@@ -829,9 +829,9 @@ def check_availability():
     cursor = conn.cursor()
 
     try:
-        # Adjusted SQL query to properly count accepted appointments within the specified time range
+        # Adjusted SQL query with correct logical precedence
         cursor.execute(
-            "SELECT COUNT(*) FROM appointments WHERE lecturer = ? AND appointment_date = ? AND appointment_time >= ? AND appointment_time <= ? AND status = 'Accepted'",
+            "SELECT COUNT(*) FROM appointments WHERE lecturer = ? AND appointment_date = ? AND appointment_time >= ? AND appointment_time <= ? AND (status = 'Accepted' OR status = 'Pending')",
             (lecturer_name, appointment_date, start_time, end_time)
         )
         count = cursor.fetchone()[0]
@@ -845,6 +845,7 @@ def check_availability():
     except sqlite3.Error as e:
         print("Error checking availability:", e)
         return jsonify({"error": "Database error occurred"}), 500
+
 
 
 
