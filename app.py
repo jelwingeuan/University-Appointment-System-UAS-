@@ -1232,10 +1232,10 @@ def profile():
     )
 
 
-@app.route("/logout", methods=['POST'])
+@app.route("/logout")
 def logout():
     session.clear()
-    return '', 204  # No content
+    return redirect("/")
 
 
 if __name__ == "__main__":
