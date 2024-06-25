@@ -3,36 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Profile</title>
     <link rel="stylesheet" href="../static/style.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <style>
-            /* CSS to style the edit container as a popup layer */
-    /* CSS to style the edit container as a popup layer */
-    .edit-container {
-    position: absolute;
-    top: 59%;
-    left: 57.5%;
-    transform: translate(-50%, -50%) scale(1); /* Start with normal scale */
-    background-color: white;
-    padding: 20px;
-    border: 1px solid #ccc;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 9999;
-    display: none; /* Hide the edit container by default */
-    transition: opacity 0.3s ease, transform 0.3s ease; /* Add transition for opacity and transform */
-    width: 700px;
-    height: 500px;
-    
-}
+        .edit-container {
+            position: absolute;
+            top: 59%;
+            left: 57.5%;
+            transform: translate(-50%, -50%) scale(1);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            display: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            width: 700px;
+            height: 500px;
+        }
 
-/* Show the edit container when its display property changes */
-    .edit-container.active {
-        opacity: 1; /* Make the container fully visible */
-        transform: translate(-50%, -50%) scale(1.1); /* Increase scale for "float out" effect */
-    }
-
-
+        .edit-container.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -40,9 +34,8 @@
         <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/about">About</a></li>
-            
             <li><a href="/appointment">Make An Appointment</a></li>
-            {% if session['logged_in'] == True %}
+            {% if session['logged_in'] %}
             <li class="dropdown">
                 <a href="/profile" class="dropbtn">Profile<i class='bx bx-chevron-down'></i></a>
                 <div class="dropdown-content">
@@ -61,38 +54,22 @@
     <div class="profilecontainer">
         <div class="profilewrapper">
             <div class="profileheader">
-                <h3 style="margin: 10px;font-size: 30px;">Profiles</h3>
+                <h3 style="margin: 10px; font-size: 30px;">Profiles</h3>
             </div>
             <div class="profilesubwrapper">
                 <div class="profilesidebar">
                     <h3 style="margin-top: 30px; font-size: 22px;">{{ session.username }}</h3>
-                    <a class="listitem active" data-toggle="list" href="/profile">General</a>
+                    <a class="listitem" data-toggle="list" href="/profile">General</a>
                     <a class="listitem" data-toggle="list" href="/changepassword">Change password</a>
                     {% if session.role == 'teacher' %}
                     <a class="listitem" data-toggle="list" href="/calendar">Calendar</a>
+                    <a class="listitem" data-toggle="list" href="/display_availability">Display Availability</a>
                     {% endif %}
                     <a class="listitem" data-toggle="list" href="/bookinghistory">Booking History</a>
                     <a class="listitem" data-toggle="list" href="/logout">Log Out</a>
                 </div>
                 <div class="profilemain">
-                    <h1 style="margin-top: 20px;">Account Setting</h1>
-                    <div class="profileinput" style="margin-left: 20px;">
-                        <div class="subprofileinput">
-                            <label>Name</label>
-                            <div id="nameDisplay" class="profiledata">{{ username }}</div>
-                            
-                            <label>Email</label>
-                            <div id="emailDisplay" class="profiledata">{{ email }}</div>
-                        </div>
-                        <div class="profileinput">
-                            <h2>Faculty : {{ faculty }}</h2>
-                            
-                            <label>Phone Number</label>
-                            <div id="phoneDisplay" class="profiledata">{{ phone_number }}</div>
-                            
-                            <h2>Role : {{ role }}</h2>
-                        </div>  
-                    </div>                       
+                    {% block content %}{% endblock %}
                 </div>
             </div>
             <div class="profilefooter">
@@ -101,23 +78,19 @@
             </div>
         </div>
     </div>
-    <div id="profileEditContainer" class="edit-container" style="display: none;">   
+    <div id="profileEditContainer" class="edit-container" style="display: none;">
         <form id="updateForm" method="post" action="/update_user_info">
-            
             <label for="username">Username:</label>
             <input type="text" id="usernameInput" name="username" value="{{ username }}">
             <br>
             <label for="email">Email:</label>
             <input type="email" id="emailInput" name="email" value="{{ email }}">
-            <br>
-            <br>
-            
+            <br><br>
             <label for="phone_number">Phone Number:</label>
             <input type="text" id="phoneInput" name="phone_number" value="{{ phone_number }}">
             <br>
-            
             <div class="profilefooter">
-                <button id="updateButton" type="submit" >Update</button>
+                <button id="updateButton" type="submit">Update</button>
             </div>
         </form>
     </div>

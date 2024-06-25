@@ -38,27 +38,26 @@
             outline: none;
             overflow: hidden;
             font-size: 15px;
-
-            }
+        }
 
         .submit icon {
             width: 24px;
             height: 24px;
             transition: all 0.3s ease-in-out;
-            }
+        }
 
         .submit button:hover {
             transform: scale(1.05);
             border-color: #fff9;
-            }
+        }
 
-            .button:hover .icon {
+        .button:hover .icon {
             transform: translate(4px);
-            }
+        }
 
         .submit button:hover::before {
             animation: shine 1.5s ease-out infinite;
-            }
+        }
 
         .submit button::before {
             content: "";
@@ -74,7 +73,7 @@
             top: 0;
             left: -100px;
             opacity: 0.6;
-            }
+        }
 
         @keyframes shine {
             0% {
@@ -96,7 +95,6 @@
         <ul>
             <li><a href="/">Home</a></li>
             <li><a href="/about">About</a></li>
-            </li>
             <li><a href="/appointment">Make An Appointment</a></li>
             {% if session['logged_in'] == True %}
             <li class="dropdown">
@@ -116,110 +114,86 @@
     </nav>
 
     <form id="appointment-form" method="post" action="/create_booking">
-    <div class="appointmentwrapper">
-        <div class="appointment-header">
-            <h1 style="margin-top: 20px;">Pick Your Slot</h1>
-            <div class="contactinfo">
-                <label>Choose Your Lecturer</label>
-                <select name="lecturer" class="bordered-select" style="margin-left: 20px;">
-                    {% for lecturer in lecturers %}
-                        <option value="{{ lecturer }}">{{ lecturer }}</option>
-                    {% endfor %}
-                </select>
+        <div class="appointmentwrapper">
+            <div class="appointment-header">
+                <h1 style="margin-top: 20px;">Pick Your Slot</h1>
+                <div class="contactinfo">
+                    <label>Choose Your Lecturer</label>
+                    <select name="lecturer" class="bordered-select" style="margin-left: 20px;">
+                        {% if lecturers %}
+                            {% for lecturer in lecturers %}
+                                <option value="{{ lecturer }}">{{ lecturer }}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="" disabled>No lecturers available</option>
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="contactinfo">
+                    <label>Purpose of Appointment</label>
+                    <input type="text" placeholder="Enter your appointment purpose" name="purpose" required style="width: 300px; margin-left: 20px;">
+                </div>
             </div>
-            <div class="contactinfo">
-                <label>Purpose of Appointment</label>
-                <input type="text" placeholder="Enter your appointment purpose" name="purpose" required style="width: 300px; margin-left: 20px;">         
-            </div>                
+            <div class="datepicker">
+                <label>Select Date</label>
+                <input type="date" id="appointment-date" name="appointment_date" required>
+                <div id="time-slots" class="time-grid">
+                    <!-- Time slots will be dynamically added here -->
+                </div>
+            </div>
         </div>
-        <div class="datepicker">
-            <label>Select Date</label>
-            <input type="date" id="appointment-date" name="appointment_date" required>
-            <div id="time-slots" class="time-grid">
-                <button type="button" data-time="08:00 AM - 09:00 AM">08:00 AM - 09:00 AM</button>
-                <button type="button" data-time="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</button>
-                <button type="button" data-time="10:00 AM - 11:00 AM">10:00 AM - 11:00 AM</button>
-                <button type="button" data-time="11:00 AM - 12:00 PM">11:00 AM - 12:00 PM</button>
-                <button type="button" data-time="12:00 PM - 01:00 PM">12:00 PM - 01:00 PM</button>
-                <button type="button" data-time="01:00 PM - 02:00 PM">01:00 PM - 02:00 PM</button>
-                <button type="button" data-time="02:00 PM - 03:00 PM">02:00 PM - 03:00 PM</button>
-                <button type="button" data-time="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</button>
-                <button type="button" data-time="04:00 PM - 05:00 PM">04:00 PM - 05:00 PM</button>
-                <button type="button" data-time="05:00 PM - 06:00 PM">05:00 PM - 06:00 PM</button>
-            </div>                    
+        <div class="submit" style="display: flex; justify-content: center;">
+            <button class="button" type="submit">
+                Apply Now
+                <svg fill="currentColor" viewBox="0 0 24 24" class="icon">
+                    <path clip-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 10-1.06 1.06l1.72 1.72H8.25a.75.75 0 000 1.5h5.69l-1.72 1.72a.75.75 0 101.06 1.06l3-3z" fill-rule="evenodd"></path>
+                </svg>
+            </button>
         </div>
-    </div>   
-    <div class="submit" style="display: flex; justify-content: center;">
-        <button class="button" type="submit">
-            Apply Now
-            <svg fill="currentColor" viewBox="0 0 24 24" class="icon">
-              <path clip-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm4.28 10.28a.75.75 0 000-1.06l-3-3a.75.75 0 10-1.06 1.06l1.72 1.72H8.25a.75.75 0 000 1.5h5.69l-1.72 1.72a.75.75 0 101.06 1.06l3-3z" fill-rule="evenodd"></path>
-            </svg>
-          </button>
-    </div>
-</form>
+    </form>
 
     <script>
         $(document).ready(function() {
-    function checkAvailability(lecturer, appointmentDate, startTime, endTime, button) {
-        $.ajax({
-            type: "POST",
-            url: "/check_availability",
-            contentType: "application/json",
-            data: JSON.stringify({
-                lecturer: lecturer,
-                appointment_date: appointmentDate,
-                start_time: startTime,
-                end_time: endTime
-            }),
-            success: function(response) {
-                if (response.availability === "unavailable") {
-                    button.addClass("unavailable").prop("disabled", true);
-                } else {
-                    button.removeClass("unavailable").prop("disabled", false);
+            function updateAvailability() {
+                let appointmentDate = $("#appointment-date").val();
+                let lecturer = $("select[name='lecturer']").val();
+                if (appointmentDate && lecturer) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/get_time_slots",
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            lecturer: lecturer,
+                            appointment_date: appointmentDate
+                        }),
+                        success: function(response) {
+                            $("#time-slots").empty();
+                            let availableTimes = response;
+                            availableTimes.forEach(function(time) {
+                                let startTime = time.start_time;
+                                let endTime = time.end_time;
+                                let timeButton = $("<button>").text(startTime + " - " + endTime);
+                                timeButton.attr("type", "button");
+                                timeButton.click(function() {
+                                    $("#time-slots button").removeClass("selected");
+                                    $(this).addClass("selected");
+                                    $("input[name='start_time']").val(startTime);
+                                    $("input[name='end_time']").val(endTime);
+                                });
+                                $("#time-slots").append(timeButton);
+                            });
+                        }
+                    });
                 }
-            },
-            error: function() {
-                console.log("Error checking availability");
             }
+
+            $("select[name='lecturer']").change(updateAvailability);
+            $("#appointment-date").change(updateAvailability);
+
+            // Ensure the form includes hidden inputs for start_time and end_time
+            $("#appointment-form").append('<input type="hidden" name="start_time">');
+            $("#appointment-form").append('<input type="hidden" name="end_time">');
         });
-    }
-
-    function updateAvailability() {
-        let appointmentDate = $("#appointment-date").val();
-        let lecturer = $("select[name='lecturer']").val();
-        if (appointmentDate && lecturer) {
-            $("#time-slots button").each(function() {
-                let timeSlot = $(this).data("time");
-                let [startTime, endTime] = timeSlot.split(" - ");
-                checkAvailability(lecturer, appointmentDate, startTime, endTime, $(this));
-            });
-        }
-    }
-
-    // Event listener for date change
-    $("#appointment-date").on("change", updateAvailability);
-
-    // Event listener for lecturer change
-    $("select[name='lecturer']").on("change", updateAvailability);
-
-    // Event listener for button click to select time slot
-    $("#time-slots button").on("click", function() {
-        if (!$(this).hasClass("unavailable")) {
-            $("#time-slots button").removeClass("selected");
-            $(this).addClass("selected");
-            $("#appointment-form").find("input[name='selected_time_slot']").remove();
-            $("#appointment-form").append('<input type="hidden" name="selected_time_slot" value="' + $(this).data("time") + '">');
-        }
-    });
-
-    // Trigger update availability on page load if date is pre-filled
-    if ($("#appointment-date").val()) {
-        updateAvailability();
-    }
-});
-
-
     </script>
 </body>
 </html>

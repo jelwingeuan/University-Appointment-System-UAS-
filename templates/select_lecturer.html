@@ -1,0 +1,20 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Select Lecturer</title>
+</head>
+<body>
+    <h1>Select Lecturer</h1>
+    <form method="POST">
+        <label for="lecturer">Choose a lecturer:</label>
+        <select name="lecturer" id="lecturer">
+            {% for lecturer in lecturers %}
+                <option value="{{ lecturer[0] }}">{{ lecturer[0] }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">View Availability</button>
+    </form>
+</body>
+</html>

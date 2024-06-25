@@ -4,17 +4,18 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask import session, flash
 import logging
 from flask_login import LoginManager, UserMixin
+from contextlib import closing
 from werkzeug.utils import secure_filename
 from create_tables import get_db_connection
 from user_authentication import(
     email_auth, username_auth, phonenumber_auth, create_user, login_student,
-    update_user_info, id_password, new_hashed_password,delete_appointment
+    update_user_info, id_password, new_hashed_password, delete_appointment
     )
 from student_booking import(
     user_booking, make_booking, update_booking_status
 )
 from teacher_availability import(
-    get_availability, availability_record, availability_repeat
+    get_current_user, get_availability, availability_record
     )
 import bcrypt
 import random
@@ -187,11 +188,7 @@ def signup():
             return create_users
         
     else:
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute("SELECT faculty_name FROM facultyhub")
-        faculties = cur.fetchall()
-        con.close()
+        faculties = ["FCI", "FOE"]  # Pre-set faculties
         return render_template("signup.html", faculties=faculties)
 
 
@@ -268,10 +265,36 @@ def change_password():
         return render_template("profile.html")
 
 
+@app.route('/appointments')
+def appointments():
+    con = get_db_connection()
+    cur = con.cursor()
+    cur.execute("SELECT * FROM appointments")
+    appointments = cur.fetchall()
+    print(appointments)  # Debugging statement
+    return render_template('appointments.html', appointments=appointments)
+
+
+
+@app.route('/get_time_slots', methods=['POST'])
+def get_time_slots():
+    data = request.get_json()
+    lecturer = data['lecturer']
+    appointment_date = data['appointment_date']
+    
+    con = get_db_connection()
+    cur = con.cursor()
+    cur.execute("SELECT start_time, end_time FROM availability WHERE lecturer = ? AND appointment_date = ?", (lecturer, appointment_date))
+    available_times = cur.fetchall()
+    con.close()
+    
+    return jsonify(available_times)
+
+
+
 # student
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
-    
     # Fetch the current user's data from the database using their session ID
     user_data = user_booking()
 
@@ -344,52 +367,99 @@ def cancel_booking():
 
 
 # teacher
-@app.route("/record_availability", methods=["GET", "POST"])
+@app.route("/record_availability", methods=["POST"])
 def record_availability():
     if request.method == "POST":
-        lecturer = request.form["lecturer"]
-        appointment_date = request.form["appointment_date"]
-        start_time = request.form["start_time"]
-        end_time = request.form["end_time"]
-        
-        availability_record(lecturer, appointment_date, start_time, end_time)
-        
-        return redirect(url_for("display_availability"))
-    
-    return render_template("availability.html")
+        lecturer = session.get('username')  # Assuming lecturer username is stored in session
 
+        if not lecturer:
+            flash("You must be logged in to record availability", "error")
+            return redirect("/login")
 
-@app.route("/repeat_availability", methods=["GET", "POST"])
-def repeat_availability():
-    if request.method == "POST":
         appointment_date = request.form["appointment_date"]
         start_time = request.form["start_time"]
         end_time = request.form["end_time"]
         repeat_type = request.form["repeat_type"]
-        repeat_interval = int(request.form["repeat_interval"])
-        repeat_count = int(request.form["repeat_count"])
-        
+        repeat_interval = int(request.form["repeat_interval"]) if repeat_type != "No repeat" else 1
+        repeat_count = int(request.form["repeat_count"]) if repeat_type != "No repeat" else 1
+
         if repeat_type not in ["No repeat", "Daily", "Weekly", "Monthly"]:
             return render_template("availability.html", message="Invalid repeat type. Must be No Repeat, Daily, Weekly, or Monthly.")
-        
+
         if repeat_count < 1:
             return render_template("availability.html", message="Repeat count must be at least 1.")
+
+        con = get_db_connection()
+        cur = con.cursor()
+
+        cur.execute("""
+            SELECT *
+            FROM availability
+            WHERE appointment_date = ? AND start_time = ? AND end_time = ?
+        """, (appointment_date, start_time, end_time))
+        appointment = cur.fetchone()
+
+        if appointment is None:
+            cur.execute("""
+                INSERT INTO availability (lecturer, appointment_date, start_time, end_time, repeat_type, repeat_interval, repeat_count)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (lecturer, appointment_date, start_time, end_time, repeat_type, repeat_interval, repeat_count))
+            con.commit()
         
-        result = availability_repeat(appointment_date, start_time, end_time, repeat_type, repeat_interval, repeat_count)
-        
+        con.close()
+
+        result = availability_record(appointment_date, start_time, end_time, repeat_type, repeat_interval, repeat_count)
+
         if result is None:
             return render_template("availability.html", message="Event not found or invalid date format.")
-        
+
         return redirect(url_for("display_availability"))
-    
+
     availability = get_availability()
     return render_template("availability.html", availability=availability)
 
-
-@app.route("/display_availability")
+@app.route('/display_availability', methods=["GET", "POST"])
 def display_availability():
-    availability = get_availability()
-    return render_template("availability.html", availability=availability)
+    lecturer = None
+    if request.method == "POST":
+        lecturer = request.form.get('lecturer')  # Lecturer passed as a form parameter
+    elif session.get('role') == 'teacher':
+        lecturer = session.get('username')  # Lecturer username from session for teachers
+
+    con = get_db_connection()
+    cur = con.cursor()
+    
+    if lecturer:
+        cur.execute("""
+                    SELECT * FROM availability
+                    WHERE lecturer = ?
+                    """, (lecturer,))
+    else:
+        cur.execute("""
+                    SELECT * FROM availability
+                    """)
+    
+    availability = cur.fetchall()  # Fetch results from the cursor
+    
+    con.close()  # Close the database connection after fetching results
+    
+    return render_template("availability.html", availability=availability if availability else [])
+
+
+
+@app.route('/select_lecturer', methods=["GET", "POST"])
+def select_lecturer():
+    if request.method == "POST":
+        lecturer = request.form.get('lecturer')
+        return redirect(url_for('display_availability', lecturer=lecturer))
+    
+    con = get_db_connection()
+    cur = con.cursor()
+    cur.execute("SELECT DISTINCT lecturer FROM availability")
+    lecturers = cur.fetchall()
+    con.close()
+
+    return render_template("select_lecturer.html", lecturers=lecturers)
 
 
 @app.route("/appointment")

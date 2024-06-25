@@ -1,17 +1,19 @@
+from flask import session
 from create_tables import get_db_connection
 from datetime import date, datetime, timedelta
 
-def availability_record(lecturer, appointment_date, start_time, end_time):
-    con = get_db_connection()
-    cur = con.cursor()
-    
-    cur.execute("""
-        INSERT INTO availability (lecturer, appointment_date, start_time, end_time)
-        VALUES (?, ?, ?, ?)
-    """, (lecturer, appointment_date, start_time, end_time))
-    
-    con.commit()
-    con.close()
+def get_current_user():
+    username = session.get("username")
+    if username:
+        con = get_db_connection()
+        cur = con.cursor()
+        cur.execute("""
+                    SELECT * FROM users WHERE username = ?
+                    """, (username,))
+        user = cur.fetchone()
+        con.close()
+        return user
+    return None
 
 
 def get_availability():
@@ -64,7 +66,20 @@ def increment_month_for_31(appointment_date, repeat_interval=1):
 
     return appointment_date.replace(year=new_year, month=new_month, day=31)
 
-def availability_repeat(appointment_date, start_time, end_time, repeat_type, repeat_interval, repeat_count):
+
+def record_db(lecturer, appointment_date, start_time, end_time):
+    con = get_db_connection()
+    cur = con.cursor()
+    
+    cur.execute("""
+        INSERT INTO availability (lecturer, appointment_date, start_time, end_time)
+        VALUES (?, ?, ?, ?)
+    """, (lecturer, appointment_date.strftime("%Y-%m-%d"), start_time, end_time))
+    con.commit()
+    con.close()
+
+
+def availability_record(appointment_date, start_time, end_time, repeat_type, repeat_interval, repeat_count):
     con = get_db_connection()
     cur = con.cursor()
     
@@ -89,14 +104,12 @@ def availability_repeat(appointment_date, start_time, end_time, repeat_type, rep
         print("Invalid date format. Expected YYYY-MM-DD.")
         return None
     
-    if repeat_count == 1:
-        con.close()
-        return True
-    
-    for _ in range(1, repeat_count):
+    con.close()
+
+    for _ in range(repeat_count):
         if repeat_type == "No Repeat":
-            # No change in appointment_date
-            pass
+            record_db(lecturer, appointment_date, start_time, end_time)
+            break
         elif repeat_type == "Daily": 
             appointment_date += timedelta(days=repeat_interval)
         elif repeat_type == "Weekly":
@@ -107,11 +120,6 @@ def availability_repeat(appointment_date, start_time, end_time, repeat_type, rep
             else:
                 appointment_date = increment_month(appointment_date, repeat_interval)
         
-        cur.execute("""
-            INSERT INTO availability (lecturer, appointment_date, start_time, end_time)
-            VALUES (?, ?, ?, ?)
-        """, (lecturer, appointment_date.strftime("%Y-%m-%d"), start_time, end_time))
-        
-    con.commit()
-    con.close()
+        record_db(lecturer, appointment_date, start_time, end_time)
+    
     return True

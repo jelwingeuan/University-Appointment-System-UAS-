@@ -21,14 +21,14 @@ def make_booking(booking_id, student, lecturer, purpose, appointment_date, start
     con = get_db_connection()
     cur = con.cursor()
     cur.execute("""
-                INSERT INTO appointments ((booking_id, student, lecturer, purpose, appointment_date, start_time, end_time, status)
+                INSERT INTO appointments (booking_id, student, lecturer, purpose, appointment_date, start_time, end_time, status)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,((booking_id, student, lecturer, purpose, appointment_date, start_time, end_time, status)),
-                )
+                """, (booking_id, student, lecturer, purpose, appointment_date, start_time, end_time, status))
     appointment_id = cur.lastrowid
     con.commit()
     con.close()
     return appointment_id
+
 
 
 # Function to update the status of a booking (both student and teacher)

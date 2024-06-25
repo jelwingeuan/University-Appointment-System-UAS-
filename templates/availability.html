@@ -1,65 +1,159 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Availability</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Availability Scheduler</title>
+    <!-- Include necessary CSS and JS files for Bootstrap, jQuery, FullCalendar, etc. -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.13/main.min.css">
 </head>
 <body>
-    <h1>Record Availability</h1>
-    <form action="{{ url_for('record_availability') }}" method="post">
-        <label for="lecturer">Lecturer:</label>
-        <input type="text" id="lecturer" name="lecturer"><br>
+    <!-- Modal for adding events -->
+    <div class="modal fade" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="eventModalLabel">Add Event</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="eventForm" action="/record_availability" method="post">
+                        <div class="form-group">
+                            <label for="eventDate">Appointment Date</label>
+                            <input type="text" class="form-control datetimepicker" name="appointment_date" id="eventDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="startTime">Start Time</label>
+                            <input type="time" class="form-control" name="start_time" id="startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endTime">End Time</label>
+                            <input type="time" class="form-control" name="end_time" id="endTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventRepeat">Repeat</label>
+                            <select class="form-control" id="eventRepeat" name="repeat_type">
+                                <option value="No repeat">No Repeat</option>
+                                <option value="Daily">Daily</option>
+                                <option value="Weekly">Weekly</option>
+                                <option value="Monthly">Monthly</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="repeatInterval">Repeat Interval</label>
+                            <input type="number" class="form-control" name="repeat_interval" id="repeatInterval" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="repeatCount">Repeat Count</label>
+                            <input type="number" class="form-control" name="repeat_count" id="repeatCount" value="1" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Event</button>
+                    </form>                    
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <label for="appointment_date">Appointment Date:</label>
-        <input type="date" id="appointment_date" name="appointment_date"><br>
+    <div class="calendar-container">
+        <div id='calendar' class="calendar"></div>
+        <a href="/profile" class="button" style="top: 13px;">
+            <span class="text">Back</span>
+            <svg class="arrow" viewBox="0 0 448 512" height="1em" xmlns="http://www.w3.org/2000/svg" style="margin-top: 4px;">
+                <path transform="rotate(180, 224, 256) translate(0, 5)" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path>
+            </svg>
+        </a>
+    </div>
 
-        <label for="start_time">Start Time:</label>
-        <input type="time" id="start_time" name="start_time"><br>
+    <div id="calendartext" class="popup">
+        <span class="close" onclick="togglePopup()">×</span>
+        <p>Press on the date to add your consultation hour</p>
+        <p>Press on the event to delete your consultation hour</p>
+    </div>
 
-        <label for="end_time">End Time:</label>
-        <input type="time" id="end_time" name="end_time"><br>
+    <script src='https://code.jquery.com/jquery-3.5.1.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js'></script>
+    <script src='https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.13/index.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/rrule@6.1.13/index.global.min.js'></script>
 
-        <input type="submit" value="Record Availability">
-    </form>
+    <script>
+        $(document).ready(function() {
+            // Initialize the datepicker with specified options
+            $('.datetimepicker').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                todayHighlight: true
+            });
 
-    <h1>Repeat Availability</h1>
-    <form action="{{ url_for('repeat_availability') }}" method="post">
-        <label for="appointment_date">Appointment Date:</label>
-        <input type="date" id="appointment_date" name="appointment_date"><br>
+            // Show the popup message on page load
+            $('#calendartext').fadeIn('slow');
+        });
 
-        <label for="start_time">Start Time:</label>
-        <input type="time" id="start_time" name="start_time"><br>
+        // Function to toggle the popup visibility
+        function togglePopup() {
+            $('#calendartext').fadeOut('slow');
+        }
 
-        <label for="end_time">End Time:</label>
-        <input type="time" id="end_time" name="end_time"><br>
+        // Close popup when clicking anywhere on the page
+        $(document).click(function(event) {
+            if (!$(event.target).closest('#calendartext').length) {
+                $('#calendartext').fadeOut('slow');
+            }
+        });
 
-        <label for="repeat_type">Repeat Type:</label>
-        <select id="repeat_type" name="repeat_type">
-            <option value="No repeat">No Repeat</option>
-            <option value="Daily">Daily</option>
-            <option value="Weekly">Weekly</option>
-            <option value="Monthly">Monthly</option>
-        </select><br>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: '/display_availability', // URL to fetch events from
+                selectable: true,
+                selectHelper: true,
+                select: function(info) {
+                    // Handle selection of time slots
+                    var selectedStart = info.startStr;
+                    var selectedEnd = info.endStr;
+                    document.getElementById('eventDate').value = selectedStart.split('T')[0];
+                    document.getElementById('startTime').value = selectedStart.split('T')[1] || '';
+                    document.getElementById('endTime').value = selectedEnd.split('T')[1] || '';
+                    $('#eventModal').modal('show');
+                },
+                editable: true,
+                eventClick: function(info) {
+                    // Handle clicking on an event to delete it
+                    if (confirm('Are you sure you want to delete this event?')) {
+                        $.ajax({
+                            url: '/delete_availability',
+                            method: 'POST',
+                            data: {
+                                availability_id: info.event.id
+                            },
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    calendar.refetchEvents();
+                                } else {
+                                    alert('Failed to delete event: ' + response.message);
+                                }
+                            },
+                            error: function() {
+                                alert('Failed to delete event. Please try again later.');
+                            }
+                        });
+                    }
+                }
+            });
 
-        <label for="repeat_interval">Repeat Interval:</label>
-        <input type="number" id="repeat_interval" name="repeat_interval" min="1"><br>
-
-        <label for="repeat_count">Repeat Count:</label>
-        <input type="number" id="repeat_count" name="repeat_count" min="1"><br>
-
-        <input type="submit" value="Repeat Availability">
-    </form>
-
-    {% if availability %}
-        <h2>Current Availability</h2>
-        <ul>
-            {% for entry in availability %}
-                <li>{{ entry.lecturer }}: {{ entry.appointment_date }} from {{ entry.start_time }} to {{ entry.end_time }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
-
-    {% if message %}
-        <p>{{ message }}</p>
-    {% endif %}
+            calendar.render();
+        });
+    </script>
 </body>
 </html>

@@ -31,7 +31,9 @@ cur.execute(
         appointment_date TEXT NOT NULL,
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL,
-        repeat_type TEXT NOT NULL,
+        repeat_type TEXT NOT NULL DEFAULT 'No repeat',
+        repeat_interval INTEGER NOT NULL DEFAULT 1,
+        repeat_count INTEGER NOT NULL DEFAULT 1,
         FOREIGN KEY (lecturer) REFERENCES users(username)
     )"""
 )
@@ -44,17 +46,17 @@ cur.execute(
         student TEXT NOT NULL,
         lecturer TEXT NOT NULL,
         appointment_date TEXT NOT NULL,
-        appointment_hour TEXT NOT NULL,
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL,
+        repeat_type TEXT NOT NULL,
         purpose TEXT NOT NULL,
         status TEXT NOT NULL,
         FOREIGN KEY (student) REFERENCES users(username),
         FOREIGN KEY (lecturer) REFERENCES users(username),
         FOREIGN KEY (appointment_date) REFERENCES availability(appointment_date),
-        FOREIGN KEY (appointment_hour) REFERENCES availability(appointment_hour),
         FOREIGN KEY (start_time) REFERENCES availability(start_time),
         FOREIGN KEY (end_time) REFERENCES availability(end_time)
+        FOREIGN KEY (repeat_type) REFERENCES availability(repeat_type)
     )"""
 )
 
