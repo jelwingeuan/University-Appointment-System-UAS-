@@ -168,7 +168,7 @@ nav .dropbtn:not(:hover) i {
 
 /* Home content section 1 */
 .homecontent1 {
-    background-image: url('https://www.ox.ac.uk/sites/files/oxford/field/field_image_main/CROP%20USE.jpg    ');
+    background-image: url('https://cdn.eduadvisor.my/institution/mmu/inst-profile-header-mmu.jpg');
     background-repeat: none;
     background-size: cover;
     width: 100%;
@@ -736,7 +736,7 @@ nav .dropbtn:not(:hover) i {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-image: url("https://mldvwwasb8tu.i.optimole.com/cb:esbD~6200b/w:1100/h:733/q:90/ig:avif/f:best/http://travelaway.me/wp-content/uploads/2018/06/sacromonte-landscape-hotel.jpg");
+    background-image: url("https://www.thoughtco.com/thmb/cqcpzy04apxiYEwaE5UnvI3eFBU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/158313114-56a449703df78cf772819700.jpg");
     background-size: cover; /* Cover the entire container without affecting the image resolution */
     background-position: center; /* Center the background image */
     background-repeat: no-repeat; /* Prevent the background image from repeating */
