@@ -10,4 +10,4 @@ The University Appointment System (UAS) is a web application built with Flask, d
 - **Admin Panel**: Administrators have access to an admin panel where they can manage user accounts, faculty hubs, and other system settings.
 - **Database Integration**: UAS integrates with SQLite for data storage, ensuring reliable and efficient data management.
 
-https://university-appointment-system-47589565d85d.herokuapp.com
+https://university-appointment-system-47589565d85d.herokuapp.com (under maintainance)
