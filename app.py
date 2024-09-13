@@ -21,9 +21,7 @@ app = Flask(__name__, static_folder="static")
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.secret_key = "jelwin"
-UPLOAD_FOLDER = os.path.join(
-    app.static_folder, "faculty_pp"
-) 
+UPLOAD_FOLDER = os.path.join(app.static_folder, "faculty_pp")
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -35,24 +33,31 @@ class User(UserMixin):
         self.id = id
         self.username = username
 
+
 # Function to establish a connection to the SQLite database
 def get_db_connection():
     con = sqlite3.connect("database.db")  # Connect to the database
-    con.row_factory = sqlite3.Row        # Set row factory to sqlite3.Row for dictionary-like row access
-    return con                           # Return the database connection
+    con.row_factory = (
+        sqlite3.Row
+    )  # Set row factory to sqlite3.Row for dictionary-like row access
+    return con  # Return the database connection
+
 
 # Function to load a user from the database, used by Flask-Login
 @login_manager.user_loader
 def load_user(id):
-    con = get_db_connection()            # Get a connection to the database
-    cur = con.cursor()                   # Create a cursor object
-    cur.execute("SELECT * FROM users WHERE id = ?", (id,))  # Execute a query to find the user by id
-    user = cur.fetchone()                # Fetch the user record
-    con.close()                          # Close the database connection
-    if user:                             # If user is found
-        return User(user['id'], user['username'])  # Create and return a User object
+    con = get_db_connection()  # Get a connection to the database
+    cur = con.cursor()  # Create a cursor object
+    cur.execute(
+        "SELECT * FROM users WHERE id = ?", (id,)
+    )  # Execute a query to find the user by id
+    user = cur.fetchone()  # Fetch the user record
+    con.close()  # Close the database connection
+    if user:  # If user is found
+        return User(user["id"], user["username"])  # Create and return a User object
 
-    return None                          # Return None if user is not found
+    return None  # Return None if user is not found
+
 
 def load_pin():
     with open("pin.json", "r") as file:
@@ -63,6 +68,7 @@ def save_pin(new_pin):
     with open("pin.json", "w") as file:
         json.dump({"pin": new_pin}, file)
 
+
 def load_content():
     with open("content.json") as f:
         return json.load(f)
@@ -71,6 +77,7 @@ def load_content():
 def save_content(content):
     with open("content.json", "w") as f:
         json.dump(content, f)
+
 
 def get_current_admin_credentials():
     with open("admin.json", "r") as admin_file:
@@ -93,7 +100,7 @@ def home():
         school_name=content["school_name"],
         school_tel=content["school_tel"],
         school_email=content["school_email"],
-        school_logo=content["school_logo"],  
+        school_logo=content["school_logo"],
     )
 
 
@@ -105,10 +112,10 @@ def about():
 def hash_password(password):
     # Encode the password to a byte string as bcrypt requires bytes input
     encoded_password = password.encode("utf-8")
-    
+
     # Generate a salt and hash the password with the salt
     hashed_password = bcrypt.hashpw(encoded_password, bcrypt.gensalt())
-    
+
     # Decode the hashed password back to a UTF-8 string and return it
     return hashed_password.decode("utf-8")
 
@@ -126,7 +133,9 @@ def signup():
 
         if role == "teacher":
             if not email.endswith("@mmu.edu.my"):
-                flash("SIGN UP FAILED. Lecturers must use an @mmu.edu.my email.", "error")
+                flash(
+                    "SIGN UP FAILED. Lecturers must use an @mmu.edu.my email.", "error"
+                )
                 return redirect("/signup")
 
             stored_pin = load_pin()
@@ -136,7 +145,10 @@ def signup():
 
         elif role == "student":
             if not email.endswith("@student.mmu.edu.my"):
-                flash("SIGN UP FAILED. Students must use an @student.mmu.edu.my email.", "error")
+                flash(
+                    "SIGN UP FAILED. Students must use an @student.mmu.edu.my email.",
+                    "error",
+                )
                 return redirect("/signup")
 
         if not password:
@@ -230,6 +242,7 @@ def update_user():
 
         return redirect("/profile")
 
+
 # student and lecturer
 @app.route("/change_password", methods=["GET", "POST"])
 def change_password():
@@ -253,7 +266,6 @@ def change_password():
         ):
             return render_template("profile.html", message="Incorrect current password")
 
-
         hashed_new_password = hash_password(new_password)
         cur.execute(
             "UPDATE users SET password = ? WHERE id = ?",
@@ -270,13 +282,11 @@ def change_password():
 # student
 
 
-
-
 @app.route("/create_booking", methods=["POST"])
 def create_booking():
     """
     Create a booking for an appointment.
-    
+
     Steps:
     1. Fetch the current user's data from the database using their session ID.
     2. Store the username in the session.
@@ -291,7 +301,7 @@ def create_booking():
     11. Insert the event into the events table in the database.
     12. Flash a success message and redirect to the invoice page.
     """
-    
+
     # Step 1: Fetch the current user's data from the database using their session ID
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -305,7 +315,7 @@ def create_booking():
     if request.method == "POST":
         # Step 4: Generate a random booking ID
         booking_id = random.randint(100000, 999999)
-        
+
         # Step 5: Retrieve and store the form data for the booking
         student = session["username"]
         lecturer = request.form.get("lecturer")
@@ -319,7 +329,15 @@ def create_booking():
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO appointments (booking_id, student, lecturer, purpose, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (booking_id, student, lecturer, purpose, appointment_date, appointment_time, "Pending"),
+                (
+                    booking_id,
+                    student,
+                    lecturer,
+                    purpose,
+                    appointment_date,
+                    appointment_time,
+                    "Pending",
+                ),
             )
             appointment_id = cursor.lastrowid
             conn.commit()
@@ -336,17 +354,20 @@ def create_booking():
         # Step 9: Calculate the start and end times for the appointment
         start_time_str, end_time_str = appointment_time.split(" - ")
         start_time = datetime.strptime(start_time_str, "%H:%M").strftime("%H:%M")
-        end_time = (datetime.strptime(end_time_str, "%H:%M") + timedelta(hours=1)).strftime("%H:%M")
+        end_time = (
+            datetime.strptime(end_time_str, "%H:%M") + timedelta(hours=1)
+        ).strftime("%H:%M")
 
         # Step 10: Update the calendar status for the booking
         update_calendar_status(booking_id, status="Pending")
 
         # Step 11: Insert the event into the events table in the database
-        event_title = f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
-        
+        event_title = (
+            f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
+        )
+
         # Retrieve slot_size from the form or database as per your application logic
         slot_size = retrieve_slot_size(appointment_date)  # Example implementation
-        
 
         insert_event_into_db(
             event_title=event_title,
@@ -354,10 +375,10 @@ def create_booking():
             start_time=start_time,
             end_time=end_time,
             event_type="appointment",
-            repeat_type="", 
+            repeat_type="",
             lecturer=lecturer,
             status="Pending",
-            slot_size=slot_size
+            slot_size=slot_size,
         )
 
         # Step 12: Flash a success message and redirect to the invoice page
@@ -366,22 +387,22 @@ def create_booking():
 
 
 def retrieve_slot_size(appointment_date):
-    conn = get_db_connection()  # Correctly call the function to get the database connection object
+    conn = (
+        get_db_connection()
+    )  # Correctly call the function to get the database connection object
     cursor = conn.cursor()
-    
+
     try:
         # Assuming slot_size is stored in a table named 'calendar' or similar
         cursor.execute(
-            "SELECT slot_size FROM calendar WHERE event_date = ?",
-            (appointment_date,)
+            "SELECT slot_size FROM calendar WHERE event_date = ?", (appointment_date,)
         )
         slot_size = cursor.fetchone()
-        
+
         if slot_size:
-            return slot_size[0] 
+            return slot_size[0]
     finally:
         conn.close()
-
 
 
 # student
@@ -411,7 +432,7 @@ def render_template_invoice():
         phone_number=user_data["phone_number"],
         role=user_data["role"],
         appointment=appointment,
-        booking_id=appointment["booking_id"]
+        booking_id=appointment["booking_id"],
     )
 
 
@@ -428,19 +449,26 @@ def user_booking_history():
         if role == "student":
             cursor.execute("SELECT * FROM appointments WHERE student = ?", (username,))
             display_role = "lecturer"
-            role = 'student'
+            role = "student"
         else:
             cursor.execute("SELECT * FROM appointments WHERE lecturer = ?", (username,))
             display_role = "student"
-            role = 'teacher'
+            role = "teacher"
 
         appointments = cursor.fetchall()
     finally:
         conn.close()
 
-    return render_template("booking_history.html", appointments=appointments, display_role=display_role, role=role)
+    return render_template(
+        "booking_history.html",
+        appointments=appointments,
+        display_role=display_role,
+        role=role,
+    )
+
 
 # lecturer
+
 
 @app.route("/cancel_booking", methods=["POST"])
 def cancel_booking():
@@ -449,23 +477,29 @@ def cancel_booking():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         # Get the booking_id from the appointments table
-        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
+        cursor.execute(
+            "SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,)
+        )
         booking_id = cursor.fetchone()["booking_id"]
-        
+
         # Update the status in the appointments table
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Cancelled", appointment_id))
+        cursor.execute(
+            "UPDATE appointments SET status = ? WHERE id = ?",
+            ("Cancelled", appointment_id),
+        )
         conn.commit()
-        
+
         # Debug: print a message indicating appointment status update
         print(f"Appointment ID {appointment_id} status updated to 'Cancelled'")
-        
+
         update_calendar_status(booking_id, "Cancelled")
     finally:
         conn.close()
 
     return redirect("/bookinghistory")
+
 
 @app.route("/reject_booking", methods=["POST"])
 def reject_booking():
@@ -474,23 +508,29 @@ def reject_booking():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         # Get the booking_id from the appointments table
-        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
+        cursor.execute(
+            "SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,)
+        )
         booking_id = cursor.fetchone()["booking_id"]
-        
+
         # Update the status in the appointments table
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Rejected", appointment_id))
+        cursor.execute(
+            "UPDATE appointments SET status = ? WHERE id = ?",
+            ("Rejected", appointment_id),
+        )
         conn.commit()
-        
+
         # Debug: print a message indicating appointment status update
         print(f"Appointment ID {appointment_id} status updated to 'Rejected'")
-        
+
         update_calendar_status(booking_id, "Rejected")
     finally:
         conn.close()
 
     return redirect("/bookinghistory")
+
 
 @app.route("/accept_booking", methods=["POST"])
 def accept_booking():
@@ -499,18 +539,23 @@ def accept_booking():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         # Get the booking_id from the appointments table
-        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
+        cursor.execute(
+            "SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,)
+        )
         booking_id = cursor.fetchone()["booking_id"]
-        
+
         # Update the status in the appointments table
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Accepted", appointment_id))
+        cursor.execute(
+            "UPDATE appointments SET status = ? WHERE id = ?",
+            ("Accepted", appointment_id),
+        )
         conn.commit()
-        
+
         # Debug: print a message indicating appointment status update
         print(f"Appointment ID {appointment_id} status updated to 'Accepted'")
-        
+
         update_calendar_status(booking_id, "Accepted")
     finally:
         conn.close()
@@ -520,113 +565,144 @@ def accept_booking():
 
 # lecturer\
 
+
 @app.route("/calendar_record", methods=["GET", "POST"])
 def create_calendar():
     if request.method == "POST":
-        event_title = 'Consultation Hour'
+        event_title = "Consultation Hour"
         event_date = request.form["event_date"]
         end_date = request.form["end_date"]
         start_time = request.form["start_time"]
         end_time = request.form["end_time"]
         repeat_type = request.form.get("repeat_type", "")
         slot_size = request.form["slot_size"]
-        
+
         # Fetch lecturer name from the session
-        lecturer = session["username"]  # Assuming the lecturer name is stored in the session
+        lecturer = session[
+            "username"
+        ]  # Assuming the lecturer name is stored in the session
 
         if repeat_type == "weekly":
-            repeat_weekly(event_title, event_date, start_time, end_time, lecturer, slot_size,end_date)
+            repeat_weekly(
+                event_title,
+                event_date,
+                start_time,
+                end_time,
+                lecturer,
+                slot_size,
+                end_date,
+            )
         elif repeat_type == "monthly":
-            repeat_monthly(event_title, event_date, start_time, end_time, lecturer, slot_size,end_date)
+            repeat_monthly(
+                event_title,
+                event_date,
+                start_time,
+                end_time,
+                lecturer,
+                slot_size,
+                end_date,
+            )
         else:
-            insert_event_into_db(event_title, event_date, start_time, end_time, lecturer, "Pending", repeat_type, 'Work', slot_size,end_date)
+            insert_event_into_db(
+                event_title,
+                event_date,
+                start_time,
+                end_time,
+                lecturer,
+                "Pending",
+                repeat_type,
+                "Work",
+                slot_size,
+                end_date,
+            )
 
         return redirect("/calendar")
 
-    return render_template("calendar_form.html") 
+    return render_template("calendar_form.html")
 
 
-
-def repeat_weekly(event_title, event_date, start_time, end_time, lecturer, slot_size, end_date):
+def repeat_weekly(
+    event_title, event_date, start_time, end_time, lecturer, slot_size, end_date
+):
     """
     Schedule an event to repeat weekly until the end date.
     """
     # Parse the initial event date from string to datetime object
-    event_date = datetime.strptime(event_date, '%Y-%m-%d')
+    event_date = datetime.strptime(event_date, "%Y-%m-%d")
     initial_month = event_date.month
-    
+
     # Parse end_date if it's a string
     if isinstance(end_date, str):
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
-    
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+
     # Loop to insert events weekly until the end date
     while event_date <= end_date:
         # Insert the event into the database
         insert_event_into_db(
-            event_title, 
-            event_date.strftime('%Y-%m-%d'), 
-            start_time, 
-            end_time, 
-            lecturer, 
-            "Pending", 
-            "weekly", 
-            'Work',  # positional argument
-            slot_size  # keyword argument
+            event_title,
+            event_date.strftime("%Y-%m-%d"),
+            start_time,
+            end_time,
+            lecturer,
+            "Pending",
+            "weekly",
+            "Work",  # positional argument
+            slot_size,  # keyword argument
         )
         # Increment the event date by one week
         event_date += timedelta(weeks=1)
 
 
-def repeat_monthly(event_title, event_date, start_time, end_time, lecturer, slot_size, end_date):
+def repeat_monthly(
+    event_title, event_date, start_time, end_time, lecturer, slot_size, end_date
+):
     """
     Schedule an event to repeat monthly until the end date.
     """
     # Parse the initial event date from string to datetime object
-    event_date = datetime.strptime(event_date, '%Y-%m-%d')
-    
+    event_date = datetime.strptime(event_date, "%Y-%m-%d")
+
     # Parse end_date if it's a string
     if isinstance(end_date, str):
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
-    
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+
     # Loop to insert events monthly until the end date
     while event_date <= end_date:
         # Insert the event into the database
         insert_event_into_db(
-            event_title, 
-            event_date.strftime('%Y-%m-%d'), 
-            start_time, 
-            end_time, 
-            lecturer, 
-            "Pending", 
-            "monthly", 
-            'Work',  # positional argument
-            slot_size  # keyword argument
+            event_title,
+            event_date.strftime("%Y-%m-%d"),
+            start_time,
+            end_time,
+            lecturer,
+            "Pending",
+            "monthly",
+            "Work",  # positional argument
+            slot_size,  # keyword argument
         )
-        
+
         # Calculate the next month and year
         year = event_date.year
         month = event_date.month + 1
         if month > 12:
             month = 1
             year += 1
-        
+
         # Ensure the day exists in the next month
         day = min(event_date.day, cal.monthrange(year, month)[1])
         event_date = event_date.replace(year=year, month=month, day=day)
-
-
-
 
 
 @app.route("/calendar", methods=["GET", "POST"])
 def event():
     return render_template("calendar.html")
 
+
 @app.route("/events", methods=["GET"])
 def get_events():
     """
     Retrieve events for the currently logged-in lecturer from the calendar table.
-    
+
     Returns:
     - JSON list of events with titles, start/end times, all-day flags, and statuses.
     - HTTP 401 if the user is not logged in.
@@ -642,7 +718,10 @@ def get_events():
 
         try:
             # Fetch events from the calendar table filtered by lecturer's username
-            cur.execute("SELECT event_title, event_date, start_time, end_time, status, event_type FROM calendar WHERE lecturer = ?", (lecturer,))
+            cur.execute(
+                "SELECT event_title, event_date, start_time, end_time, status, event_type FROM calendar WHERE lecturer = ?",
+                (lecturer,),
+            )
             calendar_events = cur.fetchall()
 
             # Initialize an empty list to hold the event details
@@ -650,26 +729,38 @@ def get_events():
             for event in calendar_events:
                 start_time = event["start_time"]
                 end_time = event["end_time"]
-                
+
                 # Check if the event type is "appointment" and the status is "Accepted"
                 if event["event_type"] == "appointment":
                     if event["status"] == "Accepted":
-                        events_list.append({
-                            "title": event["event_title"],
-                            "start": f"{event['event_date']}T{start_time}",
-                            "end": f"{event['event_date']}T{end_time}" if end_time else None,
-                            "allDay": False if start_time and end_time else True,
-                            "status": event["status"]
-                        })
+                        events_list.append(
+                            {
+                                "title": event["event_title"],
+                                "start": f"{event['event_date']}T{start_time}",
+                                "end": (
+                                    f"{event['event_date']}T{end_time}"
+                                    if end_time
+                                    else None
+                                ),
+                                "allDay": False if start_time and end_time else True,
+                                "status": event["status"],
+                            }
+                        )
                 else:
                     # For other event types, directly append to the events list
-                    events_list.append({
-                        "title": event["event_title"],
-                        "start": f"{event['event_date']}T{start_time}",
-                        "end": f"{event['event_date']}T{end_time}" if end_time else None,
-                        "allDay": False if start_time and end_time else True,
-                        "status": event["status"]
-                    })
+                    events_list.append(
+                        {
+                            "title": event["event_title"],
+                            "start": f"{event['event_date']}T{start_time}",
+                            "end": (
+                                f"{event['event_date']}T{end_time}"
+                                if end_time
+                                else None
+                            ),
+                            "allDay": False if start_time and end_time else True,
+                            "status": event["status"],
+                        }
+                    )
 
             # Return the list of events as a JSON response
             return jsonify(events_list)
@@ -682,6 +773,7 @@ def get_events():
     else:
         # Return an error response if the user is not logged in
         return jsonify({"error": "User not logged in"}), 401
+
 
 def parse_time(time_str):
     """
@@ -697,14 +789,33 @@ def parse_time(time_str):
     return datetime.strptime(time_str, "%I:%M%p").strftime("%H:%M")
 
 
-
-def insert_event_into_db(event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type, slot_size):
+def insert_event_into_db(
+    event_title,
+    event_date,
+    start_time,
+    end_time,
+    lecturer,
+    status,
+    repeat_type,
+    event_type,
+    slot_size,
+):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
             "INSERT INTO calendar (event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type, slot_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type, slot_size)
+            (
+                event_title,
+                event_date,
+                start_time,
+                end_time,
+                lecturer,
+                status,
+                repeat_type,
+                event_type,
+                slot_size,
+            ),
         )
         conn.commit()
     except sqlite3.IntegrityError as e:
@@ -716,17 +827,20 @@ def insert_event_into_db(event_title, event_date, start_time, end_time, lecturer
 def update_calendar_status(booking_id, status):
     con = get_db_connection()
     cur = con.cursor()
-    
+
     try:
         # Debug: print the status and booking ID being updated
         print(f"Updating calendar status to '{status}' for booking ID: {booking_id}")
-        
+
         # Update the status in the calendar table
-        cur.execute("UPDATE calendar SET status = ? WHERE event_title LIKE ?", (status, f'%Booking ID: {booking_id}%'))
-        
+        cur.execute(
+            "UPDATE calendar SET status = ? WHERE event_title LIKE ?",
+            (status, f"%Booking ID: {booking_id}%"),
+        )
+
         # Debug: print the number of rows updated
         print(f"Number of rows updated: {cur.rowcount}")
-        
+
         con.commit()
     except sqlite3.Error as e:
         print("Error updating calendar status:", e)
@@ -734,19 +848,25 @@ def update_calendar_status(booking_id, status):
         con.close()
 
 
-@app.route('/delete_event', methods=['POST'])
+@app.route("/delete_event", methods=["POST"])
 def delete_event():
-    event_title = request.form.get('event_title')
+    event_title = request.form.get("event_title")
     if event_title:
         if delete_event_from_db(event_title):
-            return jsonify({'status': 'success'}), 200
+            return jsonify({"status": "success"}), 200
         else:
-            return jsonify({'status': 'error', 'message': 'Event not found or deletion failed'}), 500
+            return (
+                jsonify(
+                    {"status": "error", "message": "Event not found or deletion failed"}
+                ),
+                500,
+            )
     else:
-        return jsonify({'status': 'error', 'message': 'Invalid event title'}), 400
+        return jsonify({"status": "error", "message": "Invalid event title"}), 400
+
 
 def delete_event_from_db(event_title):
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
     try:
@@ -765,29 +885,33 @@ def delete_event_from_db(event_title):
 
 @app.route("/appointment")
 def appointment():
-    if 'id' not in session:
-        return redirect('/login')  # Redirect to the login route if session ID is not found
+    if "id" not in session:
+        return redirect(
+            "/login"
+        )  # Redirect to the login route if session ID is not found
     else:
         return render_template("appointment.html")
 
 
 def get_lecturers():
-    conn = sqlite3.connect('database.db')  # Connect to your database
+    conn = sqlite3.connect("database.db")  # Connect to your database
     cursor = conn.cursor()
-    cursor.execute("SELECT username FROM users WHERE role = 'teacher'")  # Adjust the query as needed
+    cursor.execute(
+        "SELECT username FROM users WHERE role = 'teacher'"
+    )  # Adjust the query as needed
     lecturers = cursor.fetchall()
     conn.close()
     return [lecturer[0] for lecturer in lecturers]
-    
+
 
 @app.route("/get_calendar_details", methods=["GET", "POST"])
 def get_calendar_details():
     if request.method == "GET":
-        lecturer_name = request.args.get('lecturer')
-        appointment_date = request.args.get('appointment_date')
+        lecturer_name = request.args.get("lecturer")
+        appointment_date = request.args.get("appointment_date")
     else:
-        lecturer_name = request.form.get('lecturer')
-        appointment_date = request.form.get('appointment_date')
+        lecturer_name = request.form.get("lecturer")
+        appointment_date = request.form.get("appointment_date")
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -795,44 +919,51 @@ def get_calendar_details():
     try:
         cursor.execute(
             "SELECT start_time, end_time, slot_size FROM calendar WHERE lecturer = ? AND event_date = ?",
-            (lecturer_name, appointment_date)
+            (lecturer_name, appointment_date),
         )
         calendar_details = cursor.fetchone()
 
         if calendar_details:
             start_time, end_time, slot_size = calendar_details
-            return jsonify({
-                "start_time": start_time,
-                "end_time": end_time,
-                "slot_size": slot_size
-            })
+            return jsonify(
+                {"start_time": start_time, "end_time": end_time, "slot_size": slot_size}
+            )
         else:
-            return jsonify({"error": "Lecturer didnt open consultation hour for today"}), 404
+            return (
+                jsonify(
+                    {
+                        "error": "No calendar details found for the selected lecturer and date"
+                    }
+                ),
+                404,
+            )
 
     except sqlite3.Error as e:
-        print("Lecturer didnt open consultation hour for today:", e)
-        return jsonify({"error": "Lecturer didnt open consultation hour for today"}), 500
+        print("Error fetching calendar details:", e)
+        return jsonify({"error": "Database error occurred"}), 500
 
     finally:
         conn.close()
 
-    
 
 @app.route("/check_availability", methods=["GET"])
 def check_availability():
-    lecturer_name = request.args.get('lecturer')
-    appointment_date = request.args.get('appointment_date')
-    start_time = request.args.get('start_time')
-    end_time = request.args.get('end_time')
+    lecturer_name = request.args.get("lecturer")
+    appointment_date = request.args.get("appointment_date")
+    start_time = request.args.get("start_time")
+    end_time = request.args.get("end_time")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
     try:
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    "SELECT COUNT(*) FROM appointments WHERE lecturer = ? AND appointment_date = ? AND appointment_time >= ? AND appointment_time <= ? AND (status = 'Accepted' OR status = 'Pending')",
-                    (lecturer_name, appointment_date, start_time, end_time)
-                )
-                count = cursor.fetchone()[0]
+        # Adjusted SQL query to properly count accepted appointments within the specified time range
+        cursor.execute(
+            "SELECT COUNT(*) FROM appointments WHERE lecturer = ? AND appointment_date = ? AND appointment_time >= ? AND appointment_time <= ? AND status = 'Accepted'",
+            (lecturer_name, appointment_date, start_time, end_time),
+        )
+        count = cursor.fetchone()[0]
+        conn.close()
 
         if count > 0:
             return jsonify({"available": False})
@@ -844,25 +975,16 @@ def check_availability():
         return jsonify({"error": "Database error occurred"}), 500
 
 
-
-
-
 @app.route("/appointment2")
 def appointment2():
     lecturers = get_lecturers()
     return render_template("appointment2.html", lecturers=lecturers)
 
 
-
-
-
-
-
-
 # admin
 @app.route("/appointmentcontrol", methods=["GET", "POST"])
 def appointmentcontrol():
-    search_query = request.args.get('search', '')
+    search_query = request.args.get("search", "")
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -873,8 +995,14 @@ def appointmentcontrol():
             SELECT id, lecturer, student, appointment_date, purpose, status, appointment_time 
             FROM appointments 
             WHERE lecturer LIKE ? OR student LIKE ? OR appointment_date LIKE ? OR purpose LIKE ? OR status LIKE ?
-            """, 
-            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
+            """,
+            (
+                f"%{search_query}%",
+                f"%{search_query}%",
+                f"%{search_query}%",
+                f"%{search_query}%",
+                f"%{search_query}%",
+            ),
         )
     else:
         cursor.execute(
@@ -896,6 +1024,7 @@ def delete_appointment(id):
     conn.commit()
     conn.close()
 
+
 # admin
 @app.route("/delete_booking", methods=["POST"])
 def delete_booking():
@@ -903,33 +1032,26 @@ def delete_booking():
     delete_appointment(id)
     return redirect("/appointmentcontrol")
 
+
 # admin
 @app.route("/admin")
 def admin_dashboard():
-    search_query = request.args.get('search')
+    search_query = request.args.get("search")
     conn = get_db_connection()
     cursor = conn.cursor()
 
     # Fetch the counts and appointments based on the search query if provided
     if search_query:
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'teacher'"
-        )
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'teacher'")
         num_teachers = cursor.fetchone()[0]
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'student'"
-        )
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'student'")
         num_students = cursor.fetchone()[0]
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM appointments"
-        )
+        cursor.execute("SELECT COUNT(*) FROM appointments")
         num_appointments = cursor.fetchone()[0]
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM users"
-        )
+        cursor.execute("SELECT COUNT(*) FROM users")
         num_users = cursor.fetchone()[0]
 
         cursor.execute(
@@ -938,28 +1060,26 @@ def admin_dashboard():
             FROM appointments 
             WHERE lecturer LIKE ? OR student LIKE ? OR appointment_date LIKE ? OR purpose LIKE ? OR status LIKE ?
             """,
-            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
+            (
+                f"%{search_query}%",
+                f"%{search_query}%",
+                f"%{search_query}%",
+                f"%{search_query}%",
+                f"%{search_query}%",
+            ),
         )
         appointments = cursor.fetchall()
     else:
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'teacher'"
-        )
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'teacher'")
         num_teachers = cursor.fetchone()[0]
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'student'"
-        )
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'student'")
         num_students = cursor.fetchone()[0]
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM appointments"
-        )
+        cursor.execute("SELECT COUNT(*) FROM appointments")
         num_appointments = cursor.fetchone()[0]
 
-        cursor.execute(
-            "SELECT COUNT(*) FROM users"
-        )
+        cursor.execute("SELECT COUNT(*) FROM users")
         num_users = cursor.fetchone()[0]
 
         cursor.execute(
@@ -973,23 +1093,21 @@ def admin_dashboard():
     cursor.close()
     conn.close()
 
-
-
     return render_template(
-    "admin.html",
-    appointments=appointments,
-    num_teachers=num_teachers,
-    num_students=num_students,
-    num_appointments=num_appointments,  # Remove one occurrence of num_appointments
-    num_users=num_users,
-    # num_appointments=json.dumps(num_appointments)  # Remove this line
-)
+        "admin.html",
+        appointments=appointments,
+        num_teachers=num_teachers,
+        num_students=num_students,
+        num_appointments=num_appointments,  # Remove one occurrence of num_appointments
+        num_users=num_users,
+        # num_appointments=json.dumps(num_appointments)  # Remove this line
+    )
 
 
 # admin
 @app.route("/usercontrol")
 def usercontrol():
-    search_query = request.args.get('search', '')
+    search_query = request.args.get("search", "")
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1000,8 +1118,13 @@ def usercontrol():
             SELECT id, role, faculty, username, phone_number 
             FROM users 
             WHERE username LIKE ? OR role LIKE ? OR faculty LIKE ? OR phone_number LIKE ?
-            """, 
-            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
+            """,
+            (
+                f"%{search_query}%",
+                f"%{search_query}%",
+                f"%{search_query}%",
+                f"%{search_query}%",
+            ),
         )
     else:
         cursor.execute("SELECT id, role, faculty, username, phone_number FROM users")
@@ -1074,9 +1197,11 @@ def admin_page_editor():
         current_admin_password=current_admin_password,
     )
 
+
 @app.route("/getpin", methods=["GET"])
 def get_pin():
     return jsonify({"pin": load_pin()})
+
 
 @app.route("/changepin", methods=["POST"])
 def change_teacher_pin():
@@ -1089,6 +1214,7 @@ def change_teacher_pin():
     save_pin(new_pin)
 
     return redirect("/adminpageeditor")
+
 
 @app.route("/change_admin_credentials", methods=["POST"])
 def change_admin_credentials():
@@ -1116,46 +1242,47 @@ def changepassword():
 
 @app.route("/faculty")
 def faculty():
-        conn = get_db_connection()
-        cursor = conn.cursor()
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-        cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
-        faculty_info = cursor.fetchall()
+    cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
+    faculty_info = cursor.fetchall()
 
-        faculty_data = []
-        if faculty_info:
-            for faculty in faculty_info:
-                cursor.execute(
-                    "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
-                    (faculty["faculty_name"],)
-                )
-                lecturers = cursor.fetchall() 
+    faculty_data = []
+    if faculty_info:
+        for faculty in faculty_info:
+            cursor.execute(
+                "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
+                (faculty["faculty_name"],),
+            )
+            lecturers = cursor.fetchall()
 
-                cursor.execute(
-                    "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
-                    (faculty["faculty_name"],)
-                )
-                students = cursor.fetchall() 
-                faculty_data.append(
-                    {
-                        "faculty_name": faculty["faculty_name"],
-                        "faculty_image": faculty["faculty_image"],
-                        "lecturers": [
-                            {"username": lecturer[0], "email": lecturer[1]}
-                            for lecturer in lecturers
-                        ],
-                        "students": [
-                            {"username": student[0], "email": student[1]}
-                            for student in students
-                        ],
-                    }
-                )
+            cursor.execute(
+                "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
+                (faculty["faculty_name"],),
+            )
+            students = cursor.fetchall()
+            faculty_data.append(
+                {
+                    "faculty_name": faculty["faculty_name"],
+                    "faculty_image": faculty["faculty_image"],
+                    "lecturers": [
+                        {"username": lecturer[0], "email": lecturer[1]}
+                        for lecturer in lecturers
+                    ],
+                    "students": [
+                        {"username": student[0], "email": student[1]}
+                        for student in students
+                    ],
+                }
+            )
 
-        conn.close()
-        return render_template("Faculty.html", faculty_info=faculty_data)
+    conn.close()
+    return render_template("Faculty.html", faculty_info=faculty_data)
 
 
 # admin
+
 
 @app.route("/createfacultyhub", methods=["GET", "POST"])
 def create_faculty_hub():
@@ -1172,7 +1299,6 @@ def create_faculty_hub():
             filename = secure_filename(faculty_image.filename)
             image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
- 
             faculty_image.save(image_path)
 
             print(f"Saved file to {image_path}")
@@ -1188,7 +1314,7 @@ def create_faculty_hub():
             conn.commit()
             conn.close()
 
-            return redirect('/faculty')
+            return redirect("/faculty")
         except Exception as e:
             print("Error occurred:", e)
             return render_template(
