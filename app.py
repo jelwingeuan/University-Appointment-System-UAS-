@@ -822,17 +822,24 @@ def get_calendar_details():
 def check_availability():
     lecturer_name = request.args.get('lecturer')
     appointment_date = request.args.get('appointment_date')
-    start_time = request.args.get('start_time')
-    end_time = request.args.get('end_time')
+    new_start_time = request.args.get('start_time')
+    new_end_time = request.args.get('end_time')
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # Adjusted SQL query with correct logical precedence
+        # Check if the requested time overlaps with any existing appointment
         cursor.execute(
-            "SELECT COUNT(*) FROM appointments WHERE lecturer = ? AND appointment_date = ? AND appointment_time >= ? AND appointment_time <= ? AND (status = 'Accepted' OR status = 'Pending')",
-            (lecturer_name, appointment_date, start_time, end_time)
+            """
+            SELECT COUNT(*) 
+            FROM appointments 
+            WHERE lecturer = ? 
+            AND appointment_date = ? 
+            AND (status = 'Accepted' OR status = 'Pending')
+            AND NOT (? >= end_time OR ? <= start_time)
+            """,
+            (lecturer_name, appointment_date, new_start_time, new_end_time)
         )
         count = cursor.fetchone()[0]
         conn.close()
@@ -845,6 +852,7 @@ def check_availability():
     except sqlite3.Error as e:
         print("Error checking availability:", e)
         return jsonify({"error": "Database error occurred"}), 500
+
 
 
 
