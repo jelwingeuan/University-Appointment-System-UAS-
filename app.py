@@ -825,17 +825,14 @@ def check_availability():
     start_time = request.args.get('start_time')
     end_time = request.args.get('end_time')
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     try:
-        # Adjusted SQL query with correct logical precedence
-        cursor.execute(
-            "SELECT COUNT(*) FROM appointments WHERE lecturer = ? AND appointment_date = ? AND appointment_time >= ? AND appointment_time <= ? AND (status = 'Accepted' OR status = 'Pending')",
-            (lecturer_name, appointment_date, start_time, end_time)
-        )
-        count = cursor.fetchone()[0]
-        conn.close()
+        with get_db_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(*) FROM appointments WHERE lecturer = ? AND appointment_date = ? AND appointment_time >= ? AND appointment_time <= ? AND (status = 'Accepted' OR status = 'Pending')",
+                    (lecturer_name, appointment_date, start_time, end_time)
+                )
+                count = cursor.fetchone()[0]
 
         if count > 0:
             return jsonify({"available": False})
