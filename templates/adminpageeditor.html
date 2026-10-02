@@ -78,7 +78,7 @@
             <li><i class='bx bx-cart'></i><a href="/appointmentcontrol">Booking Control</a></li>
             <li><i class='bx bx-plus'></i><a href="/faculty">My Faculty</a></li>
             <li><i class='bx bx-edit'></i><a href="/adminpageeditor">Page Editor</a></li>
-            <li><i class='bx bx-cog'></i><a href="/logout">Signout</a></li>
+            <li><i class='bx bx-cog'></i><form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-link" type="submit">Signout</button></form></li>
         </ul>
     </div>
     <div class="adminbody">
@@ -89,6 +89,7 @@
                 </div>
                 <div class="subadmincontainer2">
                     <form action="/adminpageeditor" method="post" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="form-group">
                             <label for="home_content">Home Page Content</label>
                             <textarea id="home_content" name="home_content" rows="4">{{ home_content }}</textarea>
@@ -110,56 +111,6 @@
                             <textarea id="school_email" name="school_email" rows="2">{{ school_email }}</textarea>
                         </div>
                         <button type="submit">Save Changes</button>
-                    </form>
-                </div>
-            </div>
-            <div class="subadmincontainer">
-                <div class="subadmincontainer1">
-                    <h2>Change Teacher PIN</h2>
-                </div>
-                <div class="subadmincontainer2">
-                    <form action="/changepin" method="post">
-                        <div class="form-group">
-                            <label>Current Teacher PIN:</label>
-                            <input type="text" name="current_pin" value="{{pin}}" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>New Teacher PIN:</label>
-                            <input type="password" name="new_pin" placeholder="Enter new PIN">
-                        </div>
-                        <div class="form-group">
-                            <label>Retype New Teacher PIN:</label>
-                            <input type="password" name="retype_new_pin" placeholder="Retype new PIN">
-                        </div>
-                        <button type="submit">Change PIN</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <div class="admincontainer">
-            <div class="subadmincontainer">
-                <div class="subadmincontainer1">
-                    <h2>Change Admin Credentials</h2>
-                </div>  
-                <div class="subadmincontainer2">
-                    <form action="/change_admin_credentials" method="post">
-                        <div class="form-group">
-                            <label>Current Admin Email:</label>
-                            <input type="email" name="current_admin_email" value="{{ current_admin_email }}" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>New Admin Email:</label>
-                            <input type="email" name="admin_email" placeholder="Enter new admin email" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Current Admin Password:</label>
-                            <input type="text" name="current_admin_password" value="{{ current_admin_password }}" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label>New Admin Password:</label>
-                            <input type="password" name="admin_password" placeholder="Enter new admin password" required>
-                        </div>
-                        <button type="submit">Change Credentials</button>
                     </form>
                 </div>
             </div>

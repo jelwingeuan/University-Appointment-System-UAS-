@@ -2087,3 +2087,16 @@ td .accept, .cancel, .Pending {
     margin-top: 10px;
     margin-bottom:10px;
 }
+.logout-form {
+    display: inline;
+}
+
+.logout-link {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    padding: 0;
+    text-decoration: none;
+}

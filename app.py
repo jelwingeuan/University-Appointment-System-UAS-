@@ -1,1242 +1,834 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-from flask import session, flash
-from flask_login import LoginManager, UserMixin
-from werkzeug.utils import secure_filename
-from db_functions import update_user_info, delete_appointment
-from lecturer_calendar import calendar_record, calendar_repeat
-import sqlite3
-import bcrypt
-import random
-import os
+import calendar
+import hmac
 import json
-import calendar as cal
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
 import logging
+import os
+import sqlite3
+from datetime import datetime, timedelta, timezone
+from functools import wraps
+from pathlib import Path
+from urllib.parse import urljoin, urlparse
+from zoneinfo import ZoneInfo
 
-logging.basicConfig(level=logging.DEBUG)
+import bcrypt
+import click
+from dotenv import load_dotenv
+from flask import Flask, abort, flash, jsonify, redirect, render_template, request, session, url_for
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_login import LoginManager, UserMixin, current_user, login_required, login_user, logout_user
+from flask_wtf.csrf import CSRFProtect
+from werkzeug.utils import secure_filename
+
+from booking_service import BookingConflict, BookingError, InvalidTransition
+from booking_service import create_booking as create_booking_record
+from booking_service import slot_is_available, transition_appointment
+from database import connect_database, init_schema
 
 
-app = Flask(__name__, static_folder="static")
+load_dotenv()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 login_manager = LoginManager()
-login_manager.init_app(app)
-app.secret_key = "jelwin"
-UPLOAD_FOLDER = os.path.join(
-    app.static_folder, "faculty_pp"
-) 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+csrf = CSRFProtect()
+limiter = Limiter(key_func=get_remote_address, default_limits=[])
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "gif", "jfif"}
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/gif"}
 
 
-# Define a User class that inherits from UserMixin provided by Flask-Login
 class User(UserMixin):
-    def __init__(self, id, username):
-        self.id = id
-        self.username = username
-
-# Function to establish a connection to the SQLite database
-def get_db_connection():
-    con = sqlite3.connect("database.db")  # Connect to the database
-    con.row_factory = sqlite3.Row        # Set row factory to sqlite3.Row for dictionary-like row access
-    return con                           # Return the database connection
-
-# Function to load a user from the database, used by Flask-Login
-@login_manager.user_loader
-def load_user(id):
-    con = get_db_connection()            # Get a connection to the database
-    cur = con.cursor()                   # Create a cursor object
-    cur.execute("SELECT * FROM users WHERE id = ?", (id,))  # Execute a query to find the user by id
-    user = cur.fetchone()                # Fetch the user record
-    con.close()                          # Close the database connection
-    if user:                             # If user is found
-        return User(user['id'], user['username'])  # Create and return a User object
-
-    return None                          # Return None if user is not found
-
-def load_pin():
-    with open("pin.json", "r") as file:
-        return json.load(file)["pin"]
+    def __init__(self, row):
+        self.id = str(row["id"])
+        self.username = row["username"]
+        self.email = row["email"]
+        self.role = row["role"]
+        self.faculty = row["faculty"]
+        self.phone_number = row["phone_number"]
 
 
-def save_pin(new_pin):
-    with open("pin.json", "w") as file:
-        json.dump({"pin": new_pin}, file)
-
-def load_content():
-    with open("content.json") as f:
-        return json.load(f)
-
-
-def save_content(content):
-    with open("content.json", "w") as f:
-        json.dump(content, f)
-
-def get_current_admin_credentials():
-    with open("admin.json", "r") as admin_file:
-        admin_data = json.load(admin_file)
-        return admin_data.get("email"), admin_data.get("password")
-
-
-content_data = load_content()
-home_content = content_data["home_content"]
-
-
-@app.route("/")
-def home():
-    with open("content.json", "r") as file:
-        content = json.load(file)
-
-    return render_template(
-        "home.html",
-        home_content=content["home_content"],
-        school_name=content["school_name"],
-        school_tel=content["school_tel"],
-        school_email=content["school_email"],
-        school_logo=content["school_logo"],  
-    )
-
-
-@app.route("/about")
-def about():
-    return render_template("about.html")
+def _environment_flag(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def hash_password(password):
-    # Encode the password to a byte string as bcrypt requires bytes input
-    encoded_password = password.encode("utf-8")
-    
-    # Generate a salt and hash the password with the salt
-    hashed_password = bcrypt.hashpw(encoded_password, bcrypt.gensalt())
-    
-    # Decode the hashed password back to a UTF-8 string and return it
-    return hashed_password.decode("utf-8")
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
-@app.route("/signup", methods=["GET", "POST"])
-def signup():
-    if request.method == "POST":
-        role = request.form.get("role")
-        faculty = request.form.get("faculty")
-        username = request.form.get("username")
-        email = request.form.get("email")
-        phone_number = request.form.get("phone_number")
-        password = request.form.get("password")
-        pin = request.form.get("pin")
+def role_required(*roles):
+    def decorator(view):
+        @wraps(view)
+        @login_required
+        def wrapped(*args, **kwargs):
+            if current_user.role not in roles:
+                abort(403)
+            return view(*args, **kwargs)
 
-        if role == "teacher":
-            if not email.endswith("@mmu.edu.my"):
-                flash("SIGN UP FAILED. Lecturers must use an @mmu.edu.my email.", "error")
-                return redirect("/signup")
+        return wrapped
 
-            stored_pin = load_pin()
-            if pin != stored_pin:
-                flash("PIN is incorrect", "error")
-                return redirect("/signup")
+    return decorator
 
-        elif role == "student":
-            if not email.endswith("@student.mmu.edu.my"):
-                flash("SIGN UP FAILED. Students must use an @student.mmu.edu.my email.", "error")
-                return redirect("/signup")
 
-        if not password:
-            flash("Password is required", "error")
-            return redirect("/signup")
+def generate_recurrence(start, recurrence_end, repeat_type):
+    if recurrence_end < start:
+        raise ValueError("End date must not be before start date")
+    if repeat_type not in {"", "weekly", "monthly"}:
+        raise ValueError("Invalid recurrence type")
+    if not repeat_type:
+        return [start]
 
-        hashed_password = hash_password(password)
-
-        con = get_db_connection()
-        cur = con.cursor()
-
-        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user_email = cur.fetchone()
-
-        cur.execute("SELECT * FROM users WHERE username = ?", (username,))
-        user_username = cur.fetchone()
-
-        cur.execute("SELECT * FROM users WHERE phone_number = ?", (phone_number,))
-        user_phone = cur.fetchone()
-
-        if user_email:
-            con.close()
-            flash("User with this email already exists", "error")
-            return redirect("/signup")
-        elif user_username:
-            con.close()
-            flash("User with this username already exists", "error")
-            return redirect("/signup")
-        elif user_phone:
-            con.close()
-            flash("User with this phone number already exists", "error")
-            return redirect("/signup")
+    values = []
+    current = start
+    anchor_day = start.day
+    while current <= recurrence_end:
+        values.append(current)
+        if len(values) > 370:
+            raise ValueError("Recurrence creates too many availability windows")
+        if repeat_type == "weekly":
+            current += timedelta(weeks=1)
         else:
-            cur.execute(
-                "INSERT INTO users (role, faculty, username, email, phone_number, password) VALUES (?, ?, ?, ?, ?, ?)",
-                (role, faculty, username, email, phone_number, hashed_password),
-            )
-            con.commit()
-            con.close()
-            return redirect("/login")
-    else:
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute("SELECT faculty_name FROM facultyhub")
-        faculties = cur.fetchall()
-        con.close()
+            month = current.month + 1
+            year = current.year
+            if month == 13:
+                month = 1
+                year += 1
+            day = min(anchor_day, calendar.monthrange(year, month)[1])
+            current = current.replace(year=year, month=month, day=day)
+    return values
+
+
+def _safe_next_url(target):
+    if not target:
+        return None
+    host = urlparse(request.host_url)
+    resolved = urlparse(urljoin(request.host_url, target))
+    return target if (resolved.scheme, resolved.netloc) == (host.scheme, host.netloc) else None
+
+
+def _content_path(app):
+    return Path(app.root_path) / "content.json"
+
+
+def _load_content(app):
+    with _content_path(app).open(encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _save_content(app, content):
+    with _content_path(app).open("w", encoding="utf-8") as handle:
+        json.dump(content, handle, indent=2)
+
+
+def _database_path(app):
+    return app.config["DATABASE_PATH"]
+
+
+def _local_zone(app):
+    return ZoneInfo(app.config["UNIVERSITY_TIMEZONE"])
+
+
+def _local_to_utc(app, local_datetime):
+    return local_datetime.replace(tzinfo=_local_zone(app)).astimezone(timezone.utc)
+
+
+def _utc_to_local(app, value):
+    return datetime.fromisoformat(value).astimezone(_local_zone(app))
+
+
+def _appointment_view(app, row):
+    start = _utc_to_local(app, row["starts_at"])
+    end = _utc_to_local(app, row["ends_at"])
+    result = dict(row)
+    result["appointment_date"] = start.strftime("%Y-%m-%d")
+    result["appointment_time"] = f"{start:%H:%M} - {end:%H:%M}"
+    return result
+
+
+def _valid_image(file):
+    if not file or not file.filename or "." not in file.filename:
+        return False
+    extension = file.filename.rsplit(".", 1)[1].lower()
+    return extension in ALLOWED_IMAGE_EXTENSIONS and file.mimetype in ALLOWED_IMAGE_TYPES
+
+
+def create_app(test_config=None):
+    application = Flask(__name__, static_folder="static")
+    app_environment = os.getenv("APP_ENV", "production").strip().lower()
+    application.config.from_mapping(
+        SECRET_KEY=os.getenv("FLASK_SECRET_KEY"),
+        DATABASE_PATH=os.getenv("DATABASE_PATH", str(Path(application.root_path) / "database.db")),
+        UNIVERSITY_TIMEZONE=os.getenv("UNIVERSITY_TIMEZONE", "Asia/Kuala_Lumpur"),
+        LECTURER_REGISTRATION_SECRET=os.getenv("LECTURER_REGISTRATION_SECRET"),
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=_environment_flag(
+            "SESSION_COOKIE_SECURE", app_environment == "production"
+        ),
+        DEBUG=app_environment != "production" and _environment_flag("FLASK_DEBUG"),
+        MAX_CONTENT_LENGTH=5 * 1024 * 1024,
+        WTF_CSRF_TIME_LIMIT=3600,
+        RATELIMIT_STORAGE_URI="memory://",
+    )
+    if test_config:
+        application.config.update(test_config)
+    secret_key = application.config.get("SECRET_KEY") or ""
+    if not secret_key:
+        raise RuntimeError("FLASK_SECRET_KEY is required")
+    if not application.config.get("TESTING") and len(secret_key) < 32:
+        raise RuntimeError("FLASK_SECRET_KEY must contain at least 32 characters")
+    try:
+        ZoneInfo(application.config["UNIVERSITY_TIMEZONE"])
+    except Exception as exc:
+        raise RuntimeError("UNIVERSITY_TIMEZONE is invalid") from exc
+
+    upload_folder = Path(application.static_folder) / "faculty_pp"
+    upload_folder.mkdir(parents=True, exist_ok=True)
+    application.config["UPLOAD_FOLDER"] = str(upload_folder)
+
+    login_manager.init_app(application)
+    login_manager.login_view = "login"
+    csrf.init_app(application)
+    limiter.init_app(application)
+
+    @application.after_request
+    def apply_security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+        response.headers.setdefault("Referrer-Policy", "same-origin")
+        if application.config["SESSION_COOKIE_SECURE"] and not application.config.get("TESTING"):
+            response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+        return response
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        with connect_database(_database_path(application)) as connection:
+            row = connection.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        return User(row) if row else None
+
+    @application.cli.command("init-db")
+    def init_db_command():
+        with connect_database(_database_path(application)) as connection:
+            init_schema(connection)
+        click.echo("Database schema initialized.")
+
+    @application.cli.command("bootstrap-admin")
+    def bootstrap_admin_command():
+        email = os.getenv("ADMIN_EMAIL", "").strip().lower()
+        password = os.getenv("ADMIN_PASSWORD", "")
+        if not email or len(password) < 12:
+            raise click.ClickException("ADMIN_EMAIL and ADMIN_PASSWORD (12+ characters) are required")
+        with connect_database(_database_path(application)) as connection:
+            init_schema(connection)
+            existing = connection.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+            password_hash = hash_password(password)
+            if existing:
+                connection.execute(
+                    "UPDATE users SET role = 'admin', password = ? WHERE id = ?",
+                    (password_hash, existing["id"]),
+                )
+            else:
+                connection.execute(
+                    """
+                    INSERT INTO users (role, faculty, username, email, phone_number, password)
+                    VALUES ('admin', 'Administration', ?, ?, ?, ?)
+                    """,
+                    (
+                        f"Administrator-{os.urandom(4).hex()}",
+                        email,
+                        f"admin-{os.urandom(6).hex()}",
+                        password_hash,
+                    ),
+                )
+        click.echo("Administrator account is ready.")
+
+    @application.route("/")
+    def home():
+        return render_template("home.html", **_load_content(application))
+
+    @application.route("/about")
+    def about():
+        return render_template("about.html")
+
+    @application.route("/signup", methods=["GET", "POST"])
+    @limiter.limit("10 per minute")
+    def signup():
+        if request.method == "POST":
+            role = request.form.get("role", "")
+            faculty = request.form.get("faculty", "").strip()
+            username = request.form.get("username", "").strip()
+            email = request.form.get("email", "").strip().lower()
+            phone = request.form.get("phone_number", "").strip()
+            password = request.form.get("password", "")
+            confirmation = request.form.get("confirm_password", "")
+            if role not in {"student", "teacher"}:
+                flash("Please select a valid role", "error")
+            elif not all((faculty, username, email, phone)):
+                flash("All fields are required", "error")
+            elif password != confirmation or len(password) < 8:
+                flash("Passwords must match and contain at least 8 characters", "error")
+            elif role == "student" and not email.endswith("@student.mmu.edu.my"):
+                flash("Students must use an @student.mmu.edu.my email", "error")
+            elif role == "teacher" and not email.endswith("@mmu.edu.my"):
+                flash("Lecturers must use an @mmu.edu.my email", "error")
+            elif role == "teacher" and (
+                not application.config.get("LECTURER_REGISTRATION_SECRET")
+                or not hmac.compare_digest(
+                    request.form.get("pin", ""), application.config["LECTURER_REGISTRATION_SECRET"]
+                )
+            ):
+                flash("Lecturer registration could not be verified", "error")
+            else:
+                try:
+                    with connect_database(_database_path(application)) as connection:
+                        connection.execute(
+                            """
+                            INSERT INTO users (role, faculty, username, email, phone_number, password)
+                            VALUES (?, ?, ?, ?, ?, ?)
+                            """,
+                            (role, faculty, username, email, phone, hash_password(password)),
+                        )
+                    return redirect(url_for("login"))
+                except sqlite3.IntegrityError:
+                    flash("An account with those details already exists", "error")
+            return redirect(url_for("signup"))
+
+        with connect_database(_database_path(application)) as connection:
+            faculties = connection.execute("SELECT faculty_name FROM facultyhub ORDER BY faculty_name").fetchall()
         return render_template("signup.html", faculties=faculties)
 
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-
-        # Load admin credentials from admin.json
-        with open("admin.json", "r") as admin_file:
-            admin_data = json.load(admin_file)
-
-        if email == admin_data["email"] and password == admin_data["password"]:
-            session["logged_in"] = True
-            return redirect("/admin")
-        else:
-            con = get_db_connection()
-            cur = con.cursor()
-            cur.execute("SELECT * FROM users WHERE email = ?", (email,))
-            user = cur.fetchone()
-            con.close()
-
-            if user and bcrypt.checkpw(
-                password.encode("utf-8"), user["password"].encode("utf-8")
-            ):
-                session["logged_in"] = True
-                session["id"] = user["id"]  # Assuming the ID is in the "id" field
-                return redirect("/")
-            else:
-                flash("Invalid email or password")
-                return redirect("/login")
-    else:
+    @application.route("/login", methods=["GET", "POST"])
+    @limiter.limit("5 per minute")
+    def login():
+        if request.method == "POST":
+            email = request.form.get("email", "").strip().lower()
+            password = request.form.get("password", "")
+            with connect_database(_database_path(application)) as connection:
+                row = connection.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+            valid = bool(row and bcrypt.checkpw(password.encode("utf-8"), row["password"].encode("utf-8")))
+            if not valid:
+                flash("Invalid email or password", "error")
+                return redirect(url_for("login"))
+            user = User(row)
+            login_user(user)
+            destination = _safe_next_url(request.args.get("next"))
+            if destination:
+                return redirect(destination)
+            return redirect(url_for("admin_dashboard") if user.role == "admin" else url_for("home"))
         return render_template("login.html")
 
+    @application.route("/logout", methods=["POST"])
+    @login_required
+    def logout():
+        logout_user()
+        session.clear()
+        return redirect(url_for("home"))
 
-# student and lecturer
-@app.route("/update_user_info", methods=["POST"])
-def update_user():
-    if request.method == "POST":
-        username = request.form.get("username")
-        email = request.form.get("email")
-        phone_number = request.form.get("phone_number")
-        update_user_info(session["id"], username, email, phone_number)
-
-        return redirect("/profile")
-
-# student and lecturer
-@app.route("/change_password", methods=["GET", "POST"])
-def change_password():
-    if request.method == "POST":
-        current_password = request.form.get("current_password")
-        new_password = request.form.get("new_password")
-        confirm_password = request.form.get("confirm_password")
-
-        if new_password != confirm_password:
-            return render_template(
-                "profile.html", message="New password and confirm password do not match"
-            )
-
-        con = get_db_connection()
-        cur = con.cursor()
-        cur.execute("SELECT password FROM users WHERE id = ?", (session["id"],))
-        user_data = cur.fetchone()
-
-        if not user_data or not bcrypt.checkpw(
-            current_password.encode("utf-8"), user_data["password"].encode("utf-8")
-        ):
-            return render_template("profile.html", message="Incorrect current password")
-
-
-        hashed_new_password = hash_password(new_password)
-        cur.execute(
-            "UPDATE users SET password = ? WHERE id = ?",
-            (hashed_new_password, session["id"]),
+    @application.route("/profile")
+    @login_required
+    def profile():
+        return render_template(
+            "profile.html",
+            username=current_user.username,
+            email=current_user.email,
+            faculty=current_user.faculty,
+            phone_number=current_user.phone_number,
+            role=current_user.role,
         )
-        con.commit()
-        con.close()
 
-        return redirect("/profile")
-    else:
-        return render_template("profile.html")
-
-
-# student
-
-
-
-
-@app.route("/create_booking", methods=["POST"])
-def create_booking():
-    """
-    Create a booking for an appointment.
-    
-    Steps:
-    1. Fetch the current user's data from the database using their session ID.
-    2. Store the username in the session.
-    3. If the request method is POST, process the form data to create a booking.
-    4. Generate a random booking ID.
-    5. Retrieve and store the form data for the booking.
-    6. Insert the booking data into the appointments table in the database.
-    7. Handle any database integrity errors and flash a message if an error occurs.
-    8. Store the appointment ID in the session.
-    9. Calculate the start and end times for the appointment.
-    10. Update the calendar status for the booking.
-    11. Insert the event into the events table in the database.
-    12. Flash a success message and redirect to the invoice page.
-    """
-    
-    # Step 1: Fetch the current user's data from the database using their session ID
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
-    user_data = cursor.fetchone()
-    conn.close()
-
-    # Step 2: Store the username in the session
-    session["username"] = user_data["username"]
-
-    if request.method == "POST":
-        # Step 4: Generate a random booking ID
-        booking_id = random.randint(100000, 999999)
-        
-        # Step 5: Retrieve and store the form data for the booking
-        student = session["username"]
-        lecturer = request.form.get("lecturer")
-        purpose = request.form.get("purpose")
-        appointment_date = request.form.get("appointment_date")
-        appointment_time = request.form.get("selected_time_slot")
-
+    @application.route("/update_user_info", methods=["POST"])
+    @login_required
+    def update_user():
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        phone = request.form.get("phone_number", "").strip()
+        valid_domain = (
+            current_user.role == "student" and email.endswith("@student.mmu.edu.my")
+        ) or (current_user.role == "teacher" and email.endswith("@mmu.edu.my"))
+        if current_user.role == "admin":
+            valid_domain = "@" in email and not any(character.isspace() for character in email)
+        if not all((username, email, phone)) or not valid_domain:
+            flash("Enter valid account details", "error")
+            return redirect(url_for("profile"))
         try:
-            # Step 6: Insert the booking data into the appointments table in the database
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO appointments (booking_id, student, lecturer, purpose, appointment_date, appointment_time, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (booking_id, student, lecturer, purpose, appointment_date, appointment_time, "Pending"),
+            with connect_database(_database_path(application)) as connection:
+                connection.execute(
+                    "UPDATE users SET username = ?, email = ?, phone_number = ? WHERE id = ?",
+                    (username, email, phone, int(current_user.id)),
+                )
+            flash("User information updated successfully", "success")
+        except sqlite3.IntegrityError:
+            flash("Those account details are already in use", "error")
+        return redirect(url_for("profile"))
+
+    @application.route("/change_password", methods=["GET", "POST"])
+    @login_required
+    def change_password():
+        if request.method == "GET":
+            return render_template("changepassword.html")
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirmation = request.form.get("confirm_password", "")
+        with connect_database(_database_path(application)) as connection:
+            row = connection.execute("SELECT password FROM users WHERE id = ?", (current_user.id,)).fetchone()
+            if (
+                not row
+                or not bcrypt.checkpw(current_password.encode(), row["password"].encode())
+                or new_password != confirmation
+                or len(new_password) < 8
+            ):
+                flash("Password change could not be completed", "error")
+                return redirect(url_for("change_password"))
+            connection.execute(
+                "UPDATE users SET password = ? WHERE id = ?", (hash_password(new_password), current_user.id)
             )
-            appointment_id = cursor.lastrowid
-            conn.commit()
-        except sqlite3.IntegrityError as e:
-            # Step 7: Handle any database integrity errors and flash a message if an error occurs
-            flash(f"An error occurred: {str(e)}", "danger")
-            return redirect("/appointment")
-        finally:
-            conn.close()
-
-        # Step 8: Store the appointment ID in the session
-        session["appointment_id"] = appointment_id
-
-        # Step 9: Calculate the start and end times for the appointment
-        start_time_str, end_time_str = appointment_time.split(" - ")
-        start_time = datetime.strptime(start_time_str, "%H:%M").strftime("%H:%M")
-        end_time = (datetime.strptime(end_time_str, "%H:%M") + timedelta(hours=1)).strftime("%H:%M")
-
-        # Step 10: Update the calendar status for the booking
-        update_calendar_status(booking_id, status="Pending")
-
-        # Step 11: Insert the event into the events table in the database
-        event_title = f"Appointment with {user_data['username']} (Booking ID: {booking_id})"
-        
-        # Retrieve slot_size from the form or database as per your application logic
-        slot_size = retrieve_slot_size(appointment_date)  # Example implementation
-        
-
-        insert_event_into_db(
-            event_title=event_title,
-            event_date=appointment_date,
-            start_time=start_time,
-            end_time=end_time,
-            event_type="appointment",
-            repeat_type="", 
-            lecturer=lecturer,
-            status="Pending",
-            slot_size=slot_size
-        )
-
-        # Step 12: Flash a success message and redirect to the invoice page
-        flash("Booking created successfully!", "success")
-        return redirect("/invoice")
-
-
-def retrieve_slot_size(appointment_date):
-    conn = get_db_connection()  # Correctly call the function to get the database connection object
-    cursor = conn.cursor()
-    
-    try:
-        # Assuming slot_size is stored in a table named 'calendar' or similar
-        cursor.execute(
-            "SELECT slot_size FROM calendar WHERE event_date = ?",
-            (appointment_date,)
-        )
-        slot_size = cursor.fetchone()
-        
-        if slot_size:
-            return slot_size[0] 
-    finally:
-        conn.close()
-
-
-
-# student
-@app.route("/invoice")
-def render_template_invoice():
-    user_id = session.get("id")
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-    user_data = cursor.fetchone()
-    conn.close()
-
-    appointment_id = session.get("appointment_id")
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM appointments WHERE id = ?", (appointment_id,))
-    appointment = cursor.fetchone()
-    conn.close()
-
-    return render_template(
-        "invoice.html",
-        username=session.get("username"),
-        email=user_data["email"],
-        faculty=user_data["faculty"],
-        phone_number=user_data["phone_number"],
-        role=user_data["role"],
-        appointment=appointment,
-        booking_id=appointment["booking_id"]
-    )
-
-
-# student and lecturer
-@app.route("/bookinghistory")
-def user_booking_history():
-    username = session.get("username")
-    role = session.get("role")
-
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-
-        if role == "student":
-            cursor.execute("SELECT * FROM appointments WHERE student = ?", (username,))
-            display_role = "lecturer"
-            role = 'student'
-        else:
-            cursor.execute("SELECT * FROM appointments WHERE lecturer = ?", (username,))
-            display_role = "student"
-            role = 'teacher'
-
-        appointments = cursor.fetchall()
-    finally:
-        conn.close()
-
-    return render_template("booking_history.html", appointments=appointments, display_role=display_role, role=role)
-
-# lecturer
-
-@app.route("/cancel_booking", methods=["POST"])
-def cancel_booking():
-    appointment_id = request.form.get("id")
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Get the booking_id from the appointments table
-        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
-        booking_id = cursor.fetchone()["booking_id"]
-        
-        # Update the status in the appointments table
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Cancelled", appointment_id))
-        conn.commit()
-        
-        # Debug: print a message indicating appointment status update
-        print(f"Appointment ID {appointment_id} status updated to 'Cancelled'")
-        
-        update_calendar_status(booking_id, "Cancelled")
-    finally:
-        conn.close()
-
-    return redirect("/bookinghistory")
-
-@app.route("/reject_booking", methods=["POST"])
-def reject_booking():
-    appointment_id = request.form.get("id")
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Get the booking_id from the appointments table
-        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
-        booking_id = cursor.fetchone()["booking_id"]
-        
-        # Update the status in the appointments table
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Rejected", appointment_id))
-        conn.commit()
-        
-        # Debug: print a message indicating appointment status update
-        print(f"Appointment ID {appointment_id} status updated to 'Rejected'")
-        
-        update_calendar_status(booking_id, "Rejected")
-    finally:
-        conn.close()
-
-    return redirect("/bookinghistory")
-
-@app.route("/accept_booking", methods=["POST"])
-def accept_booking():
-    appointment_id = request.form.get("id")
-
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Get the booking_id from the appointments table
-        cursor.execute("SELECT booking_id FROM appointments WHERE id = ?", (appointment_id,))
-        booking_id = cursor.fetchone()["booking_id"]
-        
-        # Update the status in the appointments table
-        cursor.execute("UPDATE appointments SET status = ? WHERE id = ?", ("Accepted", appointment_id))
-        conn.commit()
-        
-        # Debug: print a message indicating appointment status update
-        print(f"Appointment ID {appointment_id} status updated to 'Accepted'")
-        
-        update_calendar_status(booking_id, "Accepted")
-    finally:
-        conn.close()
-
-    return redirect("/bookinghistory")
-
-
-# lecturer\
-
-@app.route("/calendar_record", methods=["GET", "POST"])
-def create_calendar():
-    if request.method == "POST":
-        event_title = 'Consultation Hour'
-        event_date = request.form["event_date"]
-        end_date = request.form["end_date"]
-        start_time = request.form["start_time"]
-        end_time = request.form["end_time"]
-        repeat_type = request.form.get("repeat_type", "")
-        slot_size = request.form["slot_size"]
-        
-        # Fetch lecturer name from the session
-        lecturer = session["username"]  # Assuming the lecturer name is stored in the session
-
-        if repeat_type == "weekly":
-            repeat_weekly(event_title, event_date, start_time, end_time, lecturer, slot_size,end_date)
-        elif repeat_type == "monthly":
-            repeat_monthly(event_title, event_date, start_time, end_time, lecturer, slot_size,end_date)
-        else:
-            insert_event_into_db(event_title, event_date, start_time, end_time, lecturer, "Pending", repeat_type, 'Work', slot_size,end_date)
-
-        return redirect("/calendar")
-
-    return render_template("calendar_form.html") 
-
-
-
-def repeat_weekly(event_title, event_date, start_time, end_time, lecturer, slot_size, end_date):
-    """
-    Schedule an event to repeat weekly until the end date.
-    """
-    # Parse the initial event date from string to datetime object
-    event_date = datetime.strptime(event_date, '%Y-%m-%d')
-    initial_month = event_date.month
-    
-    # Parse end_date if it's a string
-    if isinstance(end_date, str):
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
-    
-    # Loop to insert events weekly until the end date
-    while event_date <= end_date:
-        # Insert the event into the database
-        insert_event_into_db(
-            event_title, 
-            event_date.strftime('%Y-%m-%d'), 
-            start_time, 
-            end_time, 
-            lecturer, 
-            "Pending", 
-            "weekly", 
-            'Work',  # positional argument
-            slot_size  # keyword argument
-        )
-        # Increment the event date by one week
-        event_date += timedelta(weeks=1)
-
-
-def repeat_monthly(event_title, event_date, start_time, end_time, lecturer, slot_size, end_date):
-    """
-    Schedule an event to repeat monthly until the end date.
-    """
-    # Parse the initial event date from string to datetime object
-    event_date = datetime.strptime(event_date, '%Y-%m-%d')
-    
-    # Parse end_date if it's a string
-    if isinstance(end_date, str):
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
-    
-    # Loop to insert events monthly until the end date
-    while event_date <= end_date:
-        # Insert the event into the database
-        insert_event_into_db(
-            event_title, 
-            event_date.strftime('%Y-%m-%d'), 
-            start_time, 
-            end_time, 
-            lecturer, 
-            "Pending", 
-            "monthly", 
-            'Work',  # positional argument
-            slot_size  # keyword argument
-        )
-        
-        # Calculate the next month and year
-        year = event_date.year
-        month = event_date.month + 1
-        if month > 12:
-            month = 1
-            year += 1
-        
-        # Ensure the day exists in the next month
-        day = min(event_date.day, cal.monthrange(year, month)[1])
-        event_date = event_date.replace(year=year, month=month, day=day)
-
-
-
-
-
-@app.route("/calendar", methods=["GET", "POST"])
-def event():
-    return render_template("calendar.html")
-
-@app.route("/events", methods=["GET"])
-def get_events():
-    """
-    Retrieve events for the currently logged-in lecturer from the calendar table.
-    
-    Returns:
-    - JSON list of events with titles, start/end times, all-day flags, and statuses.
-    - HTTP 401 if the user is not logged in.
-    - HTTP 500 if an error occurs during data fetching.
-    """
-    # Get the username of the logged-in lecturer from the session
-    lecturer = session.get("username")
-
-    if lecturer:
-        # Establish a connection to the database
-        con = get_db_connection()
-        cur = con.cursor()
-
-        try:
-            # Fetch events from the calendar table filtered by lecturer's username
-            cur.execute("SELECT event_title, event_date, start_time, end_time, status, event_type FROM calendar WHERE lecturer = ?", (lecturer,))
-            calendar_events = cur.fetchall()
-
-            # Initialize an empty list to hold the event details
-            events_list = []
-            for event in calendar_events:
-                start_time = event["start_time"]
-                end_time = event["end_time"]
-                
-                # Check if the event type is "appointment" and the status is "Accepted"
-                if event["event_type"] == "appointment":
-                    if event["status"] == "Accepted":
-                        events_list.append({
-                            "title": event["event_title"],
-                            "start": f"{event['event_date']}T{start_time}",
-                            "end": f"{event['event_date']}T{end_time}" if end_time else None,
-                            "allDay": False if start_time and end_time else True,
-                            "status": event["status"]
-                        })
-                else:
-                    # For other event types, directly append to the events list
-                    events_list.append({
-                        "title": event["event_title"],
-                        "start": f"{event['event_date']}T{start_time}",
-                        "end": f"{event['event_date']}T{end_time}" if end_time else None,
-                        "allDay": False if start_time and end_time else True,
-                        "status": event["status"]
-                    })
-
-            # Return the list of events as a JSON response
-            return jsonify(events_list)
-        except Exception as e:
-            # Handle any exceptions that might occur during data fetching
-            return jsonify({"error": str(e)}), 500
-        finally:
-            # Ensure the database connection is closed
-            con.close()
-    else:
-        # Return an error response if the user is not logged in
-        return jsonify({"error": "User not logged in"}), 401
-
-def parse_time(time_str):
-    """
-    Parse a time string in 12-hour format with AM/PM to 24-hour format.
-
-    Parameters:
-    - time_str: Time string in 12-hour format (e.g., "02:30PM")
-
-    Returns:
-    - Parsed time string in 24-hour format (e.g., "14:30")
-    """
-    # Parse the input time string from 12-hour format to a datetime object, then format it to 24-hour format
-    return datetime.strptime(time_str, "%I:%M%p").strftime("%H:%M")
-
-
-
-def insert_event_into_db(event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type, slot_size):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "INSERT INTO calendar (event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type, slot_size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (event_title, event_date, start_time, end_time, lecturer, status, repeat_type, event_type, slot_size)
-        )
-        conn.commit()
-    except sqlite3.IntegrityError as e:
-        print(f"An error occurred: {str(e)}")
-    finally:
-        conn.close()
-
-
-def update_calendar_status(booking_id, status):
-    con = get_db_connection()
-    cur = con.cursor()
-    
-    try:
-        # Debug: print the status and booking ID being updated
-        print(f"Updating calendar status to '{status}' for booking ID: {booking_id}")
-        
-        # Update the status in the calendar table
-        cur.execute("UPDATE calendar SET status = ? WHERE event_title LIKE ?", (status, f'%Booking ID: {booking_id}%'))
-        
-        # Debug: print the number of rows updated
-        print(f"Number of rows updated: {cur.rowcount}")
-        
-        con.commit()
-    except sqlite3.Error as e:
-        print("Error updating calendar status:", e)
-    finally:
-        con.close()
-
-
-@app.route('/delete_event', methods=['POST'])
-def delete_event():
-    event_title = request.form.get('event_title')
-    if event_title:
-        if delete_event_from_db(event_title):
-            return jsonify({'status': 'success'}), 200
-        else:
-            return jsonify({'status': 'error', 'message': 'Event not found or deletion failed'}), 500
-    else:
-        return jsonify({'status': 'error', 'message': 'Invalid event title'}), 400
-
-def delete_event_from_db(event_title):
-    conn = sqlite3.connect('database.db')
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute("DELETE FROM calendar WHERE event_title=?", (event_title,))
-        conn.commit()
-        if cursor.rowcount > 0:
-            return True  # Return True if deletion is successful
-        else:
-            return False  # Return False if event not found
-    except sqlite3.Error as e:
-        print("SQLite error while deleting event:", e)
-        return False  # Return False if deletion fails
-    finally:
-        conn.close()
-
-
-@app.route("/appointment")
-def appointment():
-    if 'id' not in session:
-        return redirect('/login')  # Redirect to the login route if session ID is not found
-    else:
+        flash("Password updated", "success")
+        return redirect(url_for("profile"))
+
+    @application.route("/changepassword")
+    @login_required
+    def changepassword():
+        return redirect(url_for("change_password"))
+
+    @application.route("/appointment")
+    @role_required("student")
+    def appointment():
         return render_template("appointment.html")
 
-
-def get_lecturers():
-    conn = sqlite3.connect('database.db')  # Connect to your database
-    cursor = conn.cursor()
-    cursor.execute("SELECT username FROM users WHERE role = 'teacher'")  # Adjust the query as needed
-    lecturers = cursor.fetchall()
-    conn.close()
-    return [lecturer[0] for lecturer in lecturers]
-    
-
-@app.route("/get_calendar_details", methods=["GET", "POST"])
-def get_calendar_details():
-    if request.method == "GET":
-        lecturer_name = request.args.get('lecturer')
-        appointment_date = request.args.get('appointment_date')
-    else:
-        lecturer_name = request.form.get('lecturer')
-        appointment_date = request.form.get('appointment_date')
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        cursor.execute(
-            "SELECT start_time, end_time, slot_size FROM calendar WHERE lecturer = ? AND event_date = ?",
-            (lecturer_name, appointment_date)
-        )
-        calendar_details = cursor.fetchone()
-
-        if calendar_details:
-            start_time, end_time, slot_size = calendar_details
-            return jsonify({
-                "start_time": start_time,
-                "end_time": end_time,
-                "slot_size": slot_size
-            })
-        else:
-            return jsonify({"error": "Lecturer didnt open consultation hour for today"}), 404
-
-    except sqlite3.Error as e:
-        print("Lecturer didnt open consultation hour for today:", e)
-        return jsonify({"error": "Lecturer didnt open consultation hour for today"}), 500
-
-    finally:
-        conn.close()
-
-    
-
-@app.route("/check_availability", methods=["GET"])
-def check_availability():
-    lecturer_name = request.args.get('lecturer')
-    appointment_date = request.args.get('appointment_date')
-    start_time = request.args.get('start_time')
-    end_time = request.args.get('end_time')
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    try:
-        # Adjusted SQL query with correct logical precedence
-        cursor.execute(
-            "SELECT COUNT(*) FROM appointments WHERE lecturer = ? AND appointment_date = ? AND appointment_time >= ? AND appointment_time <= ? AND (status = 'Accepted' OR status = 'Pending')",
-            (lecturer_name, appointment_date, start_time, end_time)
-        )
-        count = cursor.fetchone()[0]
-        conn.close()
-
-        if count > 0:
-            return jsonify({"available": False})
-        else:
-            return jsonify({"available": True})
-
-    except sqlite3.Error as e:
-        print("Error checking availability:", e)
-        return jsonify({"error": "Database error occurred"}), 500
-
-
-
-
-
-@app.route("/appointment2")
-def appointment2():
-    lecturers = get_lecturers()
-    return render_template("appointment2.html", lecturers=lecturers)
-
-
-
-
-
-
-
-
-# admin
-@app.route("/appointmentcontrol", methods=["GET", "POST"])
-def appointmentcontrol():
-    search_query = request.args.get('search', '')
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    if search_query:
-        cursor.execute(
-            """
-            SELECT id, lecturer, student, appointment_date, purpose, status, appointment_time 
-            FROM appointments 
-            WHERE lecturer LIKE ? OR student LIKE ? OR appointment_date LIKE ? OR purpose LIKE ? OR status LIKE ?
-            """, 
-            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
-        )
-    else:
-        cursor.execute(
-            "SELECT id, lecturer, student, appointment_date, purpose, status, appointment_time FROM appointments"
-        )
-
-    appointments = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    return render_template("appointment_control.html", appointments=appointments)
-
-
-# admin
-def delete_appointment(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM appointments WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
-
-# admin
-@app.route("/delete_booking", methods=["POST"])
-def delete_booking():
-    id = request.form["id"]
-    delete_appointment(id)
-    return redirect("/appointmentcontrol")
-
-# admin
-@app.route("/admin")
-def admin_dashboard():
-    search_query = request.args.get('search')
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    # Fetch the counts and appointments based on the search query if provided
-    if search_query:
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'teacher'"
-        )
-        num_teachers = cursor.fetchone()[0]
-
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'student'"
-        )
-        num_students = cursor.fetchone()[0]
-
-        cursor.execute(
-            "SELECT COUNT(*) FROM appointments"
-        )
-        num_appointments = cursor.fetchone()[0]
-
-        cursor.execute(
-            "SELECT COUNT(*) FROM users"
-        )
-        num_users = cursor.fetchone()[0]
-
-        cursor.execute(
-            """
-            SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id 
-            FROM appointments 
-            WHERE lecturer LIKE ? OR student LIKE ? OR appointment_date LIKE ? OR purpose LIKE ? OR status LIKE ?
-            """,
-            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
-        )
-        appointments = cursor.fetchall()
-    else:
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'teacher'"
-        )
-        num_teachers = cursor.fetchone()[0]
-
-        cursor.execute(
-            "SELECT COUNT(*) FROM users WHERE role = 'student'"
-        )
-        num_students = cursor.fetchone()[0]
-
-        cursor.execute(
-            "SELECT COUNT(*) FROM appointments"
-        )
-        num_appointments = cursor.fetchone()[0]
-
-        cursor.execute(
-            "SELECT COUNT(*) FROM users"
-        )
-        num_users = cursor.fetchone()[0]
-
-        cursor.execute(
-            """
-            SELECT lecturer, student, appointment_date, purpose, status, appointment_time, booking_id 
-            FROM appointments
-            """
-        )
-        appointments = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-
-
-    return render_template(
-    "admin.html",
-    appointments=appointments,
-    num_teachers=num_teachers,
-    num_students=num_students,
-    num_appointments=num_appointments,  # Remove one occurrence of num_appointments
-    num_users=num_users,
-    # num_appointments=json.dumps(num_appointments)  # Remove this line
-)
-
-
-# admin
-@app.route("/usercontrol")
-def usercontrol():
-    search_query = request.args.get('search', '')
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    if search_query:
-        cursor.execute(
-            """
-            SELECT id, role, faculty, username, phone_number 
-            FROM users 
-            WHERE username LIKE ? OR role LIKE ? OR faculty LIKE ? OR phone_number LIKE ?
-            """, 
-            (f"%{search_query}%", f"%{search_query}%", f"%{search_query}%", f"%{search_query}%")
-        )
-    else:
-        cursor.execute("SELECT id, role, faculty, username, phone_number FROM users")
-
-    users = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return render_template("usercontrol.html", users=users)
-
-
-# admin
-def delete_user(id):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM users WHERE id=?", (id,))
-    conn.commit()
-    conn.close()
-
-
-@app.route("/adminpageeditor", methods=["GET", "POST"])
-def admin_page_editor():
-    content = load_content()
-    current_admin_email, current_admin_password = get_current_admin_credentials()
-
-    if request.method == "POST":
-        home_content = request.form.get("home_content")
-        school_name = request.form.get("school_name")
-        school_tel = request.form.get("school_tel")
-        school_email = request.form.get("school_email")
-        new_pin = request.form.get("new_pin")
-        retype_new_pin = request.form.get("retype_new_pin")
-
-        filename = ""
-        if "school_logo" in request.files:
-            file = request.files["school_logo"]
-            if file.filename != "":
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-
-        content.update(
-            {
-                "home_content": home_content,
-                "school_name": school_name,
-                "school_tel": school_tel,
-                "school_email": school_email,
-                "school_logo": filename,
-            }
-        )
-
-        save_content(content)
-
-        if new_pin and retype_new_pin:
-            if new_pin == retype_new_pin:
-                save_pin(new_pin)
-            else:
-                return render_template(
-                    "adminpageeditor.html",
-                    **content,
-                    pin=load_pin(),
-                    message="PINs do not match",
-                )
-
-        return redirect(url_for("admin_page_editor"))
-
-    return render_template(
-        "adminpageeditor.html",
-        **content,
-        pin=load_pin(),
-        current_admin_email=current_admin_email,
-        current_admin_password=current_admin_password,
-    )
-
-@app.route("/getpin", methods=["GET"])
-def get_pin():
-    return jsonify({"pin": load_pin()})
-
-@app.route("/changepin", methods=["POST"])
-def change_teacher_pin():
-    new_pin = request.form.get("new_pin")
-    retype_new_pin = request.form.get("retype_new_pin")
-
-    if new_pin != retype_new_pin:
-        return "New PIN and Retyped PIN do not match", 400
-
-    save_pin(new_pin)
-
-    return redirect("/adminpageeditor")
-
-@app.route("/change_admin_credentials", methods=["POST"])
-def change_admin_credentials():
-    admin_email = request.form.get("admin_email")
-    admin_password = request.form.get("admin_password")
-
-    admin_data = {"email": admin_email, "password": admin_password}
-    with open("admin.json", "w") as admin_file:
-        json.dump(admin_data, admin_file)
-
-    return redirect("/adminpageeditor")
-
-
-@app.route("/delete_user", methods=["POST"])
-def delete_user_route():
-    id = request.form["id"]
-    delete_user(id)
-    return redirect("/usercontrol")
-
-
-@app.route("/changepassword")
-def changepassword():
-    return render_template("changepassword.html")
-
-
-@app.route("/faculty")
-def faculty():
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT faculty_name, faculty_image FROM facultyhub")
-        faculty_info = cursor.fetchall()
-
-        faculty_data = []
-        if faculty_info:
-            for faculty in faculty_info:
-                cursor.execute(
-                    "SELECT username, email FROM users WHERE faculty = ? AND role = 'teacher'",
-                    (faculty["faculty_name"],)
-                )
-                lecturers = cursor.fetchall() 
-
-                cursor.execute(
-                    "SELECT username, email FROM users WHERE faculty = ? AND role = 'student'",
-                    (faculty["faculty_name"],)
-                )
-                students = cursor.fetchall() 
-                faculty_data.append(
+    @application.route("/appointment2")
+    @role_required("student")
+    def appointment2():
+        with connect_database(_database_path(application)) as connection:
+            lecturers = connection.execute(
+                "SELECT id, username FROM users WHERE role = 'teacher' ORDER BY username"
+            ).fetchall()
+        return render_template("appointment2.html", lecturers=lecturers)
+
+    @application.route("/get_calendar_details", methods=["GET"])
+    @role_required("student")
+    def get_calendar_details():
+        try:
+            lecturer_id = int(request.args.get("lecturer", ""))
+            selected_date = datetime.strptime(request.args.get("appointment_date", ""), "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return jsonify({"error": "Invalid lecturer or date"}), 400
+        day_start = datetime.combine(selected_date, datetime.min.time(), _local_zone(application)).astimezone(timezone.utc)
+        day_end = day_start + timedelta(days=1)
+        with connect_database(_database_path(application)) as connection:
+            windows = connection.execute(
+                """
+                SELECT * FROM availability
+                WHERE lecturer_id = ? AND starts_at < ? AND ends_at > ?
+                ORDER BY starts_at
+                """,
+                (lecturer_id, day_end.isoformat(), day_start.isoformat()),
+            ).fetchall()
+        slots = []
+        for window in windows:
+            current = datetime.fromisoformat(window["starts_at"])
+            window_end = datetime.fromisoformat(window["ends_at"])
+            duration = timedelta(minutes=window["slot_minutes"])
+            while current + duration <= window_end:
+                local_start = current.astimezone(_local_zone(application))
+                local_end = (current + duration).astimezone(_local_zone(application))
+                slots.append(
                     {
-                        "faculty_name": faculty["faculty_name"],
-                        "faculty_image": faculty["faculty_image"],
-                        "lecturers": [
-                            {"username": lecturer[0], "email": lecturer[1]}
-                            for lecturer in lecturers
-                        ],
-                        "students": [
-                            {"username": student[0], "email": student[1]}
-                            for student in students
-                        ],
+                        "availability_id": window["id"],
+                        "starts_at": current.isoformat(),
+                        "label": f"{local_start:%H:%M} - {local_end:%H:%M}",
+                        "available": slot_is_available(_database_path(application), window["id"], current.isoformat()),
                     }
                 )
+                current += duration
+        return jsonify({"slots": slots})
 
-        conn.close()
+    @application.route("/check_availability", methods=["GET"])
+    @role_required("student")
+    def check_availability():
+        try:
+            availability_id = int(request.args.get("availability_id", ""))
+            available = slot_is_available(
+                _database_path(application), availability_id, request.args.get("starts_at")
+            )
+        except (TypeError, ValueError, BookingError):
+            available = False
+        return jsonify({"available": available})
+
+    @application.route("/create_booking", methods=["POST"])
+    @role_required("student")
+    def create_booking():
+        try:
+            _, reference = create_booking_record(
+                _database_path(application),
+                int(current_user.id),
+                int(request.form.get("availability_id", "")),
+                request.form.get("slot_start"),
+                request.form.get("purpose"),
+            )
+        except BookingConflict as exc:
+            flash(str(exc), "error")
+            return redirect(url_for("appointment2"))
+        except (BookingError, TypeError, ValueError):
+            flash("The selected appointment is invalid", "error")
+            return redirect(url_for("appointment2"))
+        session["last_booking_reference"] = reference
+        flash("Booking created successfully", "success")
+        return redirect(url_for("render_template_invoice", reference=reference))
+
+    @application.route("/invoice")
+    @role_required("student")
+    def render_template_invoice():
+        reference = request.args.get("reference") or session.get("last_booking_reference")
+        with connect_database(_database_path(application)) as connection:
+            row = connection.execute(
+                """
+                SELECT a.*, lecturer.username AS lecturer
+                FROM appointments a
+                JOIN users lecturer ON lecturer.id = a.lecturer_id
+                WHERE a.public_reference = ? AND a.student_id = ?
+                """,
+                (reference, current_user.id),
+            ).fetchone()
+        if not row:
+            abort(404)
+        appointment_data = _appointment_view(application, row)
+        invoice_row = [
+            row["id"], current_user.username, row["student_id"], row["lecturer"],
+            appointment_data["appointment_date"], appointment_data["appointment_time"], row["purpose"],
+        ]
+        return render_template(
+            "invoice.html", username=current_user.username, email=current_user.email,
+            faculty=current_user.faculty, role=current_user.role, appointment=invoice_row,
+            booking_id=row["public_reference"],
+        )
+
+    @application.route("/bookinghistory")
+    @role_required("student", "teacher")
+    def user_booking_history():
+        owner_column = "student_id" if current_user.role == "student" else "lecturer_id"
+        other_join = "lecturer" if current_user.role == "student" else "student"
+        query = f"""
+            SELECT a.*, student.username AS student, lecturer.username AS lecturer
+            FROM appointments a
+            JOIN users student ON student.id = a.student_id
+            JOIN users lecturer ON lecturer.id = a.lecturer_id
+            WHERE a.{owner_column} = ? ORDER BY a.starts_at DESC
+        """
+        with connect_database(_database_path(application)) as connection:
+            rows = connection.execute(query, (current_user.id,)).fetchall()
+        appointments = [_appointment_view(application, row) for row in rows]
+        return render_template(
+            "booking_history.html", appointments=appointments, display_role=other_join, role=current_user.role
+        )
+
+    def status_change(target):
+        try:
+            transition_appointment(
+                _database_path(application), int(request.form.get("id", "")),
+                int(current_user.id), current_user.role, target,
+            )
+        except PermissionError:
+            abort(403)
+        except (BookingError, InvalidTransition, TypeError, ValueError):
+            flash("That appointment status cannot be changed", "error")
+        return redirect(url_for("user_booking_history"))
+
+    @application.route("/cancel_booking", methods=["POST"])
+    @role_required("student")
+    def cancel_booking():
+        return status_change("Cancelled")
+
+    @application.route("/reject_booking", methods=["POST"])
+    @role_required("teacher")
+    def reject_booking():
+        return status_change("Rejected")
+
+    @application.route("/accept_booking", methods=["POST"])
+    @role_required("teacher")
+    def accept_booking():
+        return status_change("Accepted")
+
+    @application.route("/calendar_record", methods=["GET", "POST"])
+    @role_required("teacher")
+    def create_calendar():
+        if request.method == "GET":
+            return redirect(url_for("event"))
+        try:
+            start_date = datetime.strptime(request.form.get("event_date", ""), "%Y-%m-%d")
+            end_date_value = datetime.strptime(request.form.get("end_date", ""), "%Y-%m-%d")
+            start_time = datetime.strptime(request.form.get("start_time", ""), "%H:%M").time()
+            end_time = datetime.strptime(request.form.get("end_time", ""), "%H:%M").time()
+            slot_minutes = int(request.form.get("slot_size", ""))
+            repeat_type = request.form.get("repeat_type", "")
+            first_start = datetime.combine(start_date.date(), start_time)
+            first_end = datetime.combine(start_date.date(), end_time)
+            recurrence_end = datetime.combine(end_date_value.date(), start_time)
+            if first_end <= first_start or slot_minutes <= 0 or first_end - first_start < timedelta(minutes=slot_minutes):
+                raise ValueError
+            occurrences = generate_recurrence(first_start, recurrence_end, repeat_type)
+            with connect_database(_database_path(application)) as connection:
+                connection.execute("BEGIN IMMEDIATE")
+                for occurrence in occurrences:
+                    occurrence_end = occurrence + (first_end - first_start)
+                    connection.execute(
+                        """
+                        INSERT INTO availability (lecturer_id, starts_at, ends_at, slot_minutes)
+                        VALUES (?, ?, ?, ?)
+                        """,
+                        (
+                            current_user.id, _local_to_utc(application, occurrence).isoformat(),
+                            _local_to_utc(application, occurrence_end).isoformat(), slot_minutes,
+                        ),
+                    )
+                connection.commit()
+        except (TypeError, ValueError, sqlite3.IntegrityError):
+            flash("Availability details are invalid or duplicate an existing window", "error")
+            return redirect(url_for("event"))
+        return redirect(url_for("event"))
+
+    @application.route("/calendar")
+    @role_required("teacher")
+    def event():
+        return render_template("calendar.html")
+
+    @application.route("/events")
+    @role_required("teacher")
+    def get_events():
+        with connect_database(_database_path(application)) as connection:
+            windows = connection.execute(
+                "SELECT * FROM availability WHERE lecturer_id = ? ORDER BY starts_at", (current_user.id,)
+            ).fetchall()
+            appointments = connection.execute(
+                """
+                SELECT a.*, student.username AS student
+                FROM appointments a JOIN users student ON student.id = a.student_id
+                WHERE a.lecturer_id = ? AND a.status = 'Accepted' ORDER BY a.starts_at
+                """,
+                (current_user.id,),
+            ).fetchall()
+        events = [
+            {
+                "id": f"availability-{row['id']}", "title": "Consultation Hour",
+                "start": row["starts_at"], "end": row["ends_at"],
+                "extendedProps": {"availability_id": row["id"], "kind": "availability"},
+            }
+            for row in windows
+        ]
+        events.extend(
+            {
+                "id": f"appointment-{row['id']}", "title": f"Appointment with {row['student']}",
+                "start": row["starts_at"], "end": row["ends_at"],
+                "extendedProps": {"kind": "appointment"},
+            }
+            for row in appointments
+        )
+        return jsonify(events)
+
+    @application.route("/delete_event", methods=["POST"])
+    @role_required("teacher")
+    def delete_event():
+        try:
+            availability_id = int(request.form.get("availability_id", ""))
+            with connect_database(_database_path(application)) as connection:
+                cursor = connection.execute(
+                    "DELETE FROM availability WHERE id = ? AND lecturer_id = ?",
+                    (availability_id, current_user.id),
+                )
+                if cursor.rowcount == 0:
+                    abort(404)
+            return jsonify({"status": "success"})
+        except sqlite3.IntegrityError:
+            return jsonify({"status": "error", "message": "Availability with bookings cannot be deleted"}), 409
+        except (TypeError, ValueError):
+            return jsonify({"status": "error", "message": "Invalid availability"}), 400
+
+    @application.route("/admin")
+    @role_required("admin")
+    def admin_dashboard():
+        search = request.args.get("search", "").strip()
+        parameters = [f"%{search}%"] * 5
+        where = ""
+        if search:
+            where = "WHERE lecturer.username LIKE ? OR student.username LIKE ? OR a.starts_at LIKE ? OR a.purpose LIKE ? OR a.status LIKE ?"
+        with connect_database(_database_path(application)) as connection:
+            counts = {
+                role: connection.execute("SELECT COUNT(*) FROM users WHERE role = ?", (role,)).fetchone()[0]
+                for role in ("teacher", "student")
+            }
+            num_appointments = connection.execute("SELECT COUNT(*) FROM appointments").fetchone()[0]
+            num_users = connection.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+            rows = connection.execute(
+                f"""
+                SELECT a.*, student.username AS student, lecturer.username AS lecturer
+                FROM appointments a JOIN users student ON student.id = a.student_id
+                JOIN users lecturer ON lecturer.id = a.lecturer_id
+                {where} ORDER BY a.starts_at DESC
+                """,
+                parameters if search else (),
+            ).fetchall()
+        appointments = []
+        for row in rows:
+            view = _appointment_view(application, row)
+            appointments.append([
+                row["lecturer"], row["student"], view["appointment_date"], row["purpose"],
+                row["status"], view["appointment_time"], row["public_reference"],
+            ])
+        return render_template(
+            "admin.html", appointments=appointments, num_teachers=counts["teacher"],
+            num_students=counts["student"], num_appointments=num_appointments, num_users=num_users,
+        )
+
+    @application.route("/appointmentcontrol")
+    @role_required("admin")
+    def appointmentcontrol():
+        search = request.args.get("search", "").strip()
+        where = ""
+        parameters = ()
+        if search:
+            where = "WHERE lecturer.username LIKE ? OR student.username LIKE ? OR a.starts_at LIKE ? OR a.purpose LIKE ? OR a.status LIKE ?"
+            parameters = (f"%{search}%",) * 5
+        with connect_database(_database_path(application)) as connection:
+            rows = connection.execute(
+                f"""
+                SELECT a.*, lecturer.username AS lecturer
+                FROM appointments a JOIN users lecturer ON lecturer.id = a.lecturer_id
+                JOIN users student ON student.id = a.student_id
+                {where} ORDER BY a.starts_at DESC
+                """,
+                parameters,
+            ).fetchall()
+        appointments = []
+        for row in rows:
+            view = _appointment_view(application, row)
+            appointments.append([
+                row["id"], row["lecturer"], row["student_id"], view["appointment_date"],
+                row["purpose"], row["status"], view["appointment_time"],
+            ])
+        return render_template("appointment_control.html", appointments=appointments)
+
+    @application.route("/delete_booking", methods=["POST"])
+    @role_required("admin")
+    def delete_booking():
+        try:
+            appointment_id = int(request.form.get("id", ""))
+        except ValueError:
+            abort(400)
+        with connect_database(_database_path(application)) as connection:
+            connection.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
+        return redirect(url_for("appointmentcontrol"))
+
+    @application.route("/usercontrol")
+    @role_required("admin")
+    def usercontrol():
+        search = request.args.get("search", "").strip()
+        with connect_database(_database_path(application)) as connection:
+            if search:
+                users = connection.execute(
+                    """
+                    SELECT id, role, faculty, username, phone_number FROM users
+                    WHERE username LIKE ? OR role LIKE ? OR faculty LIKE ? OR phone_number LIKE ?
+                    ORDER BY username
+                    """,
+                    (f"%{search}%",) * 4,
+                ).fetchall()
+            else:
+                users = connection.execute(
+                    "SELECT id, role, faculty, username, phone_number FROM users ORDER BY username"
+                ).fetchall()
+        return render_template("usercontrol.html", users=users)
+
+    @application.route("/delete_user", methods=["POST"])
+    @role_required("admin")
+    def delete_user_route():
+        try:
+            user_id = int(request.form.get("id", ""))
+            if user_id == int(current_user.id):
+                raise sqlite3.IntegrityError
+            with connect_database(_database_path(application)) as connection:
+                connection.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        except (ValueError, sqlite3.IntegrityError):
+            flash("Users with related records, including the active administrator, cannot be deleted", "error")
+        return redirect(url_for("usercontrol"))
+
+    @application.route("/adminpageeditor", methods=["GET", "POST"])
+    @role_required("admin")
+    def admin_page_editor():
+        content = _load_content(application)
+        if request.method == "POST":
+            uploaded = request.files.get("school_logo")
+            filename = content.get("school_logo", "")
+            if uploaded and uploaded.filename:
+                if not _valid_image(uploaded):
+                    flash("Upload a JPG, PNG, or GIF image", "error")
+                    return redirect(url_for("admin_page_editor"))
+                filename = secure_filename(uploaded.filename)
+                uploaded.save(Path(application.config["UPLOAD_FOLDER"]) / filename)
+            content.update(
+                {
+                    "home_content": request.form.get("home_content", "").strip(),
+                    "school_name": request.form.get("school_name", "").strip(),
+                    "school_tel": request.form.get("school_tel", "").strip(),
+                    "school_email": request.form.get("school_email", "").strip(),
+                    "school_logo": filename,
+                }
+            )
+            _save_content(application, content)
+            return redirect(url_for("admin_page_editor"))
+        return render_template("adminpageeditor.html", **content)
+
+    @application.route("/faculty")
+    @role_required("admin")
+    def faculty():
+        with connect_database(_database_path(application)) as connection:
+            faculties = connection.execute(
+                "SELECT faculty_name, faculty_image FROM facultyhub ORDER BY faculty_name"
+            ).fetchall()
+            faculty_data = []
+            for item in faculties:
+                members = connection.execute(
+                    "SELECT username, email, role FROM users WHERE faculty = ? ORDER BY username",
+                    (item["faculty_name"],),
+                ).fetchall()
+                faculty_data.append(
+                    {
+                        "faculty_name": item["faculty_name"], "faculty_image": item["faculty_image"],
+                        "lecturers": [row for row in members if row["role"] == "teacher"],
+                        "students": [row for row in members if row["role"] == "student"],
+                    }
+                )
         return render_template("Faculty.html", faculty_info=faculty_data)
 
-
-# admin
-
-@app.route("/createfacultyhub", methods=["GET", "POST"])
-def create_faculty_hub():
-    if request.method == "POST":
-        faculty_name = request.form.get("faculty_name")
-        faculty_image = request.files.get("faculty_image")
-
-        if not faculty_name or not faculty_image:
-            return render_template(
-                "createfacultyhub.html", message="Missing required fields"
-            )
-
-        try:
-            filename = secure_filename(faculty_image.filename)
-            image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-
- 
-            faculty_image.save(image_path)
-
-            print(f"Saved file to {image_path}")
-
-            relative_image_path = filename
-
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO facultyhub (faculty_name, faculty_image) VALUES (?, ?)",
-                (faculty_name, relative_image_path),
-            )
-            conn.commit()
-            conn.close()
-
-            return redirect('/faculty')
-        except Exception as e:
-            print("Error occurred:", e)
-            return render_template(
-                "createfacultyhub.html",
-                message="An error occurred while creating faculty hub",
-            )
-    else:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM facultyhub")
-        faculty_hubs = cursor.fetchall()
-        conn.close()
+    @application.route("/createfacultyhub", methods=["GET", "POST"])
+    @role_required("admin")
+    def create_faculty_hub():
+        if request.method == "POST":
+            name = request.form.get("faculty_name", "").strip()
+            uploaded = request.files.get("faculty_image")
+            if not name or not _valid_image(uploaded):
+                flash("A faculty name and valid image are required", "error")
+                return redirect(url_for("create_faculty_hub"))
+            filename = secure_filename(uploaded.filename)
+            uploaded.save(Path(application.config["UPLOAD_FOLDER"]) / filename)
+            try:
+                with connect_database(_database_path(application)) as connection:
+                    connection.execute(
+                        "INSERT INTO facultyhub (faculty_name, faculty_image) VALUES (?, ?)",
+                        (name, filename),
+                    )
+            except sqlite3.IntegrityError:
+                flash("That faculty already exists", "error")
+            return redirect(url_for("faculty"))
+        with connect_database(_database_path(application)) as connection:
+            faculty_hubs = connection.execute("SELECT * FROM facultyhub ORDER BY faculty_name").fetchall()
         return render_template("createfacultyhub.html", faculty_hubs=faculty_hubs)
 
-
-# admin
-@app.route("/profile")
-def profile():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id = ?", (session["id"],))
-    user_data = cursor.fetchone()
-    conn.close()
-
-    session["username"] = user_data[3]
-    session["role"] = user_data[1]
-    session["faculty"] = user_data[2]
-    session["email"] = user_data[4]
-    session["phone_number"] = user_data[5]
-
-    return render_template(
-        "profile.html",
-        username=user_data["username"],
-        email=user_data["email"],
-        faculty=user_data["faculty"],
-        phone_number=user_data["phone_number"],
-        role=user_data["role"],
-    )
+    return application
 
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
+app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=6969)
+    app.run(debug=app.debug, port=6969)

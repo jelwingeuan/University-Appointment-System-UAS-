@@ -63,8 +63,8 @@
             <li><a href="/">Home</a></li>
             <li><a href="/about">About</a></li>
             <li><a href="/appointment">Make An Appointment</a></li>
-            {% if session['logged_in'] == True %}
-            <li><a href="/logout">Logout</a></li>
+            {% if current_user.is_authenticated %}
+            <li><form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-link" type="submit">Logout</button></form></li>
             <li><a href="/profile">Profile</a></li>
             {% else %}
             <li><a href="/login">Login</a></li>
@@ -89,6 +89,7 @@
             <p id="emailFormatNotice" style="color: red;"></p>
             <p id="emailNotice" style="color: red;"></p>
             <form method="post" action="/signup">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="role">
                     <label>Choose your role</label>
                     <div class="role-options">
@@ -173,23 +174,16 @@
         document.getElementById('emailFormatNotice').innerText = 'Note: Teachers must use an @mmu.edu.my email address.';
     });
 
-    // Function to validate PIN entered by the user
+    // The server validates this secret. Client-side code only checks that it was entered.
     function validatePin() {
         const pin = document.getElementById('pin').value;
-        // Fetch the correct PIN from the server
-        fetch('/getpin')
-            .then(response => response.json())
-            .then(data => {
-                // Compare user input with correct PIN
-                if (pin === data.pin) {
-                    // If PIN is correct, hide PIN input and display signup details
-                    document.getElementById('pinInput').style.display = 'none';
-                    document.getElementById('signupDetails').style.display = 'block';
-                } else {
-                    // If PIN is incorrect, display error message
-                    document.getElementById('pinMessage').innerText = 'PIN is incorrect';
-                }
-            });
+        if (pin.trim()) {
+            document.getElementById('pinInput').style.display = 'none';
+            document.getElementById('signupDetails').style.display = 'block';
+            document.getElementById('pinMessage').innerText = '';
+        } else {
+            document.getElementById('pinMessage').innerText = 'Registration secret is required';
+        }
     }
 
     // Function to retract selection of teacher role
