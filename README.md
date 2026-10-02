@@ -15,7 +15,7 @@ https://university-appointment-system-47589565d85d.herokuapp.com (under maintain
 ## Secure local setup
 
 1. Create a virtual environment and install `requirements.txt`.
-2. Copy `.env.example` to `.env` and set new, private values. Never reuse the credentials that were previously committed.
+2. Copy `.env.example` to `.env` and edit the values inside that file. Typing `KEY=value` on a separate terminal line does not export it to Flask.
 3. For a new database, run `flask --app app init-db`.
 4. Set `ADMIN_EMAIL` and a 12+ character `ADMIN_PASSWORD`, then run `flask --app app bootstrap-admin` once. Remove `ADMIN_PASSWORD` from the runtime environment afterward.
 5. Start development with `APP_ENV=development flask --app app run`. Production must use HTTPS, `APP_ENV=production`, and a strong `FLASK_SECRET_KEY`.
