@@ -4,7 +4,12 @@
 database.db
 *.db
 *.db.bak-*
+*.backup-*
 *.migration-issues.json
+*.import-report-*.json
+instance/
+static/faculty_pp/*
+!static/faculty_pp/.gitkeep
 __pycache__/
 *.pyc
 .pytest_cache/

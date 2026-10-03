@@ -1,0 +1,58 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest --cov=uas --cov-fail-under=80
+        env:
+          FLASK_SECRET_KEY: test-secret-for-ci-only-32-characters
+          APP_ENV: testing
+      - run: ruff check .
+
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: uas_test
+          POSTGRES_USER: uas
+          POSTGRES_PASSWORD: uas_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U uas -d uas_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: flask --app app db upgrade
+        env:
+          FLASK_SECRET_KEY: test-secret-for-ci-only-32-characters
+          APP_ENV: testing
+          DATABASE_URL: postgresql+psycopg://uas:uas_test_password@localhost:5432/uas_test
+          TEST_DATABASE_URL: postgresql+psycopg://uas:uas_test_password@localhost:5432/uas_test
+      - run: pytest --cov=uas --cov-fail-under=80
+        env:
+          FLASK_SECRET_KEY: test-secret-for-ci-only-32-characters
+          APP_ENV: testing
+          TEST_DATABASE_URL: postgresql+psycopg://uas:uas_test_password@localhost:5432/uas_test
+          DATABASE_URL: postgresql+psycopg://uas:uas_test_password@localhost:5432/uas_test
+      - run: ruff check .

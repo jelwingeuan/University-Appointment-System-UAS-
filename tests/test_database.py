@@ -1,25 +1,84 @@
-import sqlite3
+from datetime import timedelta
 
 import pytest
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
-from database import connect_database
+from uas.extensions import db as orm
+from uas.models import Appointment, Availability, User
 
 
 def test_foreign_keys_and_unique_reference_are_enforced(app):
-    with connect_database(app.config["DATABASE_PATH"]) as connection:
-        assert connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
-        with pytest.raises(sqlite3.IntegrityError):
-            connection.execute(
-                """
-                INSERT INTO appointments
-                    (public_reference, student_id, lecturer_id, availability_id, starts_at, ends_at, purpose, status)
-                VALUES ('missing-user', 999, 3, 1, ?, ?, 'x', 'Pending')
-                """,
-                (app.config["TEST_SLOT_START"], app.config["TEST_SLOT_START"]),
-            )
+    if orm.engine.dialect.name == "sqlite":
+        assert orm.session.execute(text("PRAGMA foreign_keys")).scalar_one() == 1
+    else:
+        assert orm.engine.dialect.name == "postgresql"
+    start = orm.session.get(Availability, 1).starts_at
+    orm.session.add(
+        Appointment(
+            public_reference="same-reference",
+            student_id=1,
+            lecturer_id=3,
+            availability_id=1,
+            starts_at=start,
+            ends_at=start + timedelta(minutes=30),
+            purpose="test",
+        )
+    )
+    orm.session.commit()
+    orm.session.add(
+        Appointment(
+            public_reference="same-reference",
+            student_id=1,
+            lecturer_id=3,
+            availability_id=1,
+            starts_at=start + timedelta(minutes=30),
+            ends_at=start + timedelta(minutes=60),
+            purpose="duplicate",
+        )
+    )
+    with pytest.raises(IntegrityError):
+        orm.session.commit()
+    orm.session.rollback()
 
 
-def test_user_deletion_is_restricted_when_records_exist(app):
-    with connect_database(app.config["DATABASE_PATH"]) as connection:
-        with pytest.raises(sqlite3.IntegrityError):
-            connection.execute("DELETE FROM users WHERE id = 3")
+def test_composite_foreign_key_rejects_mismatched_lecturer(app):
+    start = orm.session.get(Availability, 1).starts_at
+    orm.session.add(
+        Appointment(
+            public_reference="mismatch-reference",
+            student_id=1,
+            lecturer_id=4,
+            availability_id=1,
+            starts_at=start,
+            ends_at=start + timedelta(minutes=30),
+            purpose="test",
+        )
+    )
+    with pytest.raises(IntegrityError):
+        orm.session.commit()
+    orm.session.rollback()
+
+
+def test_user_and_availability_deletions_are_restricted(app):
+    with pytest.raises(IntegrityError):
+        orm.session.delete(orm.session.get(User, 3))
+        orm.session.commit()
+    orm.session.rollback()
+    start = orm.session.get(Availability, 1).starts_at
+    orm.session.add(
+        Appointment(
+            public_reference="restrict-window",
+            student_id=1,
+            lecturer_id=3,
+            availability_id=1,
+            starts_at=start,
+            ends_at=start + timedelta(minutes=30),
+            purpose="test",
+        )
+    )
+    orm.session.commit()
+    with pytest.raises(IntegrityError):
+        orm.session.delete(orm.session.get(Availability, 1))
+        orm.session.commit()
+    orm.session.rollback()

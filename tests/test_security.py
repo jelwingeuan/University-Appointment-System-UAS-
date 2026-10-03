@@ -75,6 +75,13 @@ def test_production_requires_strong_secret_and_disables_debug(monkeypatch, tmp_p
     assert production_app.config["SESSION_COOKIE_SECURE"] is True
 
 
+def test_test_configuration_uses_isolated_files_and_does_not_create_schema():
+    isolated_app = create_app({"TESTING": True, "SECRET_KEY": "isolated-secret"})
+    assert isolated_app.config["CONTENT_PATH"] != str(__import__("pathlib").Path("content.json").resolve())
+    with isolated_app.app_context():
+        assert not __import__("sqlalchemy").inspect(isolated_app.extensions["sqlalchemy"].engine).get_table_names()
+
+
 def test_security_headers_are_set(client):
     response = client.get("/")
     assert response.headers["X-Content-Type-Options"] == "nosniff"
@@ -83,19 +90,22 @@ def test_security_headers_are_set(client):
 
 
 def test_no_hardcoded_or_plaintext_secrets():
-    source = open("app.py", encoding="utf-8").read()
+    with open("app.py", encoding="utf-8") as app_file:
+        source = app_file.read()
     assert 'secret_key = "jelwin"' not in source.lower()
     assert "admin.json" not in source
     assert "pin.json" not in source
     assert not re.search(r"random\.randint\(", source)
 
 
-def test_student_cannot_change_another_students_profile(client, db):
+def test_student_cannot_change_another_students_profile(client):
     login(client, "student1@student.mmu.edu.my")
     response = client.post(
         "/update_user_info",
         data={"id": 2, "username": "Changed", "email": "changed@example.com", "phone_number": "019"},
     )
     assert response.status_code == 302
-    other = db.execute("SELECT username FROM users WHERE id = 2").fetchone()
-    assert other["username"] == "Student Two"
+    from uas.extensions import db as orm
+    from uas.models import User
+
+    assert orm.session.get(User, 2).username == "Student Two"

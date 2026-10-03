@@ -73,7 +73,7 @@
         <div id="faculty-{{ loop.index }}" class="faculty-details" >
             <div class="card">
                 <div class="card-image">
-                    <img src="{{ url_for('static', filename='faculty_pp/' + faculty['faculty_image']) }}" alt="{{ faculty['faculty_name'] }}">
+                    {% if faculty['faculty_image'] %}<img src="{{ url_for('static', filename='faculty_pp/' + faculty['faculty_image']) }}" alt="{{ faculty['faculty_name'] }}">{% endif %}
                 </div>
                 <p class="name">{{ faculty['faculty_name'] }}</p>
             </div>

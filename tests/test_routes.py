@@ -1,13 +1,13 @@
 import io
-import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import bcrypt
 
 from app import create_app
-from database import connect_database, init_schema
 from tests.conftest import login
+from uas.extensions import db as orm
+from uas.models import Appointment, Availability, User
 
 
 def test_public_pages_and_login_form(client):
@@ -17,7 +17,7 @@ def test_public_pages_and_login_form(client):
     assert client.get("/signup").status_code == 200
 
 
-def test_student_workflow_routes(client, app, db):
+def test_student_workflow_routes(client, app):
     login(client, "student1@student.mmu.edu.my")
     assert client.get("/profile").status_code == 200
     assert client.get("/appointment").status_code == 200
@@ -25,9 +25,12 @@ def test_student_workflow_routes(client, app, db):
     assert client.get("/bookinghistory").status_code == 200
     assert client.get("/invoice").status_code == 404
 
-    local_date = datetime.fromisoformat(app.config["TEST_SLOT_START"]).astimezone(
-        ZoneInfo("Asia/Kuala_Lumpur")
-    ).date().isoformat()
+    local_date = (
+        datetime.fromisoformat(app.config["TEST_SLOT_START"])
+        .astimezone(ZoneInfo("Asia/Kuala_Lumpur"))
+        .date()
+        .isoformat()
+    )
     details = client.get(f"/get_calendar_details?lecturer=3&appointment_date={local_date}")
     assert details.status_code == 200
     slot = details.get_json()["slots"][0]
@@ -47,10 +50,10 @@ def test_student_workflow_routes(client, app, db):
     invoice = client.get(created.headers["Location"])
     assert invoice.status_code == 200
     assert "Academic advice" in invoice.get_data(as_text=True)
-    assert db.execute("SELECT COUNT(*) FROM appointments").fetchone()[0] == 1
+    assert orm.session.query(Appointment).count() == 1
 
 
-def test_student_profile_and_password_updates(client, db):
+def test_student_profile_and_password_updates(client):
     login(client, "student1@student.mmu.edu.my")
     response = client.post(
         "/update_user_info",
@@ -61,20 +64,25 @@ def test_student_profile_and_password_updates(client, db):
         },
     )
     assert response.status_code == 302
-    assert db.execute("SELECT username FROM users WHERE id = 1").fetchone()[0] == "Student Updated"
-    assert client.post(
-        "/change_password",
-        data={
-            "current_password": "CorrectHorse1",
-            "new_password": "NewCorrectHorse2",
-            "confirm_password": "NewCorrectHorse2",
-        },
-    ).status_code == 302
-    password = db.execute("SELECT password FROM users WHERE id = 1").fetchone()[0]
+    orm.session.expire_all()
+    assert orm.session.get(User, 1).username == "Student Updated"
+    assert (
+        client.post(
+            "/change_password",
+            data={
+                "current_password": "CorrectHorse1",
+                "new_password": "NewCorrectHorse2",
+                "confirm_password": "NewCorrectHorse2",
+            },
+        ).status_code
+        == 302
+    )
+    orm.session.expire_all()
+    password = orm.session.get(User, 1).password
     assert bcrypt.checkpw(b"NewCorrectHorse2", password.encode())
 
 
-def test_signup_validates_lecturer_secret(client, db):
+def test_signup_validates_lecturer_secret(client):
     base = {
         "role": "teacher",
         "faculty": "FCI",
@@ -85,12 +93,12 @@ def test_signup_validates_lecturer_secret(client, db):
         "confirm_password": "CorrectHorse1",
     }
     assert client.post("/signup", data={**base, "pin": "wrong"}).status_code == 302
-    assert db.execute("SELECT COUNT(*) FROM users WHERE email = ?", (base["email"],)).fetchone()[0] == 0
+    assert orm.session.query(User).filter_by(email=base["email"]).count() == 0
     assert client.post("/signup", data={**base, "pin": "lecturer-test-secret"}).status_code == 302
-    assert db.execute("SELECT role FROM users WHERE email = ?", (base["email"],)).fetchone()[0] == "teacher"
+    assert orm.session.query(User).filter_by(email=base["email"]).one().role == "teacher"
 
 
-def test_teacher_availability_calendar_and_owned_delete(client, app, db):
+def test_teacher_availability_calendar_and_owned_delete(client, app):
     login(client, "lecturer1@mmu.edu.my")
     assert client.get("/calendar").status_code == 200
     assert client.get("/events").status_code == 200
@@ -107,28 +115,34 @@ def test_teacher_availability_calendar_and_owned_delete(client, app, db):
         },
     )
     assert response.status_code == 302
-    created = db.execute(
-        "SELECT id FROM availability WHERE lecturer_id = 3 ORDER BY id DESC"
-    ).fetchone()[0]
+    created = orm.session.query(Availability).filter_by(lecturer_id=3).order_by(Availability.id.desc()).first().id
     deleted = client.post("/delete_event", data={"availability_id": created})
     assert deleted.status_code == 200
-    assert db.execute("SELECT COUNT(*) FROM availability WHERE id = ?", (created,)).fetchone()[0] == 0
+    assert orm.session.get(Availability, created) is None
 
 
-def test_admin_routes_and_bootstrap_command(client, app, db, monkeypatch):
+def test_admin_routes_and_bootstrap_command(client, app, monkeypatch):
     login(client, "admin@mmu.edu.my")
-    for path in ["/admin", "/admin?search=Pending", "/usercontrol", "/appointmentcontrol", "/faculty", "/createfacultyhub", "/adminpageeditor"]:
+    for path in [
+        "/admin",
+        "/admin?search=Pending",
+        "/usercontrol",
+        "/appointmentcontrol",
+        "/faculty",
+        "/createfacultyhub",
+        "/adminpageeditor",
+    ]:
         assert client.get(path).status_code == 200
     assert client.post("/delete_user", data={"id": 5}).status_code == 302
-    assert db.execute("SELECT COUNT(*) FROM users WHERE id = 5").fetchone()[0] == 1
+    assert orm.session.get(User, 5) is not None
 
     monkeypatch.setenv("ADMIN_EMAIL", "newadmin@mmu.edu.my")
     monkeypatch.setenv("ADMIN_PASSWORD", "StrongAdminPassword1")
     result = app.test_cli_runner().invoke(args=["bootstrap-admin"])
     assert result.exit_code == 0
-    row = db.execute("SELECT role, password FROM users WHERE email = 'newadmin@mmu.edu.my'").fetchone()
-    assert row["role"] == "admin"
-    assert bcrypt.checkpw(b"StrongAdminPassword1", row["password"].encode())
+    row = orm.session.query(User).filter_by(email="newadmin@mmu.edu.my").one()
+    assert row.role == "admin"
+    assert bcrypt.checkpw(b"StrongAdminPassword1", row.password.encode())
 
 
 def test_invalid_upload_is_rejected(client):
@@ -159,11 +173,10 @@ def test_login_rate_limit(tmp_path, monkeypatch):
             "RATELIMIT_ENABLED": True,
         }
     )
-    with connect_database(database_path) as connection:
-        init_schema(connection)
+    with app.app_context():
+        orm.create_all()
     client = app.test_client()
     statuses = [
-        client.post("/login", data={"email": "missing@example.com", "password": "wrong"}).status_code
-        for _ in range(6)
+        client.post("/login", data={"email": "missing@example.com", "password": "wrong"}).status_code for _ in range(6)
     ]
     assert statuses[-1] == 429

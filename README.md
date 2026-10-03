@@ -1,48 +1,53 @@
-University Appointment System (UAS)
+# University Appointment System
 
-The University Appointment System (UAS) is a web application built with Flask, designed to manage appointments within a university setting. It allows students, faculty, and staff to schedule and manage appointments efficiently.
+The University Appointment System is a Flask/Jinja application for student and lecturer appointments, availability calendars, and administrative account/faculty management. The existing interface and routes are retained; appointment storage is now relational and SQLAlchemy-backed.
 
-## Features
-
-- **User Authentication**: Users can sign up for accounts and log in securely using bcrypt for password hashing.
-- **Appointment Booking**: Students can book appointments with faculty or staff members for various purposes such as academic advising, office hours, or consultations.
-- **Faculty Hub Creation**: Faculty members can create hubs for managing their appointments, specifying their availability and location.
-- **Admin Panel**: Administrators have access to an admin panel where they can manage user accounts, faculty hubs, and other system settings.
-- **Database Integration**: UAS integrates with SQLite for data storage, ensuring reliable and efficient data management.
-
-https://university-appointment-system-47589565d85d.herokuapp.com (under maintainance)
-
-## Secure local setup
-
-1. Create a virtual environment and install `requirements.txt`.
-2. Copy `.env.example` to `.env` and edit the values inside that file. Typing `KEY=value` on a separate terminal line does not export it to Flask.
-3. For a new database, run `flask --app app init-db`.
-4. Set `ADMIN_EMAIL` and a 12+ character `ADMIN_PASSWORD`, then run `flask --app app bootstrap-admin` once. Remove `ADMIN_PASSWORD` from the runtime environment afterward.
-5. Start development with `APP_ENV=development flask --app app run`. Production must use HTTPS, `APP_ENV=production`, and a strong `FLASK_SECRET_KEY`.
-
-Required runtime values:
-
-- `FLASK_SECRET_KEY`: a long random value used to sign sessions and CSRF tokens.
-- `DATABASE_PATH`: SQLite database path, normally `database.db`.
-- `LECTURER_REGISTRATION_SECRET`: a rotated secret issued privately to lecturers.
-- `UNIVERSITY_TIMEZONE`: defaults to `Asia/Kuala_Lumpur`; canonical database timestamps are stored in UTC.
-- `SESSION_COOKIE_SECURE`: use `1` behind HTTPS and `0` only for local HTTP development. It defaults to secure in production.
-- `FLASK_DEBUG`: honored only when `APP_ENV` is not `production`; production debug mode is always disabled.
-
-`ADMIN_EMAIL` and `ADMIN_PASSWORD` are needed only while running the administrator bootstrap command.
-
-## Migrating the legacy database
-
-Run the migration before starting the updated application:
+## Local setup
 
 ```sh
-python migrate_database.py database.db
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+cp .env.example .env
 ```
 
-The migration creates a timestamped `database.db.bak-*` backup before replacing the schema. It preserves users, faculties, valid availability windows, and appointments that can be linked safely. Rows that cannot be converted are listed by legacy ID and reason in `database.migration-issues.json`; the original values remain available in the backup. Database files, backups, migration reports, and environment files are intentionally ignored by Git.
+Set `FLASK_SECRET_KEY` to a random value of at least 32 characters and rotate `LECTURER_REGISTRATION_SECRET` before sharing lecturer registration access. `.env` is loaded by the application factory. `DATABASE_URL` defaults to local SQLite; PostgreSQL URLs such as `postgresql+psycopg://user:password@host/database` are also supported. The default display timezone is `Asia/Kuala_Lumpur`; timestamps are stored in UTC.
 
-## Tests
+Initialize a new database through Alembic (the app never creates production tables on startup):
 
 ```sh
-pytest -q --cov=app --cov=booking_service --cov=database --cov=migrate_database --cov-fail-under=80
+flask --app app db upgrade
 ```
+
+Bootstrap the first administrator once, then remove the password from the process environment:
+
+```sh
+export ADMIN_EMAIL=admin@example.edu
+export ADMIN_PASSWORD='a-long-unique-password'
+flask --app app bootstrap-admin
+unset ADMIN_PASSWORD
+```
+
+Start the development server with `flask --app app run`. For production set `APP_ENV=production`, configure HTTPS and a production database, and run `gunicorn app:app`. Production always uses secure session cookies and disables debug mode, regardless of local flags.
+
+## Importing a legacy SQLite database
+
+The importer supports both the original username-linked schema and the intermediate normalized SQLite schema. It does not rewrite the source. First configure `DATABASE_URL` to point at a **separate, empty destination**; migrate that destination to Alembic head, then import:
+
+```sh
+flask --app app db upgrade
+flask --app app import-legacy-sqlite /path/to/legacy-database.db
+```
+
+The importer uses SQLite's online backup API and writes a timestamped `.backup-*` beside the source, plus a `.import-report-*` JSON file with counts and every invalid, duplicate, or ambiguous row. It preserves usable IDs/references and does not silently substitute invalid roles/statuses. Check the report before switching the application to the imported destination. Keep the source and backup until the imported records have been reviewed.
+
+For rollback, stop the app, restore the previous `DATABASE_URL` (or point it to the preserved backup copy), and restart. The importer never replaces or deletes the original source database.
+
+## Tests and lint
+
+```sh
+pytest --cov=uas --cov-fail-under=80
+ruff check .
+```
+
+Tests use disposable SQLite databases. CI runs the suite on SQLite and PostgreSQL; PostgreSQL connection failures are test failures, not skips.
