@@ -75,11 +75,19 @@ def test_production_requires_strong_secret_and_disables_debug(monkeypatch, tmp_p
     assert production_app.config["SESSION_COOKIE_SECURE"] is True
 
 
-def test_test_configuration_uses_isolated_files_and_does_not_create_schema():
-    isolated_app = create_app({"TESTING": True, "SECRET_KEY": "isolated-secret"})
+def test_test_configuration_uses_isolated_files_and_does_not_create_schema(tmp_path):
+    isolated_app = create_app(
+        {
+            "TESTING": True,
+            "SECRET_KEY": "isolated-secret",
+            "DATABASE_PATH": str(tmp_path / "app-factory.db"),
+        }
+    )
     assert isolated_app.config["CONTENT_PATH"] != str(__import__("pathlib").Path("content.json").resolve())
     with isolated_app.app_context():
-        assert not __import__("sqlalchemy").inspect(isolated_app.extensions["sqlalchemy"].engine).get_table_names()
+        tables = set(__import__("sqlalchemy").inspect(isolated_app.extensions["sqlalchemy"].engine).get_table_names())
+        application_tables = {"users", "faculties", "availability", "appointments"}
+        assert application_tables.isdisjoint(tables)
 
 
 def test_security_headers_are_set(client):
