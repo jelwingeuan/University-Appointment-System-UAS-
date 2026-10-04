@@ -1,77 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Control</title>
-    <link rel="stylesheet" href="../static/style.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="../static/myscripts.js"></script>
-</head>
-<body>
-    <header>
-        <h2>Dashboard</h2>
-
-    </header>
-    <div class="sidebar">
-        <ul>
-            <li><i class='bx bx-laptop'></i><a href="/admin">Dashboard</a></li>
-            <li><i class='bx bx-user'></i><a href="/usercontrol">User Control</a></li>
-            <li><i class='bx bx-cart'></i><a href="/appointmentcontrol">Booking Control</a></li>
-            <li><i class='bx bx-plus'></i><a href="/faculty">My Faculty</a></li>
-            <li><i class='bx bx-edit' ></i><a href="/adminpageeditor">Page Editor</a></li>
-            <li><i class='bx bx-cog' ></i><form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-link" type="submit">Signout</button></form></li>
-        </ul>
+{% extends "admin_base.html" %}
+{% from "components/pagination.html" import pagination_nav %}
+{% block title %}User Control{% endblock %}
+{% block content %}
+<section class="admin-content" aria-labelledby="page-title">
+    <div class="page-heading">
+        <h1 id="page-title">User Control</h1>
+        <form method="get" action="{{ url_for('admin.usercontrol') }}" role="search" class="search-form">
+            <label for="search-users">Search users</label>
+            <input id="search-users" type="search" name="search" value="{{ search }}" maxlength="100">
+            <button type="submit">Search</button>
+        </form>
     </div>
-    <div class="user-main">
-        <div class="table" id="customers_table">
-            <div class="table__header">
-                <h1>User Control</h1>
-                <div class="input-group">
-                    <input type="search" id="search" placeholder="Search Data...">
-                    <i class='bx bx-search' onclick="searchData()"></i>
-                </div>
-            </div>
-            <div class="table__body">
-                <table>
-                    <thead>
-                        <tr>
-                            <th> No. </th>
-                            <th> Name </th>
-                            <th> Role </th>
-                            <th> Faculty </th>
-                            <th> Phone Number </th>
-                            <th> Action </th>
-                        </tr>
-                    </thead>
-                    <tbody id="userTableBody">
-                        {% for user in users %}
-                        <form action="/delete_user" method="POST">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <tr>
-                                <td> {{ loop.index }} </td>
-                                <td>{{ user[3] }}</td>
-                                <td>{{ user[1] }}</td>
-                                <td> {{ user[2] }} </td>
-                                <td> {{ user[4] }}</td>
-                                <td> 
-                                    <input type="hidden" name="id" value="{{ user[0] }}">
-                                    <button type="submit"><i class='bx bx-user-minus'></i></button>
-                                </td>
-                            </tr>
-                        </form>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div> 
+    <div class="table-scroll" role="region" aria-label="Users" tabindex="0">
+        <table class="data-table">
+            <thead><tr><th scope="col">No.</th><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Faculty</th><th scope="col">Phone</th><th scope="col">Action</th></tr></thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td><td>{{ user.username }}</td><td>{{ user.role|title }}</td><td>{{ user.faculty }}</td><td>{{ user.phone_number }}</td>
+                    <td><form method="post" action="{{ url_for('admin.delete_user_route') }}" onsubmit="return confirm('Delete this account?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ user.id }}">
+                        <button class="button button-danger" type="submit" aria-label="Delete {{ user.username }}">Delete</button>
+                    </form></td>
+                </tr>
+            {% else %}<tr><td colspan="6" class="empty-state">No users match this search.</td></tr>{% endfor %}
+            </tbody>
+        </table>
     </div>
-    <script>
-        function searchData() {
-            const searchQuery = document.getElementById('search').value;
-            window.location.href = `/usercontrol?search=${searchQuery}`;
-        }
-    </script>
-</body>
-</html>
+    {{ pagination_nav(pagination, 'admin.usercontrol', search) }}
+</section>
+{% endblock %}

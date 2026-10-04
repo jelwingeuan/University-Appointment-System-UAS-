@@ -1,8 +1,10 @@
 import io
 import re
 from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
+from PIL import Image
 
 from tests.conftest import login
 from uas.booking_service import BookingError, InvalidTransition, create_booking, transition_appointment
@@ -100,7 +102,7 @@ def test_weekly_recurrence_is_inclusive_and_invalid_ranges_rejected():
 
 def test_calendar_recurrence_writes_inclusive_occurrences_and_delete_is_owned(client, app):
     login(client, "lecturer1@mmu.edu.my")
-    day = (datetime.now(UTC) + timedelta(days=28)).astimezone().date()
+    day = (app.config["CLOCK"]() + timedelta(days=28)).astimezone(ZoneInfo("Asia/Kuala_Lumpur")).date()
     response = client.post(
         "/calendar_record",
         data={
@@ -148,11 +150,14 @@ def test_admin_can_remove_unreferenced_user_and_update_content(client, app):
 
 def test_image_validation_and_faculty_creation(client, app):
     login(client, "admin@mmu.edu.my")
+    image = io.BytesIO()
+    Image.new("RGB", (2, 2), "red").save(image, format="PNG")
+    image.seek(0)
     response = client.post(
         "/createfacultyhub",
         data={
             "faculty_name": "New Faculty",
-            "faculty_image": (io.BytesIO(b"\x89PNG\r\n\x1a\n" + b"x" * 8), "test.png", "image/png"),
+            "faculty_image": (image, "test.png", "image/png"),
         },
         content_type="multipart/form-data",
     )
@@ -164,7 +169,7 @@ def test_profile_rejects_invalid_details_and_bad_current_password(client):
     login(client, "student1@student.mmu.edu.my")
     assert (
         client.post("/update_user_info", data={"username": "", "email": "bad@invalid", "phone_number": ""}).status_code
-        == 302
+        == 400
     )
     assert (
         client.post(
@@ -175,9 +180,9 @@ def test_profile_rejects_invalid_details_and_bad_current_password(client):
     )
 
 
-def test_calendar_rejects_nonpositive_or_duplicate_window(client):
+def test_calendar_rejects_nonpositive_or_duplicate_window(client, app):
     login(client, "lecturer1@mmu.edu.my")
-    day = (datetime.now(UTC) + timedelta(days=30)).astimezone().date().isoformat()
+    day = (app.config["CLOCK"]() + timedelta(days=30)).astimezone(ZoneInfo("Asia/Kuala_Lumpur")).date().isoformat()
     form = {
         "event_date": day,
         "end_date": day,

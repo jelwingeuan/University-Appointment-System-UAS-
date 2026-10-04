@@ -1,120 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page Editor</title>
-    <link rel="stylesheet" href="../static/style.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <script src="../static/myscripts.js"></script>
-    <style>
-        .adminbody{
-            display: flex;
-            flex-direction: column;
-        }
-        .admincontainer {
-        max-width: 800px; /* Set a maximum width */
-        margin: 0 auto; /* Center the container horizontally */
-        padding: 20px;
-        }
-
-        .subadmincontainer {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 600px;
-            margin: 20px auto;
-            display: flex;
-            flex-direction: row;
-            margin-left: 15px;
-        }
-        .subadmincontainer1{
-            margin-right: 40px;
-        }
-        .form-group, .input-container {
-            margin-bottom: 15px;
-        }
-        .input-container label {
-            display: block;
-            margin-bottom: 5px;
-            margin-top: 5px;
-            font-weight: bold;
-        }
-        .input-container input, .input-container textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            
-        }
-
-        textarea{
-            margin-top: 5px;;
-        }
-        
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h2>Page Editor</h2>
-    </header>
-    <div class="sidebar">
-        <ul>
-            <li><i class='bx bx-laptop'></i><a href="/admin">Dashboard</a></li>
-            <li><i class='bx bx-user'></i><a href="/usercontrol">User Control</a></li>
-            <li><i class='bx bx-cart'></i><a href="/appointmentcontrol">Booking Control</a></li>
-            <li><i class='bx bx-plus'></i><a href="/faculty">My Faculty</a></li>
-            <li><i class='bx bx-edit'></i><a href="/adminpageeditor">Page Editor</a></li>
-            <li><i class='bx bx-cog'></i><form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-link" type="submit">Signout</button></form></li>
-        </ul>
-    </div>
-    <div class="adminbody">
-        <div class="admincontainer">
-            <div class="subadmincontainer">
-                <div class="subadmincontainer1">
-                    <h2>Edit Home Page Content</h2>
-                </div>
-                <div class="subadmincontainer2">
-                    <form action="/adminpageeditor" method="post" enctype="multipart/form-data">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="form-group">
-                            <label for="home_content">Home Page Content</label>
-                            <textarea id="home_content" name="home_content" rows="4">{{ home_content }}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Upload School Logo:</label>
-                            <input type="file" name="school_logo">
-                        </div>
-                        <div class="form-group">
-                            <label>Enter School Name:</label>
-                            <textarea id="school_name" name="school_name" rows="2">{{ school_name }}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Enter School Contact:</label>
-                            <textarea id="school_tel" name="school_tel" rows="2">{{ school_tel }}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Enter School Email:</label>
-                            <textarea id="school_email" name="school_email" rows="2">{{ school_email }}</textarea>
-                        </div>
-                        <button type="submit">Save Changes</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+{% extends "admin_base.html" %}
+{% from "components/forms.html" import field_error %}
+{% block title %}Page Editor{% endblock %}
+{% block content %}
+<section class="admin-content" aria-labelledby="page-title">
+    <h1 id="page-title">Edit Home Page</h1>
+    <form class="editor-form" action="{{ url_for('admin.admin_page_editor') }}" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div><label for="home_content">Home page content</label><textarea id="home_content" name="home_content" rows="4" maxlength="5000">{{ form_values.get('home_content', home_content) }}</textarea>{{ field_error(form_errors, 'home_content') }}</div>
+        <div><label for="school_logo">School logo</label><input id="school_logo" type="file" name="school_logo" accept="image/jpeg,image/png,image/webp">{{ field_error(form_errors, 'school_logo') }}</div>
+        <div><label for="school_name">School name</label><input id="school_name" name="school_name" maxlength="200" value="{{ form_values.get('school_name', school_name) }}">{{ field_error(form_errors, 'school_name') }}</div>
+        <div><label for="school_tel">School contact</label><input id="school_tel" type="tel" name="school_tel" maxlength="35" value="{{ form_values.get('school_tel', school_tel) }}">{{ field_error(form_errors, 'school_tel') }}</div>
+        <div><label for="school_email">School email</label><input id="school_email" type="email" name="school_email" maxlength="254" value="{{ form_values.get('school_email', school_email) }}">{{ field_error(form_errors, 'school_email') }}</div>
+        <button class="button" type="submit">Save Changes</button>
+    </form>
+</section>
+{% endblock %}

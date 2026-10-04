@@ -58,6 +58,7 @@
     </style>
 </head>
 <body>
+    {% from "components/forms.html" import field_error %}
     <nav>
         <ul>
             <li><a href="/">Home</a></li>
@@ -93,42 +94,48 @@
                 <div class="role">
                     <label>Choose your role</label>
                     <div class="role-options">
-                        <input type="radio" name="role" value="student" id="studentRole">
+                        <input type="radio" name="role" value="student" id="studentRole" {% if form_values.get('role') == 'student' %}checked{% endif %}>
                         <label for="studentRole">Student</label>
-                        <input type="radio" name="role" value="teacher" id="teacherRole">
+                        <input type="radio" name="role" value="teacher" id="teacherRole" {% if form_values.get('role') == 'teacher' %}checked{% endif %}>
                         <label for="teacherRole">Teacher</label>
                     </div>
+                    {{ field_error(form_errors, 'role') }}
                 </div>
-                <div id="pinInput" style="display: none; margin-bottom: 20px;">
+                <div id="pinInput" {% if not form_errors.get('pin') %}hidden{% endif %} style="margin-bottom: 20px;">
                     <label for="pin">Enter PIN:</label>
                     <input type="password" name="pin" id="pin">
+                    {{ field_error(form_errors, 'pin') }}
                     <button type="button" onclick="validatePin()">Submit PIN</button>
                     <button type="button" onclick="retractPin()">Retract</button>
                     <p id="pinMessage" style="color: red;"></p>
                 </div>
-                <div id="signupDetails" style="display: none;">
+                <div id="signupDetails" {% if form_errors.get('pin') or not form_values.get('role') %}hidden{% endif %}>
                     <div class="profileinput">
-                        <label>Faculty</label>
+                        <label for="faculty">Faculty</label>
                         <select class="profileinputdetails" name="faculty" required>
                             {% for faculty in faculties %}
-                                <option value="{{ faculty['faculty_name'] }}">{{ faculty['faculty_name'] }}</option>
+                                <option value="{{ faculty['faculty_name'] }}" {% if faculty == form_values.get('faculty') %}selected{% endif %}>{{ faculty }}</option>
                             {% endfor %}
                         </select>
+                        {{ field_error(form_errors, 'faculty') }}
                     </div>
                     <div class="input_box">
-                        <input type="text" name="username" required>
+                        <input type="text" name="username" maxlength="100" value="{{ form_values.get('username', '') }}" required aria-describedby="username-error">
                         <span></span>
                         <label>Full Name</label>
+                        {{ field_error(form_errors, 'username') }}
                     </div>
                     <div class="input_box">
-                        <input type="email" name="email" required>
+                        <input type="email" name="email" maxlength="254" value="{{ form_values.get('email', '') }}" required aria-describedby="email-error">
                         <span></span>
                         <label>Email</label>
+                        {{ field_error(form_errors, 'email') }}
                     </div>
                     <div class="input_box">
-                        <input type="tel" name="phone_number" required>
+                        <input type="tel" name="phone_number" maxlength="20" value="{{ form_values.get('phone_number', '') }}" required aria-describedby="phone_number-error">
                         <span></span>
                         <label>Phone Number</label>
+                        {{ field_error(form_errors, 'phone_number') }}
                     </div>
                     <div class="input_box">
                         <input type="password" name="password" id="passwordField" minlength="8" required>
@@ -140,6 +147,7 @@
                         <span></span>
                         <label for="confirmPasswordField">Confirm your password</label>
                     </div>
+                    {{ field_error(form_errors, 'password') }}
                     <input type="submit" value="Sign Up" style="margin-bottom: 40px;">
                 </div>
             </div>

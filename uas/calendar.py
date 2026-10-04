@@ -23,6 +23,7 @@ from .common import (
 )
 from .extensions import db
 from .models import Appointment, Availability
+from .validation import parse_positive_int
 
 bp = Blueprint("calendar", __name__)
 
@@ -60,11 +61,16 @@ def calendar_record():
         end_date = datetime.strptime(request.form.get("end_date", ""), "%Y-%m-%d").date()  # noqa: DTZ007
         start_time = datetime.strptime(request.form.get("start_time", ""), "%H:%M").time()  # noqa: DTZ007
         end_time = datetime.strptime(request.form.get("end_time", ""), "%H:%M").time()  # noqa: DTZ007
-        slot_minutes = int(request.form.get("slot_size", ""))
+        slot_minutes = parse_positive_int(request.form.get("slot_size"), "slot_size", minimum=5, maximum=240)
         repeat_type = request.form.get("repeat_type", "")
         start = datetime.combine(start_date, start_time)
         end = datetime.combine(start_date, end_time)
-        if slot_minutes <= 0 or end <= start or (end - start).total_seconds() % (slot_minutes * 60):
+        duration_minutes = int((end - start).total_seconds() // 60)
+        if (
+            end <= start
+            or duration_minutes > 1440
+            or duration_minutes % slot_minutes
+        ):
             raise ValueError("Invalid slot duration")
         occurrences = generate_recurrence(start, datetime.combine(end_date, start_time), repeat_type)
         with transaction() as db_session:

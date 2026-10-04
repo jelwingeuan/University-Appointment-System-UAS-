@@ -11,7 +11,27 @@ import pytest
 
 from app import create_app
 from uas.extensions import db as orm
-from uas.models import Availability, Faculty, User
+from uas.models import Appointment, Availability, Faculty, User
+
+FIXED_NOW = datetime(2026, 10, 1, 0, 0, tzinfo=UTC)
+
+
+@pytest.fixture(autouse=True)
+def close_standalone_test_apps(request, monkeypatch):
+    creator = getattr(request.module, "create_app", None)
+    created = []
+    if creator is not None:
+        def tracked_create_app(*args, **kwargs):
+            test_app = creator(*args, **kwargs)
+            created.append(test_app)
+            return test_app
+
+        monkeypatch.setattr(request.module, "create_app", tracked_create_app)
+    yield
+    for test_app in created:
+        with test_app.app_context():
+            orm.session.remove()
+            test_app.extensions["sqlalchemy"].engine.dispose()
 
 
 @pytest.fixture()
@@ -26,7 +46,7 @@ def app(tmp_path):
         "UNIVERSITY_TIMEZONE": "Asia/Kuala_Lumpur",
         "UPLOAD_FOLDER": str(tmp_path / "uploads"),
         "CONTENT_PATH": str(tmp_path / "content.json"),
-        "CLOCK": lambda: datetime.now(UTC),
+        "CLOCK": lambda: FIXED_NOW,
     }
     if os.getenv("TEST_DATABASE_URL"):
         config["DATABASE_URL"] = os.environ["TEST_DATABASE_URL"]
@@ -89,7 +109,7 @@ def app(tmp_path):
             ),
         ]
         orm.session.add_all(users)
-        start = datetime.now(UTC).replace(microsecond=0) + timedelta(days=7)
+        start = FIXED_NOW + timedelta(days=7)
         start = start.replace(hour=2, minute=0, second=0)
         orm.session.add(
             Availability(id=1, lecturer_id=3, starts_at=start, ends_at=start + timedelta(hours=2), slot_minutes=30)
@@ -114,6 +134,7 @@ def app(tmp_path):
     with test_app.app_context():
         orm.session.remove()
         orm.drop_all()
+        orm.engine.dispose()
 
 
 @pytest.fixture()
@@ -123,3 +144,73 @@ def client(app):
 
 def login(client, email, password="CorrectHorse1"):
     return client.post("/login", data={"email": email, "password": password})
+
+
+@pytest.fixture()
+def user_factory():
+    def create(*, role="student", faculty_id=1, active=True):
+        number = orm.session.query(User).count() + 20
+        user = User(
+            role=role,
+            faculty_id=faculty_id,
+            username=f"Fixture User {number}",
+            email=f"fixture{number}@example.edu",
+            phone_number=f"+6012000{number:04d}",
+            password=bcrypt.hashpw(b"CorrectHorse1", bcrypt.gensalt()).decode(),
+            active=active,
+        )
+        orm.session.add(user)
+        orm.session.commit()
+        return user
+
+    return create
+
+
+@pytest.fixture()
+def availability_factory():
+    def create(*, lecturer_id=3, start=None, minutes=60, slot_minutes=30):
+        start = start or FIXED_NOW + timedelta(days=8, hours=2)
+        row = Availability(
+            lecturer_id=lecturer_id,
+            starts_at=start,
+            ends_at=start + timedelta(minutes=minutes),
+            slot_minutes=slot_minutes,
+        )
+        orm.session.add(row)
+        orm.session.commit()
+        return row
+
+    return create
+
+
+@pytest.fixture()
+def faculty_factory():
+    def create(name=None):
+        number = orm.session.query(Faculty).count() + 1
+        row = Faculty(faculty_name=name or f"Test Faculty {number}")
+        orm.session.add(row)
+        orm.session.commit()
+        return row
+
+    return create
+
+
+@pytest.fixture()
+def appointment_factory():
+    def create(*, student_id=1, lecturer_id=3, availability_id=1, starts_at=None, status="Pending", purpose="Advice"):
+        window = orm.session.get(Availability, availability_id)
+        starts_at = starts_at or window.starts_at
+        row = Appointment(
+            student_id=student_id,
+            lecturer_id=lecturer_id,
+            availability_id=availability_id,
+            starts_at=starts_at,
+            ends_at=starts_at + timedelta(minutes=window.slot_minutes),
+            status=status,
+            purpose=purpose,
+        )
+        orm.session.add(row)
+        orm.session.commit()
+        return row
+
+    return create

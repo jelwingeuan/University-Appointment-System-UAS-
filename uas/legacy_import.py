@@ -5,6 +5,7 @@ import json
 import sqlite3
 import uuid
 from collections import Counter
+from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -113,9 +114,10 @@ def import_sqlite(source_path, destination_session, timezone_name="Asia/Kuala_Lu
         destination_session.connection().exec_driver_sql("BEGIN IMMEDIATE")
     else:
         destination_session.connection()
-    with sqlite3.connect(f"file:{source_path}?mode=ro", uri=True) as reader:
-        with sqlite3.connect(backup) as writer:
+    with closing(sqlite3.connect(f"file:{source_path}?mode=ro", uri=True)) as reader:
+        with closing(sqlite3.connect(backup)) as writer:
             reader.backup(writer)
+            writer.commit()
         reader.row_factory = sqlite3.Row
         tables = _tables(reader)
         if "users" not in tables:

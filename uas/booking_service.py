@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from .common import lock_lecturer, transaction, utc_now
 from .models import Appointment, Availability, Status, User
+from .validation import validate_purpose
 
 
 class BookingError(ValueError):
@@ -66,9 +67,10 @@ def slot_is_available(availability_id, requested_start):
 
 
 def create_booking(student_id, availability_id, requested_start, purpose):
-    purpose = (purpose or "").strip()
-    if not purpose or len(purpose) > 500:
-        raise BookingError("Purpose is required and must be 500 characters or fewer")
+    try:
+        purpose = validate_purpose(purpose)
+    except ValueError as exc:
+        raise BookingError(str(exc)) from exc
     try:
         requested = parse_requested_time(requested_start)
         with transaction() as session:

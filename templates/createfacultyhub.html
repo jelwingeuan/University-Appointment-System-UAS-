@@ -1,50 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Faculty</title>
-    <link rel="stylesheet" href="../static/style.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="../static/myscripts.js"></script>
-</head>
-<body>
-    <header>
-        <h2>Dashboard</h2>
-
-    </header>
-    <div class="sidebar">
-        <ul>
-            <li><i class='bx bx-laptop'></i><a href="/admin">Dashboard</a></li>
-            <li><i class='bx bx-user'></i><a href="/usercontrol">User Control</a></li>
-            <li><i class='bx bx-cart'></i><a href="/appointmentcontrol">Booking Control</a></li>
-            <li><i class='bx bx-plus'></i><a href="/faculty">My Faculty</a></li>
-            <li><i class='bx bx-edit' ></i><a href="/adminpageeditor">Page Editor</a></li>
-            <li><i class='bx bx-cog' ></i><form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-link" type="submit">Signout</button></form></li>
-        </ul>
-    </div>
-    <div class="add-main">
-        <div class="add-box">
-            <div class="add-header">
-                <h2>Faculty Information</h2>
-            </div>
-            <form action="/createfacultyhub" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="faculty-info-update">
-                    <h3>Faculty Profile Image</h3>
-                    <input type="file" name="faculty_image" required>
-                </div>
-                <div class="faculty-info-update">
-                    <h3>Faculty Name</h3>
-                    <input type="text" name="faculty_name" required>
-                </div>
-                <div class="add-footer">
-                    <a href="/faculty">Cancel</a>
-                    <button type="submit">Save and Publish</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</body>
-</html>
+{% extends "admin_base.html" %}
+{% from "components/forms.html" import field_error %}
+{% block title %}Add Faculty{% endblock %}
+{% block content %}
+<section class="admin-content" aria-labelledby="page-title">
+    <h1 id="page-title">Add Faculty</h1>
+    <form class="editor-form" action="{{ url_for('faculty.create_faculty_hub') }}" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div><label for="faculty_name">Faculty name</label><input id="faculty_name" name="faculty_name" maxlength="255" value="{{ form_values.get('faculty_name', '') }}" required>{{ field_error(form_errors, 'faculty_name') }}</div>
+        <div><label for="faculty_image">Faculty image</label><input id="faculty_image" type="file" name="faculty_image" accept="image/jpeg,image/png,image/webp" required>{{ field_error(form_errors, 'faculty_image') }}</div>
+        <div class="form-actions"><a href="{{ url_for('faculty.faculty') }}">Cancel</a><button class="button" type="submit">Save Faculty</button></div>
+    </form>
+</section>
+{% endblock %}

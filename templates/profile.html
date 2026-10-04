@@ -36,6 +36,7 @@
     </style>
 </head>
 <body>
+    {% from "components/forms.html" import field_error %}
     <nav>
         <ul>
             <li><a href="/">Home</a></li>
@@ -101,20 +102,23 @@
             </div>
         </div>
     </div>
-    <div id="profileEditContainer" class="edit-container" style="display: none;">   
+    <div id="profileEditContainer" class="edit-container" style="display: {{ 'block' if form_errors else 'none' }};">
         <form id="updateForm" method="post" action="/update_user_info">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             
             <label for="username">Username:</label>
-            <input type="text" id="usernameInput" name="username" value="{{ username }}">
+            <input type="text" id="usernameInput" name="username" maxlength="100" value="{{ form_values.get('username', username) }}" aria-describedby="username-error">
+            {{ field_error(form_errors, 'username') }}
             <br>
             <label for="email">Email:</label>
-            <input type="email" id="emailInput" name="email" value="{{ email }}">
+            <input type="email" id="emailInput" name="email" maxlength="254" value="{{ form_values.get('email', email) }}" aria-describedby="email-error">
+            {{ field_error(form_errors, 'email') }}
             <br>
             <br>
             
             <label for="phone_number">Phone Number:</label>
-            <input type="text" id="phoneInput" name="phone_number" value="{{ phone_number }}">
+            <input type="tel" id="phoneInput" name="phone_number" maxlength="20" value="{{ form_values.get('phone_number', phone_number) }}" aria-describedby="phone_number-error">
+            {{ field_error(form_errors, 'phone_number') }}
             <br>
             
             <div class="profilefooter">

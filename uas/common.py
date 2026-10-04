@@ -56,7 +56,15 @@ def university_zone():
 
 
 def local_to_utc(value):
-    return value.replace(tzinfo=university_zone()).astimezone(UTC)
+    zone = university_zone()
+    naive = value.replace(tzinfo=None)
+    candidates = [naive.replace(tzinfo=zone, fold=fold) for fold in (0, 1)]
+    round_trips = [candidate.astimezone(UTC).astimezone(zone).replace(tzinfo=None) for candidate in candidates]
+    if any(result != naive for result in round_trips):
+        raise ValueError("Local time does not exist in the configured timezone")
+    if candidates[0].utcoffset() != candidates[1].utcoffset():
+        raise ValueError("Local time is ambiguous in the configured timezone")
+    return candidates[0].astimezone(UTC)
 
 
 def aware_datetime(value):
@@ -86,3 +94,17 @@ def appointment_view(row):
         "status": row.status,
         "public_reference": row.public_reference,
     }
+
+
+def page_number(value):
+    try:
+        page = int(value or 1)
+    except (TypeError, ValueError):
+        return 1
+    return min(max(page, 1), 100000)
+
+
+def pagination(page, total, per_page=25):
+    pages = max(1, (total + per_page - 1) // per_page)
+    page = min(page, pages)
+    return {"page": page, "pages": pages, "total": total, "per_page": per_page}

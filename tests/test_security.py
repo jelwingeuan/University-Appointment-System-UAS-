@@ -104,7 +104,7 @@ def test_student_cannot_change_another_students_profile(client):
         "/update_user_info",
         data={"id": 2, "username": "Changed", "email": "changed@example.com", "phone_number": "019"},
     )
-    assert response.status_code == 302
+    assert response.status_code == 400
     from uas.extensions import db as orm
     from uas.models import User
 

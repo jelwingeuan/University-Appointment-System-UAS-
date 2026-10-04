@@ -24,7 +24,8 @@ class Config:
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024
     WTF_CSRF_TIME_LIMIT = 3600
     CONTENT_PATH = str(ROOT / "content.json")
-    UPLOAD_FOLDER = str(ROOT / "static" / "faculty_pp")
+    UPLOAD_FOLDER = str(ROOT / "instance" / "uploads")
+    MAX_IMAGE_PIXELS = 20_000_000
 
 
 class DevelopmentConfig(Config):

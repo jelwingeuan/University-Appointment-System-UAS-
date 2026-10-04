@@ -92,17 +92,32 @@ def test_signup_validates_lecturer_secret(client):
         "password": "CorrectHorse1",
         "confirm_password": "CorrectHorse1",
     }
-    assert client.post("/signup", data={**base, "pin": "wrong"}).status_code == 302
+    assert client.post("/signup", data={**base, "pin": "wrong"}).status_code == 400
     assert orm.session.query(User).filter_by(email=base["email"]).count() == 0
     assert client.post("/signup", data={**base, "pin": "lecturer-test-secret"}).status_code == 302
     assert orm.session.query(User).filter_by(email=base["email"]).one().role == "teacher"
+
+
+def test_signup_shows_field_error_and_preserves_safe_values(client):
+    response = client.post(
+        "/signup",
+        data={
+            "role": "student", "faculty": "FCI", "username": "A Student", "email": "bad-address",
+            "phone_number": "+60123456789", "password": "CorrectHorse1", "confirm_password": "CorrectHorse1",
+        },
+    )
+    page = response.get_data(as_text=True)
+    assert response.status_code == 400
+    assert "Enter a valid email address." in page
+    assert 'value="A Student"' in page
+    assert "CorrectHorse1" not in page
 
 
 def test_teacher_availability_calendar_and_owned_delete(client, app):
     login(client, "lecturer1@mmu.edu.my")
     assert client.get("/calendar").status_code == 200
     assert client.get("/events").status_code == 200
-    local_start = datetime.now(ZoneInfo("Asia/Kuala_Lumpur")) + timedelta(days=14)
+    local_start = app.config["CLOCK"]().astimezone(ZoneInfo("Asia/Kuala_Lumpur")) + timedelta(days=14)
     response = client.post(
         "/calendar_record",
         data={
@@ -158,7 +173,7 @@ def test_invalid_upload_is_rejected(client):
         },
         content_type="multipart/form-data",
     )
-    assert response.status_code == 302
+    assert response.status_code == 400
 
 
 def test_login_rate_limit(tmp_path, monkeypatch):

@@ -1,8 +1,9 @@
 import os
+import re
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from flask import Flask
+from flask import Flask, url_for
 from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import HTTPException
@@ -61,6 +62,19 @@ def create_app(test_config=None):
         if app.config["SESSION_COOKIE_SECURE"]:
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
         return response
+
+    @app.context_processor
+    def image_helpers():
+        def image_url(filename):
+            if not filename:
+                return ""
+            if re.fullmatch(r"[a-f0-9]{32}\.(?:jpg|png|webp)", filename):
+                return url_for("public.uploaded_image_route", filename=filename)
+            if Path(filename).name == filename:
+                return url_for("static", filename=f"faculty_pp/{filename}")
+            return ""
+
+        return {"image_url": image_url}
 
     @app.errorhandler(HTTPException)
     def http_error(error):

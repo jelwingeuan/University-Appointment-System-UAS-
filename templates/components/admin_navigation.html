@@ -1,0 +1,14 @@
+<header class="admin-header">
+    <a class="admin-brand" href="{{ url_for('admin.admin_dashboard') }}">UAS Admin</a>
+    <nav aria-label="Administration">
+        <a href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('admin.usercontrol') }}">User Control</a>
+        <a href="{{ url_for('admin.appointmentcontrol') }}">Booking Control</a>
+        <a href="{{ url_for('faculty.faculty') }}">My Faculty</a>
+        <a href="{{ url_for('admin.admin_page_editor') }}">Page Editor</a>
+        <form action="{{ url_for('auth.logout') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">Sign out</button>
+        </form>
+    </nav>
+</header>

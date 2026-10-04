@@ -1,5 +1,6 @@
 import json
 import sqlite3
+from contextlib import closing
 
 import bcrypt
 import pytest
@@ -11,7 +12,7 @@ from uas.models import Appointment, Availability, Faculty, User
 
 
 def legacy_source(path):
-    with sqlite3.connect(path) as connection:
+    with closing(sqlite3.connect(path)) as connection:
         connection.executescript("""
             CREATE TABLE users (id INTEGER PRIMARY KEY, role TEXT, faculty TEXT, username TEXT,
                 email TEXT, phone_number TEXT, password TEXT);
@@ -36,6 +37,7 @@ def legacy_source(path):
         connection.execute(
             "INSERT INTO appointments VALUES (4, 123456, 'Student', 'Lecturer', '2026-11-02', '10:00 - 10:30', 'Advice', 'Pending')"
         )
+        connection.commit()
 
 
 def test_legacy_import_preserves_ids_and_backup(tmp_path):
@@ -93,7 +95,7 @@ def test_import_refuses_source_destination_collision(tmp_path):
 
 def test_intermediate_normalized_import_preserves_uuid_reference(tmp_path):
     source = tmp_path / "intermediate.db"
-    with sqlite3.connect(source) as connection:
+    with closing(sqlite3.connect(source)) as connection:
         connection.executescript("""
             CREATE TABLE faculties (id INTEGER PRIMARY KEY, faculty_name TEXT, faculty_image TEXT);
             CREATE TABLE users (id INTEGER PRIMARY KEY, role TEXT, faculty_id INTEGER, username TEXT,
@@ -119,6 +121,7 @@ def test_intermediate_normalized_import_preserves_uuid_reference(tmp_path):
         connection.execute(
             "INSERT INTO appointments VALUES (33, '12345678-1234-4234-8234-123456789abc', 12, 18, 22, '2026-11-02T02:00:00+00:00', '2026-11-02T02:30:00+00:00', 'Advice', 'Accepted')"
         )
+        connection.commit()
     app = create_app(
         {"TESTING": True, "SECRET_KEY": "migration-test", "DATABASE_PATH": str(tmp_path / "normalized-dest.db")}
     )
@@ -135,8 +138,9 @@ def test_intermediate_normalized_import_preserves_uuid_reference(tmp_path):
 def test_legacy_weekly_availability_expands_through_end_date(tmp_path):
     source = tmp_path / "recurrence.db"
     legacy_source(source)
-    with sqlite3.connect(source) as connection:
+    with closing(sqlite3.connect(source)) as connection:
         connection.execute("UPDATE calendar SET end_date='2026-11-16', repeat_type='weekly'")
+        connection.commit()
     app = create_app(
         {"TESTING": True, "SECRET_KEY": "migration-test", "DATABASE_PATH": str(tmp_path / "recurrence-dest.db")}
     )
@@ -150,11 +154,12 @@ def test_legacy_weekly_availability_expands_through_end_date(tmp_path):
 def test_import_reports_invalid_roles_and_statuses_without_defaulting(tmp_path):
     source = tmp_path / "invalid.db"
     legacy_source(source)
-    with sqlite3.connect(source) as connection:
+    with closing(sqlite3.connect(source)) as connection:
         connection.execute(
             "INSERT INTO users VALUES (10, 'faculty', 'FCI', 'Invalid', 'invalid@mmu.edu.my', '0103', 'hash')"
         )
         connection.execute("UPDATE appointments SET status='Done'")
+        connection.commit()
     app = create_app(
         {"TESTING": True, "SECRET_KEY": "migration-test", "DATABASE_PATH": str(tmp_path / "invalid-dest.db")}
     )

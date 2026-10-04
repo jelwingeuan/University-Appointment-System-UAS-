@@ -1,119 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faculty</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='myscripts.js') }}"></script>
-    <style>
-        body{
-            overflow: hidden;
-        }
-        .faculty-dropdown {
-            margin-bottom: 20px;
-        }
-        .faculty-dropdown select {
-            padding: 10px;
-            font-size: 16px;
-        }
-        .faculty-details {
-            display: none;
-            left: 38%;
-            position: relative;
-            top: 10%;
-        }
-        .faculty-details.active {
-            display: block;
-        }
-        .faculty-details h3 {
-            margin-top: 20px;
-        }
-        .faculty-details ul {
-            list-style: none;
-            padding: 0;
-        }
-        .faculty-details li {
-            padding: 5px 0;
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <h2>Dashboard</h2>
-        
-    </header>
-    <div class="sidebar">
-        <ul>
-            <li><i class='bx bx-laptop'></i><a href="/admin">Dashboard</a></li>
-            <li><i class='bx bx-user'></i><a href="/usercontrol">User Control</a></li>
-            <li><i class='bx bx-cart'></i><a href="/appointmentcontrol">Booking Control</a></li>
-            <li><i class='bx bx-plus'></i><a href="/faculty">My Faculty</a></li>
-            <li><i class='bx bx-edit'></i><a href="/adminpageeditor">Page Editor</a></li>
-            <li><i class='bx bx-cog'></i><form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-link" type="submit">Signout</button></form></li>
-        </ul>
+{% extends "admin_base.html" %}
+{% from "components/pagination.html" import pagination_nav %}
+{% block title %}Faculty Directory{% endblock %}
+{% block content %}
+<section class="admin-content" aria-labelledby="page-title">
+    <div class="page-heading">
+        <div><h1 id="page-title">Faculty Directory</h1><p>Browse lecturers and students by faculty.</p></div>
+        <a class="button" href="{{ url_for('faculty.create_faculty_hub') }}">Add Faculty</a>
     </div>
-    <div class="facultydirectory"> 
-        <div class="dir">
-            <h1>My Faculty</h1>
-            <a href="/createfacultyhub">Add Faculty</a>
+    {% if faculties %}
+    <form class="search-form faculty-picker" method="get" action="{{ url_for('faculty.faculty') }}">
+        <label for="facultySelect">Select faculty</label>
+        <select id="facultySelect" name="faculty_id" onchange="this.form.submit()">
+            {% for faculty in faculties %}<option value="{{ faculty.id }}" {% if faculty.id == selected_faculty.id %}selected{% endif %}>{{ faculty.faculty_name }}</option>{% endfor %}
+        </select>
+    </form>
+    <section class="faculty-content" aria-labelledby="selected-faculty">
+        {% if selected_faculty.faculty_image %}<img class="faculty-image" src="{{ image_url(selected_faculty.faculty_image) }}" alt="{{ selected_faculty.faculty_name }}">{% endif %}
+        <h2 id="selected-faculty">{{ selected_faculty.faculty_name }}</h2>
+        <p>Showing {{ (pagination.page - 1) * pagination.per_page + 1 if pagination.total else 0 }}-{{ [pagination.page * pagination.per_page, pagination.total]|min }} of {{ pagination.total }} members.</p>
+        <div class="directory-columns">
+            <section><h3>Lecturers</h3><ul>{% for lecturer in lecturers %}<li>{{ lecturer.username }} <span>{{ lecturer.email }}</span></li>{% else %}<li class="empty-state">No lecturers on this page.</li>{% endfor %}</ul></section>
+            <section><h3>Students</h3><ul>{% for student in students %}<li>{{ student.username }} <span>{{ student.email }}</span></li>{% else %}<li class="empty-state">No students on this page.</li>{% endfor %}</ul></section>
         </div>
-        <div class="faculty-dropdown" style="margin-left: 200px;">
-            <label for="facultySelect">Select Faculty:</label>
-            <select id="facultySelect" onchange="showFacultyDetails()">
-                <option value="">-- Select --</option>
-                {% for faculty in faculty_info %}
-                <option value="faculty-{{ loop.index }}">{{ faculty['faculty_name'] }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        {% for faculty in faculty_info %}
-        <div id="faculty-{{ loop.index }}" class="faculty-details" >
-            <div class="card">
-                <div class="card-image">
-                    {% if faculty['faculty_image'] %}<img src="{{ url_for('static', filename='faculty_pp/' + faculty['faculty_image']) }}" alt="{{ faculty['faculty_name'] }}">{% endif %}
-                </div>
-                <p class="name">{{ faculty['faculty_name'] }}</p>
-            </div>
-            <h3>Lecturers</h3>
-            <ul>
-                {% for lecturer in faculty['lecturers'] %}
-                <li>{{ lecturer['username'] }} ({{ lecturer['email'] }})</li>
-                {% endfor %}
-            </ul>
-            <h3>Students</h3>
-            <ul>
-                {% for student in faculty['students'] %}
-                <li>{{ student['username'] }} ({{ student['email'] }})</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endfor %}
-    </div>
-    <script>
-        function showFacultyDetails() {
-    // Get the select element with the id 'facultySelect'
-    var select = document.getElementById('facultySelect');
-    // Get the currently selected value from the select element
-    var selectedValue = select.value;
-    // Get all elements with the class 'faculty-details'
-    var details = document.querySelectorAll('.faculty-details');
-
-    // Iterate over each element with the class 'faculty-details'
-    details.forEach(function(detail) {
-        // Remove the 'active' class from each element
-        detail.classList.remove('active');
-    });
-
-    // If a faculty member is selected
-    if (selectedValue) {
-        // Get the element with the id matching the selected value and add the 'active' class to it
-        document.getElementById(selectedValue).classList.add('active');
-    }
-}
-
-    </script>
-</body>
-</html>
+        {{ pagination_nav(pagination, 'faculty.faculty', '', selected_faculty.id) }}
+    </section>
+    {% else %}<p class="empty-state">No faculties have been created.</p>{% endif %}
+</section>
+{% endblock %}
