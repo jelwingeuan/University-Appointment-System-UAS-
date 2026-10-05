@@ -69,7 +69,7 @@ def app(tmp_path):
                 username="Student One",
                 email="student1@student.mmu.edu.my",
                 phone_number="0100000001",
-                password=password_hash,
+                password_hash=password_hash,
             ),
             User(
                 id=2,
@@ -78,7 +78,7 @@ def app(tmp_path):
                 username="Student Two",
                 email="student2@student.mmu.edu.my",
                 phone_number="0100000002",
-                password=password_hash,
+                password_hash=password_hash,
             ),
             User(
                 id=3,
@@ -87,7 +87,7 @@ def app(tmp_path):
                 username="Lecturer One",
                 email="lecturer1@mmu.edu.my",
                 phone_number="0100000003",
-                password=password_hash,
+                password_hash=password_hash,
             ),
             User(
                 id=4,
@@ -96,7 +96,7 @@ def app(tmp_path):
                 username="Lecturer Two",
                 email="lecturer2@mmu.edu.my",
                 phone_number="0100000004",
-                password=password_hash,
+                password_hash=password_hash,
             ),
             User(
                 id=5,
@@ -105,7 +105,7 @@ def app(tmp_path):
                 username="Administrator",
                 email="admin@mmu.edu.my",
                 phone_number="0100000005",
-                password=password_hash,
+                password_hash=password_hash,
             ),
         ]
         orm.session.add_all(users)
@@ -156,7 +156,7 @@ def user_factory():
             username=f"Fixture User {number}",
             email=f"fixture{number}@example.edu",
             phone_number=f"+6012000{number:04d}",
-            password=bcrypt.hashpw(b"CorrectHorse1", bcrypt.gensalt()).decode(),
+            password_hash=bcrypt.hashpw(b"CorrectHorse1", bcrypt.gensalt()).decode(),
             active=active,
         )
         orm.session.add(user)

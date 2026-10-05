@@ -76,7 +76,7 @@ def test_import_refuses_nonempty_destination(tmp_path):
         app.test_cli_runner().invoke(args=["db", "upgrade"])
         orm.session.add(Faculty(id=1, faculty_name="Existing"))
         orm.session.flush()
-        orm.session.add(User(role="student", faculty_id=1, username="x", email="x@y", phone_number="x", password="x"))
+        orm.session.add(User(role="student", faculty_id=1, username="x", email="x@y", phone_number="x", password_hash="x"))
         orm.session.commit()
         with pytest.raises(ValueError, match="must be empty"):
             import_sqlite(source, orm.session)
@@ -99,7 +99,7 @@ def test_intermediate_normalized_import_preserves_uuid_reference(tmp_path):
         connection.executescript("""
             CREATE TABLE faculties (id INTEGER PRIMARY KEY, faculty_name TEXT, faculty_image TEXT);
             CREATE TABLE users (id INTEGER PRIMARY KEY, role TEXT, faculty_id INTEGER, username TEXT,
-                email TEXT, phone_number TEXT, password TEXT, active INTEGER);
+            email TEXT, phone_number TEXT, password_hash TEXT, active INTEGER);
             CREATE TABLE availability (id INTEGER PRIMARY KEY, lecturer_id INTEGER, starts_at TEXT,
                 ends_at TEXT, slot_minutes INTEGER);
             CREATE TABLE appointments (id INTEGER PRIMARY KEY, public_reference TEXT, student_id INTEGER,

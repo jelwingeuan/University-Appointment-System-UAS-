@@ -10,13 +10,15 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from alembic.script import ScriptDirectory
+from flask import current_app
 from sqlalchemy import inspect, select, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from .models import Appointment, Availability, Faculty, User
 
 VALID_ROLES = {"student", "teacher", "admin"}
-VALID_STATUSES = {"Pending", "Accepted", "Rejected", "Cancelled"}
+VALID_STATUSES = {"Pending", "Accepted", "Rejected", "Cancelled", "Completed", "No Show"}
 
 
 def _tables(connection):
@@ -28,6 +30,10 @@ def _as_utc(value, zone):
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=zone)
     return parsed.astimezone(UTC)
+
+
+def _optional_utc(value):
+    return _as_utc(value, UTC) if value else None
 
 
 def _legacy_range(row, zone):
@@ -98,15 +104,20 @@ def import_sqlite(source_path, destination_session, timezone_name="Asia/Kuala_Lu
     inspector = inspect(destination_session.get_bind())
     tables_present = set(inspector.get_table_names())
     required = {"alembic_version", "faculties", "users", "availability", "appointments"}
-    if not required.issubset(tables_present) or tables_present - required:
+    if not required.issubset(tables_present):
         raise ValueError("Destination must be upgraded to Alembic head before import")
-    version = destination_session.execute(text("SELECT version_num FROM alembic_version")).scalar_one_or_none()
-    if version != "0001_orm_schema":
+    migration_dir = Path(current_app.root_path).parent / "migrations"
+    heads = set(ScriptDirectory(str(migration_dir)).get_heads())
+    versions = set(destination_session.execute(text("SELECT version_num FROM alembic_version")).scalars())
+    if versions != heads:
         raise ValueError("Destination must be upgraded to Alembic head before import")
-    if any(
-        table in tables_present and destination_session.execute(text(f"SELECT 1 FROM {table} LIMIT 1")).first()
-        for table in ("users", "faculties", "availability", "appointments")
-    ):
+    quote = destination_session.get_bind().dialect.identifier_preparer.quote
+    tables_with_data = [
+        table
+        for table in tables_present - {"alembic_version", "site_settings"}
+        if destination_session.execute(text(f"SELECT 1 FROM {quote(table)} LIMIT 1")).first()
+    ]
+    if tables_with_data:
         raise ValueError("Destination must be empty before import")
     # End inspection reads, then force a real outer SQLite transaction before nested row savepoints.
     destination_session.commit()
@@ -166,8 +177,10 @@ def import_sqlite(source_path, destination_session, timezone_name="Asia/Kuala_Lu
                     "username": str(row.get("username") or "").strip(),
                     "email": str(row.get("email") or "").strip().lower(),
                     "phone_number": str(phone),
-                    "password": row.get("password") or "",
+                    "password": row.get("password_hash") or row.get("password") or "",
                     "active": bool(row.get("active", 1)),
+                    "last_login_at": _optional_utc(row.get("last_login_at")),
+                    "email_verified_at": _optional_utc(row.get("email_verified_at")),
                     "faculty": faculty_name,
                 }
                 if not all((normalized["username"], normalized["email"], normalized["password"])):
@@ -191,8 +204,10 @@ def import_sqlite(source_path, destination_session, timezone_name="Asia/Kuala_Lu
                             username=normalized["username"],
                             email=normalized["email"],
                             phone_number=normalized["phone_number"],
-                            password=normalized["password"],
+                            password_hash=normalized["password"],
                             active=normalized["active"],
+                            last_login_at=normalized["last_login_at"],
+                            email_verified_at=normalized["email_verified_at"],
                         )
                         destination_session.add(user)
                         destination_session.flush()
@@ -259,8 +274,22 @@ def import_sqlite(source_path, destination_session, timezone_name="Asia/Kuala_Lu
                             else:
                                 window_id = next_window_id
                                 next_window_id += 1
+                            timestamps = {
+                                name: parsed
+                                for name, value in (
+                                    ("created_at", row.get("created_at")),
+                                    ("updated_at", row.get("updated_at")),
+                                )
+                                if (parsed := _optional_utc(value)) is not None
+                            }
                             window = Availability(
-                                id=window_id, lecturer_id=lecturer.id, starts_at=start, ends_at=end, slot_minutes=slot
+                                id=window_id,
+                                lecturer_id=lecturer.id,
+                                starts_at=start,
+                                ends_at=end,
+                                slot_minutes=slot,
+                                active=bool(row.get("active", 1)),
+                                **timestamps,
                             )
                             destination_session.add(window)
                             windows.append(window)

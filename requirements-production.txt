@@ -1,0 +1,2 @@
+# Install alongside requirements.txt for a production deployment using Redis limits.
+Flask-Limiter[redis]>=3.12,<5

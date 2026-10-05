@@ -133,19 +133,20 @@ def test_admin_can_delete_booking_but_not_appointments_through_user_delete(clien
     assert orm.session.get(Appointment, appointment_id) is None
 
 
-def test_admin_can_remove_unreferenced_user_and_update_content(client, app):
+def test_admin_deactivates_unreferenced_user_and_updates_database_content(client, app):
     login(client, "admin@mmu.edu.my")
     assert client.get("/usercontrol?search=Student").status_code == 200
     assert client.post("/delete_user", data={"id": 2}).status_code == 302
     orm.session.expire_all()
-    assert orm.session.get(User, 2) is None
+    assert orm.session.get(User, 2).active is False
     response = client.post(
         "/adminpageeditor",
         data={"home_content": "Updated", "school_name": "MMU", "school_tel": "123", "school_email": "info@mmu.edu.my"},
     )
     assert response.status_code == 302
-    with open(app.config["CONTENT_PATH"], encoding="utf-8") as content_file:
-        assert '"home_content": "Updated"' in content_file.read()
+    from uas.content_service import load_content
+
+    assert load_content()["home_content"] == "Updated"
 
 
 def test_image_validation_and_faculty_creation(client, app):
@@ -216,4 +217,4 @@ def test_bootstrap_command_rotates_existing_administrator_password(client, app, 
     assert orm.session.get(User, 5).role == "admin"
     import bcrypt
 
-    assert bcrypt.checkpw(b"UpdatedStrongAdminPassword1", orm.session.get(User, 5).password.encode())
+    assert bcrypt.checkpw(b"UpdatedStrongAdminPassword1", orm.session.get(User, 5).password_hash.encode())

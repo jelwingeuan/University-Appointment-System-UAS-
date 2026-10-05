@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="wrapper">
+        <h1>{{ title }}</h1>
+        {% if 'Reset' in title %}
+        <form action="{{ url_for(endpoint) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="token" id="account-token">
+            <label for="password">New password</label>
+            <input id="password" name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required>
+            <label for="confirm-password">Confirm new password</label>
+            <input id="confirm-password" name="confirm_password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required>
+            <button type="submit">Update password</button>
+        </form>
+        {% else %}
+        <form action="{{ url_for(endpoint) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="token" id="account-token">
+            <p>Submit to verify the email address for your account.</p>
+            <button type="submit">Verify email</button>
+        </form>
+        {% endif %}
+        <p id="token-error" role="alert" hidden>This link is incomplete. Open the original email link again.</p>
+        <a href="{{ url_for('auth.login') }}">Return to sign in</a>
+    </main>
+    <script>
+        const fragment = new URLSearchParams(location.hash.slice(1));
+        const token = fragment.get("token") || "";
+        document.getElementById("account-token").value = token;
+        history.replaceState(null, "", location.pathname);
+        if (!token) document.getElementById("token-error").hidden = false;
+    </script>
+</body>
+</html>

@@ -2,8 +2,8 @@ from datetime import timedelta
 
 from sqlalchemy import select
 
-from .common import lock_lecturer, transaction, utc_now
-from .models import Appointment, Availability, Status, User
+from .common import lock_lecturer, require_actor, transaction, utc_now
+from .models import Appointment, AppointmentStatusHistory, Availability, Status, User
 from .validation import validate_purpose
 
 
@@ -30,7 +30,7 @@ def parse_requested_time(value):
 
 def _validate_slot(session, availability_id, requested, now=None):
     window = session.get(Availability, availability_id)
-    if not window or window.lecturer.role != "teacher" or not window.lecturer.active:
+    if not window or not window.active or window.lecturer.role != "teacher" or not window.lecturer.active:
         raise BookingError("Invalid availability")
     duration = timedelta(minutes=window.slot_minutes)
     end = requested + duration
@@ -81,6 +81,7 @@ def create_booking(student_id, availability_id, requested_start, purpose):
             if not window:
                 raise BookingError("Invalid availability")
             lock_lecturer(session, window.lecturer_id)
+            session.refresh(window)
             window, end = _validate_slot(session, availability_id, requested)
             conflict = session.scalar(
                 select(Appointment.id)
@@ -109,26 +110,63 @@ def create_booking(student_id, availability_id, requested_start, purpose):
         raise
 
 
-def transition_appointment(appointment_id, actor_id, actor_role, target_status):
+def transition_appointment(appointment_id, actor_id, actor_role, target_status, reason=None):
     allowed = {
-        "teacher": {(Status.PENDING.value, Status.ACCEPTED.value), (Status.PENDING.value, Status.REJECTED.value)},
+        "teacher": {
+            (Status.PENDING.value, Status.ACCEPTED.value),
+            (Status.PENDING.value, Status.REJECTED.value),
+            (Status.ACCEPTED.value, Status.COMPLETED.value),
+            (Status.ACCEPTED.value, Status.NO_SHOW.value),
+        },
+        "admin": {
+            (Status.ACCEPTED.value, Status.COMPLETED.value),
+            (Status.ACCEPTED.value, Status.NO_SHOW.value),
+        },
         "student": {(Status.PENDING.value, Status.CANCELLED.value), (Status.ACCEPTED.value, Status.CANCELLED.value)},
     }
     if actor_role not in allowed or target_status not in {
         Status.ACCEPTED.value,
         Status.REJECTED.value,
         Status.CANCELLED.value,
+        Status.COMPLETED.value,
+        Status.NO_SHOW.value,
     }:
         raise InvalidTransition("Invalid appointment status")
     with transaction() as session:
+        require_actor(session, actor_id, actor_role)
         row = session.get(Appointment, appointment_id)
         if not row:
             raise BookingError("Appointment not found")
         lock_lecturer(session, row.lecturer_id)
-        row = session.get(Appointment, appointment_id)
-        owner_id = row.lecturer_id if actor_role == "teacher" else row.student_id
-        if owner_id != int(actor_id):
+        session.refresh(row)
+        owns_record = (
+            actor_role == "admin"
+            or (actor_role == "teacher" and row.lecturer_id == int(actor_id))
+            or (actor_role == "student" and row.student_id == int(actor_id))
+        )
+        if not owns_record:
             raise PermissionError("You cannot update this appointment")
         if (row.status, target_status) not in allowed[actor_role]:
             raise InvalidTransition("Invalid appointment status transition")
+        before, now = row.status, utc_now()
         row.status = target_status
+        if target_status == Status.ACCEPTED.value:
+            row.accepted_at = now
+        elif target_status == Status.CANCELLED.value:
+            row.cancelled_at = now
+            row.cancelled_by_user_id = int(actor_id)
+            row.cancel_reason = (reason or "").strip()[:500] or None
+        elif target_status == Status.COMPLETED.value:
+            row.completed_at = now
+        elif target_status == Status.NO_SHOW.value:
+            row.no_show_at = now
+        session.add(
+            AppointmentStatusHistory(
+                appointment_id=row.id,
+                from_status=before,
+                to_status=target_status,
+                actor_user_id=int(actor_id),
+                created_at=now,
+                reason=(reason or "").strip()[:500] or None,
+            )
+        )

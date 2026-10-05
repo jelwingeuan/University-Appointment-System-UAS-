@@ -137,7 +137,7 @@
                                         <form method="post" action="/accept_booking">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            {% if appointment['status'] == 'Cancelled' or appointment['status'] == 'Rejected' %}
+                                            {% if appointment['status'] != 'Pending' %}
                                                 <button type="submit" disabled style="pointer-events: none;">Accept</button>
                                             {% else %}
                                                 <button type="submit" value="Accepted">Accept</button>
@@ -149,12 +149,24 @@
                                         <form method="post" action="/reject_booking">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            {% if appointment['status'] == 'Cancelled' or appointment['status'] == 'Rejected'%}
+                                            {% if appointment['status'] != 'Pending' %}
                                                 <button type="button" disabled style="pointer-events: none;">Reject</button>
                                             {% else %}
                                                 <button type="submit" value="Rejected">Reject</button>
                                             {% endif %}
                                         </form>
+                                        {% if appointment['status'] == 'Accepted' %}
+                                        <form method="post" action="/complete_booking">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="id" value="{{ appointment['id'] }}">
+                                            <button type="submit">Complete</button>
+                                        </form>
+                                        <form method="post" action="/no_show_booking">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="id" value="{{ appointment['id'] }}">
+                                            <button type="submit">No Show</button>
+                                        </form>
+                                        {% endif %}
                                     </td>
                                     {% endif %}
 
@@ -163,9 +175,7 @@
                                         <form method="post" action="/cancel_booking">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            {% if appointment['status'] == 'Rejected' or appointment['status'] == 'Cancelled' %}
-                                                <button type="button" disabled style="pointer-events: none;">Cancel</button>
-                                            {% elif appointment['status'] == 'cancelled' %}
+                                            {% if appointment['status'] not in ['Pending', 'Accepted'] %}
                                                 <button type="button" disabled>Cancel</button>
                                             {% else %}
                                                 <button type="submit" value="cancelled">Cancel</button>

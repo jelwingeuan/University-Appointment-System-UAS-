@@ -1,8 +1,9 @@
 from flask import Blueprint, redirect, render_template, request, url_for
+from flask_login import current_user
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
-from .common import page_number, pagination, role_required, transaction
+from .common import page_number, pagination, record_audit, require_actor, role_required, transaction
 from .content_service import remove_uploaded_image, save_image
 from .extensions import db
 from .models import Faculty, User
@@ -62,7 +63,11 @@ def create_faculty_hub():
         try:
             filename = save_image(uploaded)
             with transaction() as session:
-                session.add(Faculty(faculty_name=name, faculty_image=filename))
+                require_actor(session, current_user.id, "admin")
+                row = Faculty(faculty_name=name, faculty_image=filename)
+                session.add(row)
+                session.flush()
+                record_audit(session, current_user.id, "faculty.created", "Faculty", row.id)
         except ValueError:
             form_errors["faculty_image"] = "The file is not a valid supported image."
             return render_template("createfacultyhub.html", form_values=form_values, form_errors=form_errors), 400

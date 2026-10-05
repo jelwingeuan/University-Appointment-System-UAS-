@@ -24,9 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const emailNotice = document.getElementById("emailFormatNotice");
     const setSignupRole = () => {
         if (!pinInput || !signupDetails) return;
-        const teacherNeedsSecret = Boolean(teacherRole?.checked) && !document.getElementById("pin")?.dataset.verified;
         pinInput.hidden = !teacherRole?.checked;
-        signupDetails.hidden = teacherNeedsSecret || (!studentRole?.checked && !teacherRole?.checked);
+        signupDetails.hidden = !studentRole?.checked && !teacherRole?.checked;
         if (emailNotice) emailNotice.textContent = studentRole?.checked
             ? "Students must use an @student.mmu.edu.my email address."
             : teacherRole?.checked ? "Lecturers must use an @mmu.edu.my email address." : "";
@@ -35,30 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
     teacherRole?.addEventListener("change", setSignupRole);
     if (studentRole || teacherRole) setSignupRole();
 });
-
-function validatePin() {
-    const pin = document.getElementById("pin");
-    const details = document.getElementById("signupDetails");
-    const message = document.getElementById("pinMessage");
-    if (!pin || !details || !message) return;
-    if (pin.value.trim()) {
-        pin.dataset.verified = "true";
-        document.getElementById("pinInput").hidden = true;
-        details.hidden = false;
-        message.textContent = "";
-    } else {
-        message.textContent = "Enter the lecturer registration secret.";
-    }
-}
-
-function retractPin() {
-    const teacher = document.getElementById("teacherRole");
-    const pin = document.getElementById("pin");
-    if (teacher) teacher.checked = false;
-    if (pin) { pin.value = ""; delete pin.dataset.verified; }
-    document.getElementById("pinInput")?.setAttribute("hidden", "");
-    document.getElementById("signupDetails")?.setAttribute("hidden", "");
-}
 
 function printInvoice() {
     const content = document.getElementById("print-area");

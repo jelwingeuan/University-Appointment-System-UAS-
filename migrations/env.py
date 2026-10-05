@@ -23,9 +23,24 @@ def run_migrations():
             context.run_migrations()
     else:
         with database.engine.connect() as connection:
+            sqlite = connection.dialect.name == "sqlite"
+            sqlite_dbapi = connection.connection.driver_connection if sqlite else None
+            if sqlite:
+                # SQLite cannot rebuild referenced tables while FK checks are enabled.
+                sqlite_dbapi.execute("PRAGMA foreign_keys=OFF")
             context.configure(connection=connection, **options)
-            with context.begin_transaction():
-                context.run_migrations()
+            try:
+                with context.begin_transaction():
+                    context.run_migrations()
+                    if sqlite:
+                        violations = sqlite_dbapi.execute("PRAGMA foreign_key_check").fetchall()
+                        if violations:
+                            raise RuntimeError(
+                                f"SQLite migration left {len(violations)} foreign-key violation(s)"
+                            )
+            finally:
+                if sqlite:
+                    sqlite_dbapi.execute("PRAGMA foreign_keys=ON")
 
 
 run_migrations()

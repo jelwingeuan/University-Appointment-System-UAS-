@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .extensions import db
-from .models import User
+from .models import AuditLog, User
 
 
 def role_required(*roles):
@@ -32,6 +32,21 @@ def require_actor(session, actor_id, role):
     if not actor or not actor.active or actor.role != role:
         raise PermissionError("Not authorized")
     return actor
+
+
+def record_audit(session, actor_id, action, target_type, target_id, **metadata):
+    # Only callers pass allowlisted, non-secret values; this also strips common credential keys.
+    forbidden = {"password", "password_hash", "token", "token_hash", "secret", "csrf", "cookie"}
+    safe = {key: value for key, value in metadata.items() if key.lower() not in forbidden}
+    session.add(
+        AuditLog(
+            actor_user_id=int(actor_id),
+            action=action,
+            target_type=target_type,
+            target_id=str(target_id),
+            metadata_json=safe,
+        )
+    )
 
 
 @contextmanager
@@ -93,6 +108,7 @@ def appointment_view(row):
         "purpose": row.purpose,
         "status": row.status,
         "public_reference": row.public_reference,
+        "created_at": row.created_at.astimezone(university_zone()).isoformat() if row.created_at else "",
     }
 
 

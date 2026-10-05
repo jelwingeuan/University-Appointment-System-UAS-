@@ -1,23 +1,46 @@
 import io
-import json
 import re
-import secrets
 from pathlib import Path
 from uuid import uuid4
 
-from flask import current_app, send_from_directory
+from flask import current_app, redirect, send_file
+
+from .common import record_audit
+from .extensions import db
+from .models import SiteSettings
 
 
 def load_content():
-    with Path(current_app.config["CONTENT_PATH"]).open(encoding="utf-8") as handle:
-        return json.load(handle)
+    row = db.session.get(SiteSettings, 1)
+    if row:
+        return {
+            "home_content": row.home_content,
+            "school_name": row.school_name,
+            "school_tel": row.school_tel,
+            "school_email": row.school_email,
+            "school_logo": row.school_logo,
+        }
+    # Legacy JSON is read-only bootstrap fallback for unmigrated local installations.
+    if current_app.config["APP_ENV"] != "production":
+        import json
+
+        try:
+            return json.loads(Path(current_app.config["CONTENT_PATH"]).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            pass
+    return {"home_content": "", "school_name": "Multimedia University", "school_tel": "", "school_email": "", "school_logo": ""}
 
 
-def save_content(content):
-    path = Path(current_app.config["CONTENT_PATH"])
-    temporary = path.with_name(f".{path.name}.{secrets.token_hex(4)}.tmp")
-    temporary.write_text(json.dumps(content, indent=2), encoding="utf-8")
-    temporary.replace(path)
+def save_content(content, actor_id=None):
+    row = db.session.get(SiteSettings, 1)
+    if row is None:
+        row = SiteSettings(id=1)
+        db.session.add(row)
+    for key in ("home_content", "school_name", "school_tel", "school_email", "school_logo"):
+        setattr(row, key, content.get(key, ""))
+    if actor_id is not None:
+        record_audit(db.session, actor_id, "site_settings.updated", "SiteSettings", 1)
+    db.session.commit()
 
 
 def save_image(upload):
@@ -44,18 +67,29 @@ def save_image(upload):
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError, Image.DecompressionBombWarning) as exc:
         raise ValueError("Invalid image") from exc
     stored_name = f"{uuid4().hex}{output_suffix}"
-    destination = Path(current_app.config["UPLOAD_FOLDER"]) / stored_name
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(output.getvalue())
+    mime = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}[image_format]
+    current_app.extensions["image_storage"].save(stored_name, output.getvalue(), mime)
     return stored_name
 
 
 def uploaded_image(filename):
     if not filename or not re.fullmatch(r"[a-f0-9]{32}\.(?:jpg|png|webp)", filename):
         return ""
-    return send_from_directory(current_app.config["UPLOAD_FOLDER"], filename, max_age=3600)
+    storage = current_app.extensions["image_storage"]
+    stored = storage.open(filename)
+    if stored is not None:
+        mime = {"jpg": "image/jpeg", "png": "image/png", "webp": "image/webp"}[filename.rsplit(".", 1)[1]]
+        return send_file(stored, mimetype=mime, max_age=3600)
+    target = storage.url(filename)
+    return redirect(target) if target else ""
 
 
 def remove_uploaded_image(filename):
     if filename and re.fullmatch(r"[a-f0-9]{32}\.(?:jpg|png|webp)", filename):
-        (Path(current_app.config["UPLOAD_FOLDER"]) / filename).unlink(missing_ok=True)
+        current_app.extensions["image_storage"].delete(filename)
+
+
+def stored_image_url(filename):
+    if not filename or not re.fullmatch(r"[a-f0-9]{32}\.(?:jpg|png|webp)", filename):
+        return ""
+    return current_app.extensions["image_storage"].url(filename) or ""

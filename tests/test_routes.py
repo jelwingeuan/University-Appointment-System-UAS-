@@ -78,7 +78,7 @@ def test_student_profile_and_password_updates(client):
         == 302
     )
     orm.session.expire_all()
-    password = orm.session.get(User, 1).password
+    password = orm.session.get(User, 1).password_hash
     assert bcrypt.checkpw(b"NewCorrectHorse2", password.encode())
 
 
@@ -157,7 +157,7 @@ def test_admin_routes_and_bootstrap_command(client, app, monkeypatch):
     assert result.exit_code == 0
     row = orm.session.query(User).filter_by(email="newadmin@mmu.edu.my").one()
     assert row.role == "admin"
-    assert bcrypt.checkpw(b"StrongAdminPassword1", row.password.encode())
+    assert bcrypt.checkpw(b"StrongAdminPassword1", row.password_hash.encode())
 
 
 def test_invalid_upload_is_rejected(client):

@@ -101,15 +101,12 @@
                     </div>
                     {{ field_error(form_errors, 'role') }}
                 </div>
-                <div id="pinInput" {% if not form_errors.get('pin') %}hidden{% endif %} style="margin-bottom: 20px;">
-                    <label for="pin">Enter PIN:</label>
-                    <input type="password" name="pin" id="pin">
-                    {{ field_error(form_errors, 'pin') }}
-                    <button type="button" onclick="validatePin()">Submit PIN</button>
-                    <button type="button" onclick="retractPin()">Retract</button>
-                    <p id="pinMessage" style="color: red;"></p>
+                <div id="pinInput" {% if form_values.get('role') != 'teacher' %}hidden{% endif %} style="margin-bottom: 20px;">
+                    <label for="invitation">Lecturer invitation</label>
+                    <input type="password" name="invitation" id="invitation" autocomplete="off">
+                    {{ field_error(form_errors, 'invitation') }}
                 </div>
-                <div id="signupDetails" {% if form_errors.get('pin') or not form_values.get('role') %}hidden{% endif %}>
+                <div id="signupDetails" {% if not form_values.get('role') %}hidden{% endif %}>
                     <div class="profileinput">
                         <label for="faculty">Faculty</label>
                         <select class="profileinputdetails" name="faculty" required>
@@ -138,12 +135,12 @@
                         {{ field_error(form_errors, 'phone_number') }}
                     </div>
                     <div class="input_box">
-                        <input type="password" name="password" id="passwordField" minlength="8" required>
+                        <input type="password" name="password" id="passwordField" minlength="12" maxlength="72" required>
                         <span></span>
                         <label for="passwordField">Password</label>
                     </div>
                     <div class="input_box">
-                        <input type="password" name="confirm_password" id="confirmPasswordField" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters" required>
+                        <input type="password" name="confirm_password" id="confirmPasswordField" minlength="12" maxlength="72" required>
                         <span></span>
                         <label for="confirmPasswordField">Confirm your password</label>
                     </div>
@@ -165,43 +162,5 @@
             </div>
         </footer>
     </div>
-    <script>
-        // Function to handle click event when student role is selected
-    document.getElementById('studentRole').addEventListener('click', function() {
-        // Hide PIN input, display signup details, and update email format notice for students
-        document.getElementById('pinInput').style.display = 'none';
-        document.getElementById('signupDetails').style.display = 'block';
-        document.getElementById('emailFormatNotice').innerText = 'Note: Students must use an @student.mmu.edu.my email address.';
-    });
-
-    // Function to handle click event when teacher role is selected
-    document.getElementById('teacherRole').addEventListener('click', function() {
-        // Hide signup details, display PIN input, and update email format notice for teachers
-        document.getElementById('signupDetails').style.display = 'none';
-        document.getElementById('pinInput').style.display = 'block';
-        document.getElementById('emailFormatNotice').innerText = 'Note: Teachers must use an @mmu.edu.my email address.';
-    });
-
-    // The server validates this secret. Client-side code only checks that it was entered.
-    function validatePin() {
-        const pin = document.getElementById('pin').value;
-        if (pin.trim()) {
-            document.getElementById('pinInput').style.display = 'none';
-            document.getElementById('signupDetails').style.display = 'block';
-            document.getElementById('pinMessage').innerText = '';
-        } else {
-            document.getElementById('pinMessage').innerText = 'Registration secret is required';
-        }
-    }
-
-    // Function to retract selection of teacher role
-    function retractPin() {
-        // Hide both PIN input and signup details, and uncheck teacher role checkbox
-        document.getElementById('pinInput').style.display = 'none';
-        document.getElementById('signupDetails').style.display = 'none';
-        document.getElementById('teacherRole').checked = false;
-    }
-
-    </script>
 </body>
 </html>

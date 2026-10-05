@@ -23,7 +23,15 @@
                     <td><form method="post" action="{{ url_for('admin.delete_booking') }}" onsubmit="return confirm('Delete this appointment?')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment[0] }}">
                         <button class="button button-danger" type="submit" aria-label="Delete appointment {{ appointment[0] }}">Delete</button>
-                    </form></td>
+                    </form>
+                    {% if appointment[5] == 'Accepted' %}
+                    {% for status in ['Completed', 'No Show'] %}
+                    <form method="post" action="{{ url_for('admin.admin_appointment_status') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment[0] }}">
+                        <input type="hidden" name="status" value="{{ status }}"><button type="submit">Mark {{ status }}</button>
+                    </form>
+                    {% endfor %}
+                    {% endif %}</td>
                 </tr>
             {% else %}<tr><td colspan="7" class="empty-state">No appointments match this search.</td></tr>{% endfor %}
             </tbody>

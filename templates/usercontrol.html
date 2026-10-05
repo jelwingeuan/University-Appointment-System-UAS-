@@ -13,20 +13,41 @@
     </div>
     <div class="table-scroll" role="region" aria-label="Users" tabindex="0">
         <table class="data-table">
-            <thead><tr><th scope="col">No.</th><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Faculty</th><th scope="col">Phone</th><th scope="col">Action</th></tr></thead>
+            <thead><tr><th scope="col">No.</th><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Faculty</th><th scope="col">Phone</th><th scope="col">Account</th><th scope="col">Action</th></tr></thead>
             <tbody>
             {% for user in users %}
                 <tr>
                     <td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td><td>{{ user.username }}</td><td>{{ user.role|title }}</td><td>{{ user.faculty }}</td><td>{{ user.phone_number }}</td>
-                    <td><form method="post" action="{{ url_for('admin.delete_user_route') }}" onsubmit="return confirm('Delete this account?')">
+                    <td>{{ 'Active' if user.active else 'Inactive' }}</td>
+                    <td><form method="post" action="{{ url_for('admin.activate_user_route') if not user.active else url_for('admin.delete_user_route') }}" onsubmit="return confirm('{{ 'Reactivate' if not user.active else 'Deactivate' }} this account?')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ user.id }}">
-                        <button class="button button-danger" type="submit" aria-label="Delete {{ user.username }}">Delete</button>
+                        <button class="button {{ 'button-primary' if not user.active else 'button-danger' }}" type="submit" aria-label="{{ 'Reactivate' if not user.active else 'Deactivate' }} {{ user.username }}">{{ 'Reactivate' if not user.active else 'Deactivate' }}</button>
                     </form></td>
                 </tr>
-            {% else %}<tr><td colspan="6" class="empty-state">No users match this search.</td></tr>{% endfor %}
+            {% else %}<tr><td colspan="7" class="empty-state">No users match this search.</td></tr>{% endfor %}
             </tbody>
         </table>
     </div>
     {{ pagination_nav(pagination, 'admin.usercontrol', search) }}
+    <form method="post" action="{{ url_for('admin.create_lecturer_invitation') }}" class="search-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="invitation-email">Create lecturer invitation, optionally for one email</label>
+        <input id="invitation-email" type="email" name="email" maxlength="254">
+        <button type="submit">Create invitation</button>
+    </form>
+    {% if invitations %}
+    <h2>Open lecturer invitations</h2>
+    <ul>
+        {% for invitation in invitations %}
+        <li>
+            {{ invitation.email or 'Any institutional email' }}
+            <form method="post" action="{{ url_for('admin.revoke_lecturer_invitation_route', invitation_id=invitation.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit">Revoke invitation</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
 </section>
 {% endblock %}

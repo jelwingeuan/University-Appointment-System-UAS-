@@ -65,7 +65,12 @@ def get_calendar_details():
     end = start + timedelta(days=1)
     windows = db.session.scalars(
         select(Availability)
-        .where(Availability.lecturer_id == lecturer_id, Availability.starts_at < end, Availability.ends_at > start)
+        .where(
+            Availability.lecturer_id == lecturer_id,
+            Availability.active.is_(True),
+            Availability.starts_at < end,
+            Availability.ends_at > start,
+        )
         .order_by(Availability.starts_at)
     ).all()
     slots = []
@@ -180,7 +185,13 @@ def booking_history():
 
 def status_change(target):
     try:
-        transition_appointment(int(request.form.get("id", "")), int(current_user.id), current_user.role, target)
+        transition_appointment(
+            int(request.form.get("id", "")),
+            int(current_user.id),
+            current_user.role,
+            target,
+            request.form.get("reason"),
+        )
     except PermissionError:
         abort(403)
     except (BookingError, InvalidTransition, TypeError, ValueError):
@@ -204,3 +215,15 @@ def reject_booking():
 @role_required("teacher")
 def accept_booking():
     return status_change("Accepted")
+
+
+@bp.post("/complete_booking")
+@role_required("teacher")
+def complete_booking():
+    return status_change("Completed")
+
+
+@bp.post("/no_show_booking")
+@role_required("teacher")
+def no_show_booking():
+    return status_change("No Show")

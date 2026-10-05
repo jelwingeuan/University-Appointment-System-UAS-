@@ -26,6 +26,24 @@ def test_invalid_login_is_generic(client):
     assert "missing@example.com" not in page
 
 
+def test_overlong_password_inputs_fail_without_server_errors(client):
+    response = client.post(
+        "/login", data={"email": "student1@student.mmu.edu.my", "password": "x" * 100}
+    )
+    assert response.status_code == 302
+    login(client, "student1@student.mmu.edu.my")
+    response = client.post(
+        "/change_password",
+        data={
+            "current_password": "x" * 100,
+            "new_password": "a valid new passphrase",
+            "confirm_password": "a valid new passphrase",
+        },
+    )
+    assert response.status_code == 302
+    assert client.get("/profile").status_code == 200
+
+
 def test_protected_and_role_routes(client):
     assert client.get("/profile").status_code == 302
     login(client, "student1@student.mmu.edu.my")
@@ -60,17 +78,15 @@ def test_csrf_rejects_missing_token(tmp_path):
 def test_production_requires_strong_secret_and_disables_debug(monkeypatch, tmp_path):
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("FLASK_DEBUG", "1")
+    monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg://uas:secret@localhost/uas")
+    monkeypatch.setenv("RATELIMIT_STORAGE_URI", "redis://localhost:6379/1")
+    monkeypatch.setenv("IMAGE_STORAGE_FACTORY", "tests.test_platform_foundation:storage_factory")
     monkeypatch.setenv("FLASK_SECRET_KEY", "too-short")
     with pytest.raises(RuntimeError, match="at least 32"):
         create_app()
 
     monkeypatch.setenv("FLASK_SECRET_KEY", "a-production-secret-with-32-characters")
-    production_app = create_app(
-        {
-            "DATABASE_PATH": str(tmp_path / "production.db"),
-            "RATELIMIT_ENABLED": False,
-        }
-    )
+    production_app = create_app({"APP_ENV": "production", "RATELIMIT_ENABLED": False})
     assert production_app.debug is False
     assert production_app.config["SESSION_COOKIE_SECURE"] is True
 

@@ -76,6 +76,13 @@
         <div class="signup_link">
             Not a member? <a href="/signup">SignUp</a>
         </div>
+        <p><a href="{{ url_for('auth.password_reset_request') }}">Forgot your password?</a></p>
+        <form action="{{ url_for('auth.email_verification_request') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label for="verificationEmail">Resend email verification</label>
+            <input id="verificationEmail" type="email" name="email" required>
+            <button type="submit">Send instructions</button>
+        </form>
     </div>
 
     <div class="footer-wrapper">

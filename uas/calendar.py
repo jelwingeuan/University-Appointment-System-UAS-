@@ -77,11 +77,23 @@ def calendar_record():
             lock_lecturer(db_session, int(current_user.id))
             for occurrence in occurrences:
                 occurrence_end = occurrence + (end - start)
+                starts_at = local_to_utc(occurrence)
+                ends_at = local_to_utc(occurrence_end)
+                conflict = db_session.scalar(
+                    select(Availability.id).where(
+                        Availability.lecturer_id == int(current_user.id),
+                        Availability.active.is_(True),
+                        Availability.starts_at < ends_at,
+                        Availability.ends_at > starts_at,
+                    ).limit(1)
+                )
+                if conflict:
+                    raise ValueError("Availability windows cannot overlap")
                 db_session.add(
                     Availability(
                         lecturer_id=int(current_user.id),
-                        starts_at=local_to_utc(occurrence),
-                        ends_at=local_to_utc(occurrence_end),
+                        starts_at=starts_at,
+                        ends_at=ends_at,
                         slot_minutes=slot_minutes,
                     )
                 )
@@ -103,7 +115,9 @@ def events_page():
 def events():
     owner = int(current_user.id)
     windows = db.session.scalars(
-        select(Availability).where(Availability.lecturer_id == owner).order_by(Availability.starts_at)
+        select(Availability)
+        .where(Availability.lecturer_id == owner, Availability.active.is_(True))
+        .order_by(Availability.starts_at)
     ).all()
     rows = db.session.scalars(
         select(Appointment)

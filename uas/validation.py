@@ -63,6 +63,14 @@ def validate_purpose(value):
     return clean_text(value, "purpose", maximum=500)
 
 
+def validate_password(value):
+    password = value or ""
+    encoded_length = len(password.encode("utf-8"))
+    if len(password) < 12 or encoded_length > 72:
+        raise InputValidationError({"password": "Use at least 12 characters and no more than 72 UTF-8 bytes."})
+    return password
+
+
 def validate_search(value):
     value = (value or "").strip()
     if len(value) > 100:

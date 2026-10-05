@@ -4,8 +4,8 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from flask import Flask, url_for
-from sqlalchemy import event
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import event, text
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.exceptions import HTTPException
 
 from .config import ROOT, configure
@@ -18,8 +18,9 @@ def create_app(test_config=None):
     app = Flask(__name__, static_folder=str(ROOT / "static"), template_folder=str(ROOT / "templates"))
     configure(app, overrides)
     ZoneInfo(app.config["UNIVERSITY_TIMEZONE"])
-    Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
-    Path(app.config["CONTENT_PATH"]).parent.mkdir(parents=True, exist_ok=True)
+    from .storage import create_image_storage
+
+    app.extensions["image_storage"] = create_image_storage(app)
     database_url = app.config["SQLALCHEMY_DATABASE_URI"]
     if database_url.startswith("sqlite:///"):
         Path(database_url.removeprefix("sqlite:///")).expanduser().resolve().parent.mkdir(parents=True, exist_ok=True)
@@ -34,6 +35,7 @@ def create_app(test_config=None):
     limiter.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
+    login_manager.session_protection = app.config.get("SESSION_PROTECTION", "strong")
     migrate.init_app(app, db, directory=str(ROOT / "migrations"))
 
     with app.app_context():
@@ -49,8 +51,15 @@ def create_app(test_config=None):
     @login_manager.user_loader
     def load_user(user_id):
         try:
-            user = db.session.get(User, int(user_id))
-            return user if user and user.active else None
+            identity, separator, version = user_id.partition(":")
+            if not separator:
+                return None
+            user = db.session.get(User, int(identity))
+            if not user or not user.active or user.session_version != int(version):
+                return None
+            if app.config.get("REQUIRE_EMAIL_VERIFICATION") and not user.email_verified_at:
+                return None
+            return user
         except (TypeError, ValueError):
             return None
 
@@ -59,6 +68,7 @@ def create_app(test_config=None):
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         response.headers.setdefault("Referrer-Policy", "same-origin")
+        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         if app.config["SESSION_COOKIE_SECURE"]:
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
         return response
@@ -69,7 +79,9 @@ def create_app(test_config=None):
             if not filename:
                 return ""
             if re.fullmatch(r"[a-f0-9]{32}\.(?:jpg|png|webp)", filename):
-                return url_for("public.uploaded_image_route", filename=filename)
+                from .content_service import stored_image_url
+
+                return stored_image_url(filename) or url_for("public.uploaded_image_route", filename=filename)
             if Path(filename).name == filename:
                 return url_for("static", filename=f"faculty_pp/{filename}")
             return ""
@@ -100,6 +112,19 @@ def create_app(test_config=None):
 
     for module in (public, auth, profile, appointments, calendar, admin, faculty):
         app.register_blueprint(module.bp)
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}, 200
+
+    @app.get("/ready")
+    def ready():
+        try:
+            db.session.execute(text("SELECT 1"))
+            return {"ready": True}, 200
+        except SQLAlchemyError:
+            db.session.rollback()
+            return {"ready": False}, 503
 
     @app.cli.command("bootstrap-admin")
     def bootstrap_admin_command():
@@ -142,4 +167,17 @@ def create_app(test_config=None):
             f"Imported {result['counts']}; backup: {result['backup']}; report: {result['report']}; issues: {len(result['issues'])}"
         )
 
+    if app.config.get("APP_ENV") == "production":
+        from werkzeug.middleware.proxy_fix import ProxyFix
+
+        counts = app.config["PROXY_FIX_COUNTS"]
+        if any(counts.values()):
+            app.wsgi_app = ProxyFix(
+                app.wsgi_app,
+                x_for=counts["x_for"],
+                x_proto=counts["x_proto"],
+                x_host=counts["x_host"],
+                x_port=counts["x_port"],
+                x_prefix=counts["x_prefix"],
+            )
     return app
