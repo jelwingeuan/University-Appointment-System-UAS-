@@ -1,9 +1,11 @@
 import os
 import re
+import time
 from pathlib import Path
+from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from flask import Flask, url_for
+from flask import Flask, g, url_for
 from sqlalchemy import event, text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.exceptions import HTTPException
@@ -11,12 +13,14 @@ from werkzeug.exceptions import HTTPException
 from .config import ROOT, configure
 from .extensions import csrf, db, limiter, login_manager, migrate
 from .models import User
+from .observability import configure_logging
 
 
 def create_app(test_config=None):
     overrides = test_config or {}
     app = Flask(__name__, static_folder=str(ROOT / "static"), template_folder=str(ROOT / "templates"))
     configure(app, overrides)
+    configure_logging(app)
     ZoneInfo(app.config["UNIVERSITY_TIMEZONE"])
     from .storage import create_image_storage
 
@@ -71,7 +75,22 @@ def create_app(test_config=None):
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
         if app.config["SESSION_COOKIE_SECURE"]:
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+        request_id = getattr(g, "request_id", None) or str(uuid4())
+        response.headers["X-Request-ID"] = request_id
+        app.logger.info(
+            "request completed",
+            extra={
+                "event": "http.request",
+                "status_code": response.status_code,
+                "duration_ms": round((time.perf_counter() - getattr(g, "request_started", time.perf_counter())) * 1000, 2),
+            },
+        )
         return response
+
+    @app.before_request
+    def begin_request():
+        g.request_id = str(uuid4())
+        g.request_started = time.perf_counter()
 
     @app.context_processor
     def image_helpers():
@@ -105,7 +124,10 @@ def create_app(test_config=None):
             return "The requested change conflicts with existing data", 409
         if app.config["TESTING"]:
             raise error
-        app.logger.exception("Unhandled application error")
+        app.logger.error(
+            "unhandled application error",
+            extra={"event": "application.error", "error_type": type(error).__name__},
+        )
         return "An unexpected error occurred", 500
 
     from . import admin, appointments, auth, calendar, faculty, profile, public
@@ -166,6 +188,28 @@ def create_app(test_config=None):
         click.echo(
             f"Imported {result['counts']}; backup: {result['backup']}; report: {result['report']}; issues: {len(result['issues'])}"
         )
+
+    @app.cli.command("seed-demo")
+    def seed_demo_command():
+        if app.config.get("APP_ENV") == "production":
+            raise click.ClickException("Demo data cannot be seeded in production")
+        from .demo_seed import seed_demo
+
+        password = app.config.get("DEMO_ACCOUNT_PASSWORD", "")
+        try:
+            db.session.remove()
+            with db.session.begin():
+                counts = seed_demo(db.session, password)
+        except ValueError as exc:
+            db.session.rollback()
+            raise click.ClickException(str(exc)) from exc
+        except IntegrityError as exc:
+            db.session.rollback()
+            raise click.ClickException("Demo records conflict with existing data; no changes were saved") from exc
+        except Exception:
+            db.session.rollback()
+            raise
+        click.echo(f"Demo data ready: {counts}")
 
     if app.config.get("APP_ENV") == "production":
         from werkzeug.middleware.proxy_fix import ProxyFix

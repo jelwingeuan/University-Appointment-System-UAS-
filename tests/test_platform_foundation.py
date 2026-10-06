@@ -125,10 +125,12 @@ def test_production_requires_postgres_shared_limits_and_durable_image_store(monk
         create_app({"APP_ENV": "production"})
 
     monkeypatch.setenv("IMAGE_STORAGE_FACTORY", "tests.test_platform_foundation:storage_factory")
+    monkeypatch.setenv("DEMO_ACCOUNT_PASSWORD", "must-not-load-in-production")
     app = create_app({"APP_ENV": "production", "DEBUG": True, "SESSION_COOKIE_SECURE": False})
     assert not app.debug
     assert app.config["SESSION_COOKIE_SECURE"]
     assert app.config["SESSION_PROTECTION"] == "strong"
+    assert app.config["DEMO_ACCOUNT_PASSWORD"] is None
 
 
 def test_database_migrations_upgrade_clean_db_and_current_head(tmp_path):

@@ -80,6 +80,7 @@ def configure(app, overrides):
         )
     app.config.update(
         UNIVERSITY_TIMEZONE="Asia/Kuala_Lumpur" if testing else os.getenv("UNIVERSITY_TIMEZONE", "Asia/Kuala_Lumpur"),
+        DEMO_ACCOUNT_PASSWORD=None if testing or environment == "production" else os.getenv("DEMO_ACCOUNT_PASSWORD"),
         RATELIMIT_STORAGE_URI=(
             "memory://" if testing else os.getenv("RATELIMIT_STORAGE_URI", "memory://")
         ),

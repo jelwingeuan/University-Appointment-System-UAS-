@@ -31,6 +31,18 @@ Passwords require at least 12 characters and must fit bcrypt's 72-byte limit. Th
 
 Lecturer registration in development can still use `LECTURER_REGISTRATION_SECRET`. In production, lecturers register with a single-use invitation: an administrator creates one under User Control, copies the token from its one-time response, and sends it to the lecturer. Invitations expire after seven days, can be tied to an institutional email, and store only a token hash.
 
+### Synthetic demo data
+
+For local UI work, set a local-only `DEMO_ACCOUNT_PASSWORD` (at least 12 characters) and run:
+
+```sh
+export DEMO_ACCOUNT_PASSWORD='a-local-only-demo-password'
+flask --app app seed-demo
+unset DEMO_ACCOUNT_PASSWORD
+```
+
+The command refuses `APP_ENV=production`, creates synthetic users that share this password, and is safe to repeat. It does not reset or overwrite unrelated records and never runs during application startup. Do not reuse an institutional or production password. The [UI contract](docs/ui-contract.md) documents the behaviors the redesigned UI should rely on.
+
 ## Production configuration
 
 Install the production Redis client extra as well as the core application:
@@ -69,9 +81,13 @@ Example production environment keys are commented in `.env.example`. Do not comm
 Schema is created only by Alembic, never by application startup. Before upgrading an existing database, take a restorable database backup. For PostgreSQL, for example:
 
 ```sh
-pg_dump --format=custom --file=uas-before-upgrade.dump "$DATABASE_URL"
+pg_dump --format=custom --file=uas-before-upgrade.dump --dbname="service=uas-production"
 flask --app app db upgrade
 ```
+
+The `uas-production` service should be defined in a protected libpq service file and use a separate restricted password file or managed identity; do not put credentials in the command or source tree. The application emits request logs to stderr using route templates rather than raw URLs. Configure proxy or Gunicorn access logs to omit query strings, headers, and request bodies.
+
+See the [PostgreSQL backup and recovery runbook](docs/backup-recovery.md) for scheduled backup, encryption, retention, isolated restore, and restore-drill guidance.
 
 Migration `0002_production_foundation` preserves user IDs, renames `password` to `password_hash`, adds account and lifecycle timestamps, adds settings/tokens/history/audit tables, and expands appointment statuses. It seeds the single `site_settings` row from tracked `content.json` at migration time. Normal production reads and edits use the database; the JSON file remains a read-only local fallback/bootstrap source. To roll back after a failed upgrade, restore the pre-upgrade database backup. Do not downgrade after `Completed` or `No Show` appointments exist; the migration refuses that downgrade. A downgrade also removes settings, tokens, audit entries, and status history, so backup restore is the supported rollback.
 
