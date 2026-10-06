@@ -48,6 +48,13 @@ def about():
     return render_template("about.html")
 
 
+@bp.get("/design-system")
+def design_system():
+    if current_app.config.get("APP_ENV") == "production":
+        raise NotFound()
+    return render_template("design_system.html")
+
+
 @bp.route("/signup", methods=["GET", "POST"])
 @limiter.limit("10 per minute")
 def signup():

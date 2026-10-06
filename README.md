@@ -41,7 +41,7 @@ flask --app app seed-demo
 unset DEMO_ACCOUNT_PASSWORD
 ```
 
-The command refuses `APP_ENV=production`, creates synthetic users that share this password, and is safe to repeat. It does not reset or overwrite unrelated records and never runs during application startup. Do not reuse an institutional or production password. The [UI contract](docs/ui-contract.md) documents the behaviors the redesigned UI should rely on.
+The command refuses `APP_ENV=production`, creates synthetic users that share this password, and is safe to repeat. It does not reset or overwrite unrelated records and never runs during application startup. Do not reuse an institutional or production password. The [UI contract](docs/ui-contract.md) documents existing product behavior, while the [design system guide](docs/design-system.md) covers shared theme and component usage. The development-only `/design-system` page previews the common tokens and components.
 
 ## Production configuration
 

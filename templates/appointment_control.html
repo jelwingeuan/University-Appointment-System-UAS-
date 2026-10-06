@@ -19,7 +19,7 @@
                 <tr>
                     <td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td>
                     <td>{{ appointment[1] }}</td><td>{{ appointment[3] }}</td><td>{{ appointment[6] }}</td><td>{{ appointment[4] }}</td>
-                    <td><span class="status-badge status-{{ appointment[5]|lower }}">{{ appointment[5] }}</span></td>
+                    <td><span class="status-badge status-{{ appointment[5]|lower|replace(' ', '-') }}">{{ appointment[5] }}</span></td>
                     <td><form method="post" action="{{ url_for('admin.delete_booking') }}" onsubmit="return confirm('Delete this appointment?')">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment[0] }}">
                         <button class="button button-danger" type="submit" aria-label="Delete appointment {{ appointment[0] }}">Delete</button>

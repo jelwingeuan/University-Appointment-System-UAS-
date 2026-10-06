@@ -1,16 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pick Your Slot</title>
-    <link rel="stylesheet" href="../static/style.css">
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
-    <script src="../static/myscripts.js"></script>
-    <style>
+{% extends "base.html" %}
+{% block title %}Pick Your Slot{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+{% endblock %}
+{% block page_styles %}
+<style>
         .time-grid button.unavailable {
             background-color: rgb(242, 67, 67);
             cursor: not-allowed;
@@ -89,32 +84,12 @@
             }
         }
     </style>
-</head>
-<body>
-    <nav>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
-            </li>
-            <li><a href="/appointment">Make An Appointment</a></li>
-            {% if current_user.is_authenticated %}
-            <li class="dropdown">
-                <a href="/profile" class="dropbtn">Profile<i class='bx bx-chevron-down'></i></a>
-                <div class="dropdown-content">
-                    <a href="/profile">View Profile</a>
-                    <a href="/changepassword">Change Password</a>
-                    <a href="/bookinghistory">Booking History</a>
-                </div>
-            </li>
-            <li><form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-link" type="submit">Logout</button></form></li>
-            {% else %}
-            <li><a href="/login">Login</a></li>
-            <li><a href="/signup">Sign Up</a></li>
-            {% endif %}
-        </ul>
-    </nav>
-
-    <form id="appointment-form" method="post" action="/create_booking">
+{% endblock %}
+{% block navigation %}
+{% include "components/public_navigation.html" %}
+{% endblock %}
+{% block content %}
+<form id="appointment-form" method="post" action="/create_booking">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="appointmentwrapper">
             <div class="appointment-header">
@@ -148,8 +123,9 @@
               </button>
         </div>
     </form>
-
-    <script>
+{% endblock %}
+{% block scripts %}
+<script>
         function updateAvailability() {
             const appointmentDate = $("#appointment-date").val();
             const lecturer = $("select[name='lecturer']").val();
@@ -198,6 +174,6 @@
             }
         });
     </script>
-    
-</body>
-</html>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.3/jquery-ui.min.js"></script>
+{% endblock %}

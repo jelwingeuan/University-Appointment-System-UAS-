@@ -1,13 +1,7 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <main class="wrapper">
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="wrapper">
         <h1>{{ title }}</h1>
         {% if 'Reset' in title %}
         <form action="{{ url_for(endpoint) }}" method="post">
@@ -29,13 +23,14 @@
         {% endif %}
         <p id="token-error" role="alert" hidden>This link is incomplete. Open the original email link again.</p>
         <a href="{{ url_for('auth.login') }}">Return to sign in</a>
-    </main>
-    <script>
+    </section>
+{% endblock %}
+{% block scripts %}
+<script>
         const fragment = new URLSearchParams(location.hash.slice(1));
         const token = fragment.get("token") || "";
         document.getElementById("account-token").value = token;
         history.replaceState(null, "", location.pathname);
         if (!token) document.getElementById("token-error").hidden = false;
     </script>
-</body>
-</html>
+{% endblock %}

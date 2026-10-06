@@ -27,7 +27,7 @@
         <table class="data-table">
             <thead><tr><th scope="col">Reference</th><th scope="col">Student</th><th scope="col">Lecturer</th><th scope="col">Date</th><th scope="col">Time</th><th scope="col">Purpose</th><th scope="col">Status</th></tr></thead>
             <tbody>{% for appointment in appointments %}
-                <tr><td>{{ appointment[6] }}</td><td>{{ appointment[1] }}</td><td>{{ appointment[0] }}</td><td>{{ appointment[2] }}</td><td>{{ appointment[5] }}</td><td>{{ appointment[3] }}</td><td><span class="status-badge status-{{ appointment[4]|lower }}">{{ appointment[4] }}</span></td></tr>
+                <tr><td>{{ appointment[6] }}</td><td>{{ appointment[1] }}</td><td>{{ appointment[0] }}</td><td>{{ appointment[2] }}</td><td>{{ appointment[5] }}</td><td>{{ appointment[3] }}</td><td><span class="status-badge status-{{ appointment[4]|lower|replace(' ', '-') }}">{{ appointment[4] }}</span></td></tr>
             {% else %}<tr><td class="empty-state" colspan="7">No appointments match this search.</td></tr>{% endfor %}</tbody>
         </table>
     </div>

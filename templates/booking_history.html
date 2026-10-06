@@ -1,13 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking History</title>
-    <link rel="stylesheet" href="../static/style.css">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-
-    <style>
+{% extends "base.html" %}
+{% block title %}Booking History{% endblock %}
+{% block head %}
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+{% endblock %}
+{% block page_styles %}
+<style>
         button {
         border: none; /* Remove border */
         padding: 10px 20px; /* Add padding */
@@ -63,31 +60,12 @@
     }
 
     </style>
-</head>
-<body>
-    <nav>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
-            
-            <li><a href="/appointment">Make An Appointment</a></li>
-            {% if current_user.is_authenticated %}
-            <li class="dropdown">
-                <a href="/profile" class="dropbtn">Profile<i class='bx bx-chevron-down'></i></a>
-                <div class="dropdown-content">
-                    <a href="/profile">View Profile</a>
-                    <a href="/changepassword">Change Password</a>
-                    <a href="/bookinghistory">Booking History</a>
-                </div>
-            </li>
-            <li><form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-link" type="submit">Logout</button></form></li>
-            {% else %}
-            <li><a href="/login">Login</a></li>
-            <li><a href="/signup">Sign Up</a></li>
-            {% endif %}
-        </ul>  
-    </nav>
-    <div class="profilecontainer">
+{% endblock %}
+{% block navigation %}
+{% include "components/public_navigation.html" %}
+{% endblock %}
+{% block content %}
+<div class="profilecontainer">
         <div class="profilewrapper">
             <div class="profileheader">
                 <h3 style="margin: 10px;font-size: 30px;">Booking History</h3>
@@ -104,7 +82,7 @@
                     <form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="listitem logout-link" type="submit">Log Out</button></form>
                 </div>
                 <div class="profilemain" style="width: 800px;">
-                    <div class="table__body">
+                    <div class="table__body" role="region" aria-label="Appointment history" tabindex="0">
                         <table>
                             <thead>
                                 <tr>
@@ -131,7 +109,7 @@
                                     <td>{{ appointment['appointment_date'] }}</td>
                                     <td>{{ appointment['appointment_time'] }}</td>
                                     <td>{{ appointment['purpose'] }}</td>
-                                    <td class="{{ appointment['status']}}">{{ appointment['status'] }}</td>
+                                    <td><span class="status-badge status-{{ appointment['status']|lower|replace(' ', '-') }}">{{ appointment['status'] }}</span></td>
                                     {% if role == "teacher" %}
                                     <td>
                                         <form method="post" action="/accept_booking">
@@ -204,7 +182,4 @@
             </div>
         </footer>
     </div>
-    <script src="../static/myscripts.js"></script>
-    
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% macro button(label, variant='primary', size='default', type='button', disabled=false) -%}
+<button class="btn btn-{{ variant }}{% if size != 'default' %} btn-{{ size }}{% endif %}" type="{{ type }}"{% if disabled %} disabled{% endif %}>{{ label }}</button>
+{%- endmacro %}
+
+{% macro icon_button(label, size='default') -%}
+<button class="icon-button{% if size != 'default' %} icon-button-{{ size }}{% endif %}" type="button" aria-label="{{ label }}"><span aria-hidden="true">{{ caller() }}</span></button>
+{%- endmacro %}
+
+{% macro field(label, name, hint='', error='') -%}
+<div class="field">
+    <label for="{{ name }}">{{ label }}</label>
+    {{ caller() }}
+    {% if hint %}<p class="field-hint" id="{{ name }}-hint">{{ hint }}</p>{% endif %}
+    {% if error %}<p class="field-error" id="{{ name }}-error" role="alert">{{ error }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro badge(label, variant='neutral') -%}
+<span class="badge{% if variant != 'neutral' %} badge-{{ variant }}{% endif %}">{{ label }}</span>
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+<span class="status-badge status-{{ status|lower|replace(' ', '-') }}">{{ status }}</span>
+{%- endmacro %}
+
+{% macro alert(kind, message, title='') -%}
+<div class="alert alert-{{ kind }}" role="{{ 'alert' if kind in ['danger', 'error'] else 'status' }}">
+    <span>{% if title %}<strong>{{ title }}</strong> {% endif %}{{ message }}</span>
+</div>
+{%- endmacro %}
+
+{% macro card(title='') -%}
+<section class="ui-card">
+    {% if title %}<header class="ui-card-header"><h2>{{ title }}</h2></header>{% endif %}
+    <div class="ui-card-body">{{ caller() }}</div>
+</section>
+{%- endmacro %}
+
+{% macro empty_state(title, description, action_url='', action_label='', icon_class='') -%}
+<section class="ui-empty-state" aria-label="{{ title }}">
+    {% if icon_class %}<span class="ui-empty-icon {{ icon_class }}" aria-hidden="true"></span>{% endif %}
+    <h2>{{ title }}</h2>
+    <p>{{ description }}</p>
+    {% if action_url and action_label %}<a class="btn btn-primary" href="{{ action_url }}">{{ action_label }}</a>{% endif %}
+</section>
+{%- endmacro %}
+
+{% macro dialog(dialog_id, title, close_label='Close') -%}
+<dialog class="ui-dialog" id="{{ dialog_id }}" aria-labelledby="{{ dialog_id }}-title">
+    <header class="ui-dialog-header">
+        <h2 id="{{ dialog_id }}-title">{{ title }}</h2>
+        <button class="icon-button icon-button-sm" type="button" data-dialog-close aria-label="{{ close_label }}">×</button>
+    </header>
+    <div class="ui-dialog-body">{{ caller() }}</div>
+</dialog>
+{%- endmacro %}
+
+{% macro avatar(initials='', size='md', image='', label='') -%}
+<span class="avatar avatar-{{ size }}"{% if label %} aria-label="{{ label }}"{% endif %}>
+    {% if image %}<img src="{{ image }}" alt="{{ label }}">{% else %}<span aria-hidden="true">{{ initials }}</span>{% endif %}
+</span>
+{%- endmacro %}

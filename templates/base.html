@@ -1,19 +1,35 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="system">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
     <title>{% block title %}University Appointment System{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='ui.js') }}"></script>
     {% block head %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block page_styles %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}">
 </head>
 <body class="{% block body_class %}{% endblock %}">
-    <a class="skip-link" href="#main-content">Skip to content</a>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     {% block navigation %}{% endblock %}
-    <main id="main-content" class="page-content">
+    <div class="theme-control-shell">
+        <label class="theme-control" for="uas-theme">
+            <span>Appearance</span>
+            <select id="uas-theme" name="theme" autocomplete="off">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </label>
+    </div>
+    <main id="main-content" class="page-content" tabindex="-1">
         {% include "components/flash_messages.html" %}
         {% block content %}{% endblock %}
     </main>
+    {% block after_main %}{% endblock %}
+    <div id="toast-region" class="toast-region" aria-label="Notifications"></div>
     <script src="{{ url_for('static', filename='myscripts.js') }}" defer></script>
     {% block scripts %}{% endblock %}
 </body>

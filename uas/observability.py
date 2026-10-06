@@ -46,6 +46,27 @@ class ApplicationFormatter(logging.Formatter):
         return f"{timestamp} {record.levelname} {record.getMessage()} [{context}]"
 
 
+class WerkzeugStartupFilter(logging.Filter):
+    _uas_startup_filter = True
+
+    def filter(self, record):
+        if record.levelno >= logging.WARNING:
+            return True
+        return record.levelno >= logging.INFO and " * Running on " in record.getMessage()
+
+
+def configure_werkzeug_logging(environment):
+    logger = logging.getLogger("werkzeug")
+    if environment == "development":
+        # Keep the useful local URL banner without duplicating our request-scoped
+        # HTTP logs with Werkzeug's unstructured access log for every request.
+        logger.setLevel(logging.INFO)
+        if not any(getattr(item, "_uas_startup_filter", False) for item in logger.filters):
+            logger.addFilter(WerkzeugStartupFilter())
+    else:
+        logger.setLevel(logging.WARNING)
+
+
 def configure_logging(app):
     logger = app.logger
     if not any(getattr(item, "_uas_context_filter", False) for item in logger.filters):
@@ -57,4 +78,4 @@ def configure_logging(app):
     for handler in logger.handlers:
         handler.setFormatter(ApplicationFormatter())
     logger.setLevel(logging.INFO)
-    logging.getLogger("werkzeug").setLevel(logging.WARNING)
+    configure_werkzeug_logging(app.config.get("APP_ENV"))

@@ -1,8 +1,12 @@
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <ul class="flash-list" aria-live="polite">
+    <ul class="flash-list" aria-live="polite" aria-atomic="false">
         {% for category, message in messages %}
-        <li class="flash-message flash-{{ category }}">{{ message }}</li>
+        {% set kind = {'error': 'danger', 'message': 'info'}.get(category, category) %}
+        <li class="flash-message alert alert-{{ kind }}" role="{{ 'alert' if kind in ['danger', 'error'] else 'status' }}">
+            <span>{{ message }}</span>
+            <button class="alert-dismiss icon-button icon-button-sm" type="button" data-alert-dismiss aria-label="Dismiss message">×</button>
+        </li>
         {% endfor %}
     </ul>
     {% endif %}

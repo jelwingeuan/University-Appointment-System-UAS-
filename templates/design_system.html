@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% from "components/ui.html" import alert, button, card, dialog, empty_state, field, icon_button, status_badge %}
+{% block title %}Design system{% endblock %}
+{% block page_styles %}
+<style>
+    .design-showcase { width: min(calc(100% - 2rem), 76rem); margin: 2rem auto 4rem; }
+    .design-showcase > header { display: block; width: auto; max-width: 48rem; margin-bottom: 2rem; padding: 0; border: 0; color: var(--color-text); background: transparent; }
+    .design-showcase h1 { margin-bottom: .5rem; }
+    .design-section { margin-block: 2.5rem; }
+    .design-section > h2 { padding-bottom: .75rem; border-bottom: 1px solid var(--color-border); }
+    .token-grid, .component-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: 1rem; }
+    .token-swatch { display: flex; min-height: 5rem; align-items: end; padding: .75rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); background: var(--swatch); }
+    .token-swatch-text { color: var(--color-bg); }
+    .status-list, .button-list { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+    .design-form { max-width: 34rem; display: grid; gap: 1rem; }
+    .design-table-wrap { max-width: 100%; overflow-x: auto; }
+    .design-table { width: 100%; border-collapse: collapse; }
+    .design-table th, .design-table td { padding: .75rem 1rem; border-bottom: 1px solid var(--color-border); text-align: left; }
+    .design-actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+    @media (max-width: 639px) { .design-showcase { width: calc(100% - 1.5rem); margin-top: 1rem; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="design-showcase">
+    <header>
+        <h1>Design system</h1>
+        <p>Shared interface tokens and components for the University Appointment System. This showcase is available only outside production.</p>
+    </header>
+
+    <section class="design-section" aria-labelledby="color-tokens">
+        <h2 id="color-tokens">Color tokens</h2>
+        <div class="token-grid">
+            {% for name, token in [('Page', '--color-bg'), ('Surface', '--color-surface-raised'), ('Muted surface', '--color-surface-muted'), ('Text', '--color-text'), ('Border', '--color-border'), ('University blue', '--color-primary')] %}
+            <div class="token-swatch{% if name == 'Text' %} token-swatch-text{% endif %}" style="--swatch: var({{ token }})"><span>{{ name }} <code>{{ token }}</code></span></div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="design-section" aria-labelledby="buttons">
+        <h2 id="buttons">Buttons and fields</h2>
+        <div class="button-list">
+            {{ button('Primary action', 'primary') }}
+            {{ button('Secondary action', 'secondary') }}
+            {{ button('Destructive action', 'danger') }}
+            {{ button('Compact', 'primary', 'sm') }}
+            {% call icon_button('Close example', 'sm') %}×{% endcall %}
+        </div>
+        <form class="design-form" action="#" onsubmit="return false">
+            {% call field('Email address', 'showcase-email', hint='Use a visible label and describe any constraints.') %}
+                <input id="showcase-email" type="email" autocomplete="email" placeholder="name@example.edu">
+            {% endcall %}
+            {% call field('Message', 'showcase-message') %}
+                <textarea id="showcase-message" rows="3" placeholder="Optional details"></textarea>
+            {% endcall %}
+        </form>
+    </section>
+
+    <section class="design-section" aria-labelledby="cards">
+        <h2 id="cards">Card</h2>
+        {% call card('Appointment details') %}
+            <p>Use an elevated surface when it clarifies a distinct group of information.</p>
+        {% endcall %}
+    </section>
+
+    <section class="design-section" aria-labelledby="statuses">
+        <h2 id="statuses">Appointment statuses</h2>
+        <div class="status-list">
+            {% for status in ['Pending', 'Accepted', 'Rejected', 'Cancelled', 'Completed', 'No Show'] %}
+                {{ status_badge(status) }}
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="design-section" aria-labelledby="feedback">
+        <h2 id="feedback">Feedback and empty states</h2>
+        <div class="component-grid">
+            <div>{{ alert('success', 'Your changes have been saved.') }}</div>
+            <div>{{ alert('warning', 'Review the information before continuing.') }}</div>
+            <div>{{ alert('danger', 'The request could not be completed.') }}</div>
+        </div>
+        <div class="design-actions" style="margin-block: 1rem">
+            <button class="btn btn-secondary" type="button" data-toast-kind="success" data-toast-title="Saved" data-toast-message="This success notice closes after five seconds.">Show success toast</button>
+            <button class="btn btn-secondary" type="button" data-toast-kind="warning" data-toast-title="Review needed" data-toast-message="This warning stays until dismissed.">Show warning toast</button>
+        </div>
+        {{ empty_state('No appointments yet', 'When you book a consultation, it will appear here.', url_for('appointments.appointment'), 'Make an appointment') }}
+        <div class="skeleton skeleton-text" aria-hidden="true"></div>
+    </section>
+
+    <section class="design-section" aria-labelledby="table">
+        <h2 id="table">Responsive table</h2>
+        <div class="design-table-wrap" role="region" aria-label="Sample appointment table" tabindex="0">
+            <table class="design-table">
+                <thead><tr><th scope="col">Reference</th><th scope="col">Purpose</th><th scope="col">Status</th></tr></thead>
+                <tbody><tr><td>Example booking</td><td>Academic advising</td><td>{{ status_badge('Accepted') }}</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="design-section" aria-labelledby="dialogs">
+        <h2 id="dialogs">Native dialog</h2>
+        <button class="btn btn-secondary" type="button" data-dialog-open="design-dialog">Open dialog example</button>
+        {% call dialog('design-dialog', 'Dialog example') %}
+            <p>Native dialogs block background interaction, close with Escape, and return focus to the opener.</p>
+            <button class="btn btn-primary" type="button" data-dialog-close>Close dialog</button>
+        {% endcall %}
+    </section>
+</div>
+{% endblock %}

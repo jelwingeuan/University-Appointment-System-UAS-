@@ -1,11 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
-    <link rel="stylesheet" href="../static/style.css">
-    <style>
+{% extends "base.html" %}
+{% block title %}Sign Up{% endblock %}
+{% block page_styles %}
+<style>
         button {
         padding: 10px 20px;
         margin: 5px;
@@ -52,40 +48,20 @@
         border: 1px solid grey;
         box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
         margin: auto;
-    
+
         }
 
     </style>
-</head>
-<body>
-    {% from "components/forms.html" import field_error %}
-    <nav>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/about">About</a></li>
-            <li><a href="/appointment">Make An Appointment</a></li>
-            {% if current_user.is_authenticated %}
-            <li><form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-link" type="submit">Logout</button></form></li>
-            <li><a href="/profile">Profile</a></li>
-            {% else %}
-            <li><a href="/login">Login</a></li>
-            <li><a href="/signup">Sign Up</a></li>
-            {% endif %}
-        </ul>
-    </nav>
+{% endblock %}
+{% block navigation %}
+{% include "components/public_navigation.html" %}
+{% endblock %}
+{% block content %}
+{% from "components/forms.html" import field_error %}
+
     <div class="wrapper" style="width: 600px; height:800px ;position: absolute; left: 30%; margin-top: 20px;" >
         <div class="subwrapper" >
             <h1>Sign Up</h1>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flashes" style="margin-left: 50px;">
-                {% for category, message in messages %}
-                    <div class="{{ category }}" style="margin-left: 40px;" >{{ message }}</div>
-                {% endfor %}
-                </div>
-            {% endif %}
-            {% endwith %}
-
             <!-- Notice for incorrect email format -->
             <p id="emailFormatNotice" style="color: red;"></p>
             <p id="emailNotice" style="color: red;"></p>
@@ -162,5 +138,4 @@
             </div>
         </footer>
     </div>
-</body>
-</html>
+{% endblock %}

@@ -7,7 +7,7 @@ from sqlalchemy import select
 from tests.conftest import login
 from uas.extensions import db
 from uas.models import Appointment, Availability, Faculty, User
-from uas.observability import ApplicationFormatter
+from uas.observability import ApplicationFormatter, configure_werkzeug_logging
 
 
 def test_request_id_is_generated_and_request_logs_are_safe(client, app, caplog):
@@ -73,6 +73,25 @@ def test_log_formatter_is_human_readable_locally_and_json_in_production():
     assert structured["route"] == "/health"
     assert structured["status"] == 200
     assert structured["environment"] == "production"
+
+
+def test_development_server_logs_its_local_url_without_duplicate_access_logs():
+    logger = logging.getLogger("werkzeug")
+    old_level, old_filters = logger.level, logger.filters[:]
+    try:
+        configure_werkzeug_logging("development")
+        assert logger.level == logging.INFO
+        startup_filter = next(item for item in logger.filters if getattr(item, "_uas_startup_filter", False))
+
+        def record(message, level=logging.INFO):
+            return logging.LogRecord("werkzeug", level, __file__, 1, message, (), None)
+
+        assert startup_filter.filter(record("WARNING: dev server\n * Running on http://127.0.0.1:5000"))
+        assert not startup_filter.filter(record('127.0.0.1 - - "GET / HTTP/1.1" 200 -'))
+        assert startup_filter.filter(record("server warning", logging.WARNING))
+    finally:
+        logger.setLevel(old_level)
+        logger.filters[:] = old_filters
 
 
 def test_seed_demo_refuses_production_without_writing_rows(app):
