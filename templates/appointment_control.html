@@ -1,10 +1,10 @@
 {% extends "admin_base.html" %}
 {% from "components/pagination.html" import pagination_nav %}
 {% block title %}Booking Control{% endblock %}
+{% block content_width %}wide{% endblock %}
 {% block content %}
-<section class="admin-content" aria-labelledby="page-title">
+<section class="admin-content">
     <div class="page-heading">
-        <h1 id="page-title">Booking Control</h1>
         <form method="get" action="{{ url_for('admin.appointmentcontrol') }}" role="search" class="search-form">
             <label for="search-appointments">Search bookings</label>
             <input id="search-appointments" type="search" name="search" value="{{ search }}" maxlength="100">

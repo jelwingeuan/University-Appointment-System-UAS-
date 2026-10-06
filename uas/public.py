@@ -43,11 +43,6 @@ def home():
     return render_template("home.html", **content)
 
 
-@bp.get("/about")
-def about():
-    return render_template("about.html")
-
-
 @bp.get("/design-system")
 def design_system():
     if current_app.config.get("APP_ENV") == "production":

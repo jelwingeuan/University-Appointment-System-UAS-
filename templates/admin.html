@@ -2,9 +2,9 @@
 {% from "components/pagination.html" import pagination_nav %}
 {% block title %}Administration Dashboard{% endblock %}
 {% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>{% endblock %}
+{% block content_width %}wide{% endblock %}
 {% block content %}
-<section class="admin-content" aria-labelledby="page-title">
-    <h1 id="page-title">Administration Dashboard</h1>
+<section class="admin-content">
     <dl class="dashboard-counts">
         <div><dt>Students</dt><dd id="num_students">{{ num_students }}</dd></div>
         <div><dt>Lecturers</dt><dd id="num_teachers">{{ num_teachers }}</dd></div>

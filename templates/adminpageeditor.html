@@ -1,9 +1,10 @@
 {% extends "admin_base.html" %}
 {% from "components/forms.html" import field_error %}
 {% block title %}Page Editor{% endblock %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Site Settings'}]) }}{% endblock %}
 {% block content %}
-<section class="admin-content" aria-labelledby="page-title">
-    <h1 id="page-title">Edit Home Page</h1>
+<section class="admin-content">
     <form class="editor-form" action="{{ url_for('admin.admin_page_editor') }}" method="post" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div><label for="home_content">Home page content</label><textarea id="home_content" name="home_content" rows="4" maxlength="5000">{{ form_values.get('home_content', home_content) }}</textarea>{{ field_error(form_errors, 'home_content') }}</div>

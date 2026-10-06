@@ -1,0 +1,14 @@
+{% macro app_navigation(items, in_drawer=false) %}
+<nav class="app-nav" aria-label="{{ 'Mobile application' if in_drawer else 'Application' }}">
+    <ul>
+        {% for item in items %}
+        <li>
+            <a class="app-nav-link{% if item.active %} is-active{% endif %}" href="{{ item.url }}"{% if item.active %} aria-current="page"{% endif %}{% if in_drawer %} data-dialog-close{% endif %}>
+                <i class="fa-solid {{ item.icon }}" aria-hidden="true"></i>
+                <span>{{ item.label }}</span>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</nav>
+{% endmacro %}

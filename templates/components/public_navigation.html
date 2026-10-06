@@ -1,19 +1,21 @@
 <nav class="public-nav" aria-label="Main">
     <ul>
         <li><a href="{{ url_for('public.home') }}">Home</a></li>
-        <li><a href="{{ url_for('public.about') }}">About</a></li>
-        <li><a href="{{ url_for('appointments.appointment') }}">Make An Appointment</a></li>
         {% if current_user.is_authenticated %}
-        <li class="dropdown">
-            <a href="{{ url_for('profile.profile') }}" class="dropbtn">Profile<span class="nav-chevron" aria-hidden="true"></span></a>
-            <div class="dropdown-content">
-                <a href="{{ url_for('profile.profile') }}">View Profile</a>
-                <a href="{{ url_for('profile.changepassword') }}">Change Password</a>
-                <a href="{{ url_for('appointments.booking_history') }}">Booking History</a>
-            </div>
+        <li class="dropdown public-role-menu">
+            <details>
+                <summary>Application</summary>
+                <div class="dropdown-content">
+                    {% for item in app_navigation_items %}
+                    <a href="{{ item.url }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.label }}</a>
+                    {% endfor %}
+                    <a href="{{ url_for('profile.change_password') }}">Change Password</a>
+                </div>
+            </details>
         </li>
         <li><form class="logout-form" action="{{ url_for('auth.logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-link" type="submit">Logout</button></form></li>
         {% else %}
+        <li><a href="{{ url_for('appointments.appointment') }}">Make An Appointment</a></li>
         <li><a href="{{ url_for('auth.login') }}">Login</a></li>
         <li><a href="{{ url_for('public.signup') }}">Sign Up</a></li>
         {% endif %}

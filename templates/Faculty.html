@@ -1,12 +1,11 @@
 {% extends "admin_base.html" %}
 {% from "components/pagination.html" import pagination_nav %}
 {% block title %}Faculty Directory{% endblock %}
+{% block content_width %}wide{% endblock %}
+{% block page_description %}<p>Browse lecturers and students by faculty.</p>{% endblock %}
+{% block page_actions %}<a class="button" href="{{ url_for('faculty.create_faculty_hub') }}">Add Faculty</a>{% endblock %}
 {% block content %}
-<section class="admin-content" aria-labelledby="page-title">
-    <div class="page-heading">
-        <div><h1 id="page-title">Faculty Directory</h1><p>Browse lecturers and students by faculty.</p></div>
-        <a class="button" href="{{ url_for('faculty.create_faculty_hub') }}">Add Faculty</a>
-    </div>
+<section class="admin-content">
     {% if faculties %}
     <form class="search-form faculty-picker" method="get" action="{{ url_for('faculty.faculty') }}">
         <label for="facultySelect">Select faculty</label>

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "components/app_navigation.html" import app_navigation %}
+{% block shell_head %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozmP/TpFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">{% endblock %}
+{% block body_class %}app-page{% endblock %}
+{% block page_layout %}
+<div class="app-shell">
+    <aside class="app-sidebar" aria-label="Application sidebar">
+        <a class="app-brand" href="{{ application_home_url }}" aria-label="{{ application_brand_name }} home">
+            {% if application_brand_logo %}<img src="{{ application_brand_logo }}" alt="" class="app-brand-image">
+            {% else %}<span class="app-brand-mark" aria-hidden="true">{{ application_brand_initials }}</span>{% endif %}
+            <span class="app-brand-name">{{ application_brand_name }}</span>
+        </a>
+        {{ app_navigation(app_navigation_items) }}
+    </aside>
+
+    <div class="app-frame">
+        <header class="app-topbar">
+            <button class="app-menu-trigger" type="button" data-dialog-open="app-navigation" aria-haspopup="dialog" aria-controls="app-navigation" aria-label="Open application navigation">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+            <a class="app-mobile-brand" href="{{ application_home_url }}" aria-label="{{ application_brand_name }} home">
+                {% if application_brand_logo %}<img src="{{ application_brand_logo }}" alt="" class="app-brand-image">
+                {% else %}<span class="app-brand-mark" aria-hidden="true">{{ application_brand_initials }}</span>{% endif %}
+                <span class="app-brand-name">{{ application_brand_name }}</span>
+            </a>
+            <div class="app-topbar-tools">
+                <div class="app-theme-control">{% include "components/theme_control.html" %}</div>
+                {% include "components/account_menu.html" %}
+            </div>
+        </header>
+
+        <main id="main-content" class="app-main" tabindex="-1">
+            {% include "components/flash_messages.html" %}
+            <div class="app-main-inner app-main-inner--{% block content_width %}normal{% endblock %}">
+                {% set breadcrumb_content %}{% block breadcrumbs %}{% endblock %}{% endset %}
+                {% if breadcrumb_content|trim %}{{ breadcrumb_content|safe }}{% endif %}
+                <header class="app-page-header">
+                    <div class="app-page-heading">
+                        <h1>{% block page_title %}{{ self.title()|striptags|trim }}{% endblock %}</h1>
+                        {% block page_description %}{% endblock %}
+                    </div>
+                    <div class="app-page-actions">{% block page_actions %}{% endblock %}</div>
+                </header>
+                <div class="app-page-content">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<dialog class="app-nav-drawer" id="app-navigation" aria-labelledby="app-navigation-title">
+    <div class="app-drawer-header">
+        <h2 id="app-navigation-title">Navigation</h2>
+        <button class="icon-button" type="button" data-dialog-close aria-label="Close navigation">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+    </div>
+    <a class="app-brand app-drawer-brand" href="{{ application_home_url }}" data-dialog-close aria-label="{{ application_brand_name }} home">
+        {% if application_brand_logo %}<img src="{{ application_brand_logo }}" alt="" class="app-brand-image">
+        {% else %}<span class="app-brand-mark" aria-hidden="true">{{ application_brand_initials }}</span>{% endif %}
+        <span class="app-brand-name">{{ application_brand_name }}</span>
+    </a>
+    {{ app_navigation(app_navigation_items, true) }}
+</dialog>
+{% endblock %}

@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Login{% endblock %}
+{% extends "app_shell.html" %}
+{% block title %}Profile{% endblock %}
 {% block head %}
 <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 {% endblock %}
@@ -33,30 +33,14 @@
 
     </style>
 {% endblock %}
-{% block navigation %}
-{% include "components/public_navigation.html" %}
-{% endblock %}
 {% block content %}
 {% from "components/forms.html" import field_error %}
 
     <div class="profilecontainer">
         <div class="profilewrapper">
-            <div class="profileheader">
-                <h3 style="margin: 10px;font-size: 30px;">Profiles</h3>
-            </div>
             <div class="profilesubwrapper">
-                <div class="profilesidebar">
-                    <h3 style="margin-top: 30px; font-size: 22px;">{{ current_user.username }}</h3>
-                    <a class="listitem active" data-toggle="list" href="/profile">General</a>
-                    <a class="listitem" data-toggle="list" href="/changepassword">Change password</a>
-                    {% if current_user.role == 'teacher' %}
-                    <a class="listitem" data-toggle="list" href="/calendar">Calendar</a>
-                    {% endif %}
-                    <a class="listitem" data-toggle="list" href="/bookinghistory">Booking History</a>
-                    <form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="listitem logout-link" type="submit">Log Out</button></form>
-                </div>
                 <div class="profilemain">
-                    <h1 style="margin-top: 20px;">Account Setting</h1>
+                    <h2 style="margin-top: 20px;">Account Setting</h2>
                     <div class="profileinput" style="margin-left: 20px;">
                         <div class="subprofileinput">
                             <label>Name</label>
@@ -105,17 +89,5 @@
                 <button id="updateButton" type="submit" >Update</button>
             </div>
         </form>
-    </div>
-    <div class="footer-wrapper">
-        <footer class="footer">
-            <div class="footer-col">
-                <h4>Universal Appointment Booking System</h4>
-                <ul>
-                    <li><a href="/about">About Us</a></li>
-                    <li><a href="/appointment">Book Now</a></li>
-                    <li><a href="/signup">Join Now</a></li>
-                </ul>
-            </div>
-        </footer>
     </div>
 {% endblock %}

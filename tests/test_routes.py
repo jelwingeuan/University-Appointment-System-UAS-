@@ -12,7 +12,7 @@ from uas.models import Appointment, Availability, User
 
 def test_public_pages_and_login_form(client):
     assert client.get("/").status_code == 200
-    assert client.get("/about").status_code == 200
+    assert client.get("/about").status_code == 404
     assert 'name="csrf_token"' in client.get("/login").get_data(as_text=True)
     assert client.get("/signup").status_code == 200
 

@@ -5,7 +5,8 @@ from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from flask import Flask, g, url_for
+from flask import Flask, g, render_template, request, url_for
+from flask_login import current_user
 from sqlalchemy import event, text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from werkzeug.exceptions import HTTPException
@@ -13,7 +14,25 @@ from werkzeug.exceptions import HTTPException
 from .config import ROOT, configure
 from .extensions import csrf, db, limiter, login_manager, migrate
 from .models import User
+from .navigation import account_initials, navigation_for_user, role_label
 from .observability import configure_logging
+
+_NON_HTML_ENDPOINTS = {
+    "appointments.get_calendar_details",
+    "appointments.check_availability",
+    "calendar.events",
+    "calendar.delete_event",
+}
+
+
+def _wants_html_error():
+    accepted = request.accept_mimetypes
+    return (
+        not request.is_json
+        and request.endpoint not in _NON_HTML_ENDPOINTS
+        and accepted["text/html"] > 0
+        and accepted["text/html"] >= accepted["application/json"]
+    )
 
 
 def create_app(test_config=None):
@@ -92,35 +111,85 @@ def create_app(test_config=None):
         g.request_id = str(uuid4())
         g.request_started = time.perf_counter()
 
+    def image_url(filename):
+        if not filename:
+            return ""
+        if re.fullmatch(r"[a-f0-9]{32}\.(?:jpg|png|webp)", filename):
+            from .content_service import stored_image_url
+
+            return stored_image_url(filename) or url_for("public.uploaded_image_route", filename=filename)
+        if Path(filename).name == filename:
+            return url_for("static", filename=f"faculty_pp/{filename}")
+        return ""
+
     @app.context_processor
     def image_helpers():
-        def image_url(filename):
-            if not filename:
-                return ""
-            if re.fullmatch(r"[a-f0-9]{32}\.(?:jpg|png|webp)", filename):
-                from .content_service import stored_image_url
-
-                return stored_image_url(filename) or url_for("public.uploaded_image_route", filename=filename)
-            if Path(filename).name == filename:
-                return url_for("static", filename=f"faculty_pp/{filename}")
-            return ""
-
         return {"image_url": image_url}
+
+    @app.context_processor
+    def application_shell_context():
+        context = {
+            "app_navigation_items": [],
+            "account_initials": "U",
+            "account_role": "Account",
+            "account_faculty": "",
+            "application_brand_name": "Multimedia University",
+            "application_brand_logo": "",
+            "application_brand_initials": "MU",
+            "application_home_url": url_for("public.home"),
+        }
+        if not current_user.is_authenticated:
+            return context
+
+        links = navigation_for_user(current_user.role, request.endpoint)
+        from .content_service import load_content
+
+        content = load_content()
+        brand_name = str(content.get("school_name") or "Multimedia University").strip()
+        context.update(
+            app_navigation_items=links,
+            account_initials=account_initials(current_user.username),
+            account_role=role_label(current_user.role),
+            account_faculty=current_user.faculty if current_user.role in {"student", "teacher"} else "",
+            application_brand_name=brand_name,
+            application_brand_logo=image_url(content.get("school_logo")),
+            application_brand_initials=account_initials(brand_name),
+            application_home_url=links[0]["url"] if links else url_for("public.home"),
+        )
+        return context
 
     @app.errorhandler(HTTPException)
     def http_error(error):
-        if app.config["TESTING"]:
-            return error
-        if error.code == 404:
-            return "Page not found", 404
-        if error.code == 403:
-            return "You are not authorized to access this page", 403
+        messages = {
+            403: ("Access denied", "You are not authorized to access this page."),
+            404: ("Page not found", "The page you requested could not be found."),
+            409: ("Conflict", "The requested change conflicts with existing data."),
+            500: ("Something went wrong", "The request could not be completed."),
+        }
+        title, message = messages.get(error.code, (error.name, "The request could not be completed."))
+        if _wants_html_error():
+            return render_template("error.html", status=error.code, title=title, message=message), error.code
+        plain_messages = {
+            403: "You are not authorized to access this page",
+            404: "Page not found",
+            409: "The request could not be completed",
+            500: "The request could not be completed",
+        }
+        if error.code in plain_messages:
+            return plain_messages[error.code], error.code
         return "The request could not be completed", error.code
 
     @app.errorhandler(Exception)
     def unexpected_error(error):
         if isinstance(error, IntegrityError):
             db.session.rollback()
+            if _wants_html_error():
+                return render_template(
+                    "error.html",
+                    status=409,
+                    title="Conflict",
+                    message="The requested change conflicts with existing data.",
+                ), 409
             return "The requested change conflicts with existing data", 409
         if app.config["TESTING"]:
             raise error
@@ -128,6 +197,13 @@ def create_app(test_config=None):
             "unhandled application error",
             extra={"event": "application.error", "error_type": type(error).__name__},
         )
+        if _wants_html_error():
+            return render_template(
+                "error.html",
+                status=500,
+                title="Something went wrong",
+                message="The request could not be completed.",
+            ), 500
         return "An unexpected error occurred", 500
 
     from . import admin, appointments, auth, calendar, faculty, profile, public

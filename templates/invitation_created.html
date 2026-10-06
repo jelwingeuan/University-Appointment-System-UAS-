@@ -1,8 +1,9 @@
 {% extends "admin_base.html" %}
 {% block title %}Lecturer Invitation{% endblock %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Users', 'url': url_for('admin.usercontrol')}, {'label': 'Lecturer Invitation'}]) }}{% endblock %}
 {% block content %}
-<section class="admin-content" aria-labelledby="page-title">
-    <h1 id="page-title">Lecturer invitation created</h1>
+<section class="admin-content">
     <p>Copy this token now. It is shown only once and expires in seven days.</p>
     <p><code>{{ token }}</code></p>
     <p>Enter it in the lecturer invitation field during registration.</p>

@@ -1,0 +1,28 @@
+<details class="app-account-menu">
+    <summary aria-label="Account menu for {{ current_user.username }}">
+        <span class="app-avatar" aria-hidden="true">{{ account_initials }}</span>
+        <span class="app-account-summary">
+            <strong>{{ current_user.username }}</strong>
+            <span>{{ account_role }}</span>
+        </span>
+        <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+    </summary>
+    <div class="app-account-popover">
+        <div class="app-account-identity">
+            <span class="app-avatar app-avatar-large" aria-hidden="true">{{ account_initials }}</span>
+            <span class="app-account-details">
+                <strong>{{ current_user.username }}</strong>
+                <span>{{ account_role }}</span>
+                {% if account_faculty %}<span>{{ account_faculty }}</span>{% endif %}
+            </span>
+        </div>
+        <div class="app-account-actions">
+            <a href="{{ url_for('profile.profile') }}">Profile</a>
+            <a href="{{ url_for('profile.change_password') }}">Change Password</a>
+            <form action="{{ url_for('auth.logout') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit">Log Out</button>
+            </form>
+        </div>
+    </div>
+</details>

@@ -1,8 +1,7 @@
-{% extends "base.html" %}
+{% extends "app_shell.html" %}
 {% block title %}Pick Your Slot{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.3/themes/base/jquery-ui.css">
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 {% endblock %}
 {% block page_styles %}
 <style>
@@ -85,15 +84,11 @@
         }
     </style>
 {% endblock %}
-{% block navigation %}
-{% include "components/public_navigation.html" %}
-{% endblock %}
 {% block content %}
 <form id="appointment-form" method="post" action="/create_booking">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="appointmentwrapper">
             <div class="appointment-header">
-                <h1 style="margin-top: 20px;">Pick Your Slot</h1>
                 <div class="contactinfo">
                     <label>Choose Your Lecturer</label>
                     <select name="lecturer" class="bordered-select" style="margin-left: 20px;">

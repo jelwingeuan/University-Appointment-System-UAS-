@@ -44,6 +44,18 @@ Shared breakpoints are 640px (small), 768px (medium), 1024px (large), and 1280px
 
 The base shell provides a skip link, a single main landmark, persistent feedback, and a labeled theme selector. Keep labels visible, associate hints and errors with fields, preserve visible keyboard focus, use semantic table headers, and retain status text. Native dialogs must have an accessible name and a clear close action. Shared motion honors `prefers-reduced-motion`; avoid adding animation that conveys no user feedback or state change.
 
+## Authenticated application shell
+
+Authenticated templates extend `templates/app_shell.html`; public content continues to extend `templates/base.html`. `templates/admin_base.html` remains as a thin compatibility layer for existing administrator templates. The app shell owns the role-aware sidebar, mobile navigation dialog, top bar, account disclosure, theme selector, page header, flashes, and the single main landmark. Page bodies remain in their existing templates.
+
+Navigation is built on the server from `current_user.role` and Flask endpoint names in `uas/navigation.py`. Add a link only when a route already exists and is valid for that role. The active link uses an endpoint allowlist and `aria-current="page"`; it does not infer state from URL substrings. Authenticated public pages retain their public layout and expose only the same role-specific application destinations.
+
+The sidebar is persistent at 1024px and wider. Below 1024px it becomes a native `<dialog>` drawer opened by the top-bar button. Native dialog behavior blocks background interaction and handles Escape; `window.UASUI` restores focus to the trigger. Navigation links and the close button dismiss the drawer. The account control is a native `<details>` disclosure, supports keyboard activation, closes on Escape, and returns focus to its summary. It shows the account name, human-readable role, and faculty for students/lecturers; its logout form remains a CSRF-protected POST.
+
+The shared header takes its visible title from the page's existing `title` block. Templates may optionally supply `page_description`, `page_actions`, and `breadcrumbs` blocks. Breadcrumbs are for deeper routes and use a labeled navigation landmark with the current location marked by `aria-current="page"`. Set `content_width` to `normal` (default), `wide`, or `full` for content such as forms, tables, or calendars. The shell reuses `SiteSettings` branding and falls back to the existing university name when no setting or logo exists.
+
+Browser requests that accept HTML use the public base layout for 403, 404, 409, and 500 errors. JSON and calendar/availability API requests keep their non-page response behavior and HTTP status. The production `/design-system` showcase remains unavailable.
+
 ## Security policy note
 
 Content Security Policy remains deferred until the redesigned UI's inline scripts, external resources, and image needs are known. Do not introduce a restrictive policy that silently breaks existing workflows during this foundation phase.

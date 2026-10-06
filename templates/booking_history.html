@@ -1,8 +1,5 @@
-{% extends "base.html" %}
+{% extends "app_shell.html" %}
 {% block title %}Booking History{% endblock %}
-{% block head %}
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-{% endblock %}
 {% block page_styles %}
 <style>
         button {
@@ -61,26 +58,10 @@
 
     </style>
 {% endblock %}
-{% block navigation %}
-{% include "components/public_navigation.html" %}
-{% endblock %}
 {% block content %}
 <div class="profilecontainer">
         <div class="profilewrapper">
-            <div class="profileheader">
-                <h3 style="margin: 10px;font-size: 30px;">Booking History</h3>
-            </div>
             <div class="profilesubwrapper">
-                <div class="profilesidebar" style="width: 200px; margin-left: 20px;">
-                    <h3 style="margin-top: 30px; font-size: 22px;">{{ current_user.username }}</h3>
-                    <a class="listitem active" data-toggle="list" href="/profile">General</a>
-                    <a class="listitem" data-toggle="list" href="/changepassword">Change password</a>
-                    {% if current_user.role == 'teacher' %}
-                    <a class="listitem" data-toggle="list" href="/calendar">Calendar</a>
-                    {% endif %}
-                    <a class="listitem" data-toggle="list" href="/bookinghistory">Booking History</a>
-                    <form class="logout-form" action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="listitem logout-link" type="submit">Log Out</button></form>
-                </div>
                 <div class="profilemain" style="width: 800px;">
                     <div class="table__body" role="region" aria-label="Appointment history" tabindex="0">
                         <table>
@@ -169,17 +150,5 @@
                 </div>
             </div>
         </div>
-    </div>
-    <div class="footer-wrapper">
-        <footer class="footer">
-            <div class="footer-col">
-                <h4>Universal Appointment Booking System</h4>
-                <ul>
-                    <li><a href="/aboutus">About us</a></li>
-                    <li><a href="/appointment">Book now</a></li>
-                    <li><a href="/signup">Join Now</a></li>
-                </ul>
-            </div>
-        </footer>
     </div>
 {% endblock %}

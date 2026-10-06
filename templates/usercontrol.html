@@ -1,10 +1,10 @@
 {% extends "admin_base.html" %}
 {% from "components/pagination.html" import pagination_nav %}
 {% block title %}User Control{% endblock %}
+{% block content_width %}wide{% endblock %}
 {% block content %}
-<section class="admin-content" aria-labelledby="page-title">
+<section class="admin-content">
     <div class="page-heading">
-        <h1 id="page-title">User Control</h1>
         <form method="get" action="{{ url_for('admin.usercontrol') }}" role="search" class="search-form">
             <label for="search-users">Search users</label>
             <input id="search-users" type="search" name="search" value="{{ search }}" maxlength="100">

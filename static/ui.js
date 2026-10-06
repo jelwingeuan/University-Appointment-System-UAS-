@@ -114,6 +114,11 @@
             if (event.key === storageKey) applyTheme(event.newValue || "system");
         });
         document.addEventListener("click", (event) => {
+            const accountMenu = document.querySelector(".app-account-menu[open]");
+            if (accountMenu && !accountMenu.contains(event.target)) accountMenu.open = false;
+            if (event.target.closest(".app-account-menu a, .app-account-menu button")) {
+                event.target.closest(".app-account-menu")?.removeAttribute("open");
+            }
             const opener = event.target.closest("[data-dialog-open]");
             if (opener) openDialog(opener.dataset.dialogOpen, opener);
             const closer = event.target.closest("[data-dialog-close]");
@@ -128,6 +133,13 @@
                     message: toastTrigger.dataset.toastMessage || "",
                 });
             }
+        });
+        document.addEventListener("keydown", (event) => {
+            if (event.key !== "Escape") return;
+            const accountMenu = document.querySelector(".app-account-menu[open]");
+            if (!accountMenu) return;
+            accountMenu.open = false;
+            accountMenu.querySelector("summary")?.focus();
         });
     };
 

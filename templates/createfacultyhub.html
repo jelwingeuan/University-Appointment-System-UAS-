@@ -1,9 +1,10 @@
 {% extends "admin_base.html" %}
 {% from "components/forms.html" import field_error %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
 {% block title %}Add Faculty{% endblock %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Faculties', 'url': url_for('faculty.faculty')}, {'label': 'Add Faculty'}]) }}{% endblock %}
 {% block content %}
-<section class="admin-content" aria-labelledby="page-title">
-    <h1 id="page-title">Add Faculty</h1>
+<section class="admin-content">
     <form class="editor-form" action="{{ url_for('faculty.create_faculty_hub') }}" method="post" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div><label for="faculty_name">Faculty name</label><input id="faculty_name" name="faculty_name" maxlength="255" value="{{ form_values.get('faculty_name', '') }}" required>{{ field_error(form_errors, 'faculty_name') }}</div>

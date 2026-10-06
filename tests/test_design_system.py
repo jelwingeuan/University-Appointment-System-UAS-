@@ -12,16 +12,18 @@ def assert_shared_shell(markup):
 
 def test_public_templates_use_shared_shell(client):
     for path in (
-        "/", "/about", "/login", "/signup", "/password-reset",
+        "/", "/login", "/signup", "/password-reset",
         "/password-reset/complete", "/email-verification/complete",
     ):
         response = client.get(path)
         assert response.status_code == 200, path
         assert_shared_shell(response.get_data(as_text=True))
+        assert 'class="app-shell"' not in response.get_data(as_text=True)
     login(client, "student1@student.mmu.edu.my")
     appointment = client.get("/appointment")
     assert appointment.status_code == 200
     assert_shared_shell(appointment.get_data(as_text=True))
+    assert 'class="app-shell"' in appointment.get_data(as_text=True)
 
 
 def test_authenticated_role_templates_use_shared_shell(client):
@@ -30,12 +32,14 @@ def test_authenticated_role_templates_use_shared_shell(client):
         response = client.get(path)
         assert response.status_code == 200, path
         assert_shared_shell(response.get_data(as_text=True))
+        assert 'class="app-shell"' in response.get_data(as_text=True)
         client.post("/logout")
 
     login(client, "lecturer1@mmu.edu.my")
     calendar = client.get("/calendar")
     assert calendar.status_code == 200
     assert_shared_shell(calendar.get_data(as_text=True))
+    assert 'class="app-shell"' in calendar.get_data(as_text=True)
     client.post("/logout")
 
     login(client, "admin@mmu.edu.my")
@@ -43,6 +47,7 @@ def test_authenticated_role_templates_use_shared_shell(client):
         response = client.get(path)
         assert response.status_code == 200, path
         assert_shared_shell(response.get_data(as_text=True))
+        assert 'class="app-shell"' in response.get_data(as_text=True)
 
 
 def test_persistent_flashes_render_accessible_categories_and_dismiss_controls(client):
