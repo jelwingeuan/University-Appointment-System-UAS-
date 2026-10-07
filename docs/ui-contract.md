@@ -8,6 +8,8 @@ The server is authoritative for identity, ownership, appointment state, availabi
 - **Teacher (lecturer):** create availability and delete their own unbooked windows; view their own calendar and bookings; accept or reject their own Pending bookings; mark their own Accepted bookings Completed or No Show.
 - **Admin:** inspect users and appointments; deactivate/reactivate accounts; create faculties and lecturer invitations; edit site settings; delete appointments; mark Accepted appointments Completed or No Show. Admin actions do not grant ownership of student invoices or lecturer calendars.
 
+Student navigation opens `/appointment` for a personal summary, `/appointment2` for booking, `/bookinghistory` for the student's own appointments, `/explore` for read-only faculty/active lecturer discovery, and `/profile` for account settings. Lecturer and administrator workflows remain unchanged.
+
 ## Appointment states and transitions
 
 The supported states are `Pending`, `Accepted`, `Rejected`, `Cancelled`, `Completed`, and `No Show`.
@@ -29,6 +31,7 @@ Only Pending and Accepted appointments block a slot. Rejected, Cancelled, Comple
 - Conflicts are checked across all availability windows for the lecturer. Adjacent back-to-back slots are allowed. The booking transaction is authoritative even when a prior availability check said the slot was free.
 - `POST /calendar_record` accepts `event_date`, `end_date`, `start_time`, `end_time`, `slot_size`, and `repeat_type` (``, `weekly`, or `monthly`). Local times are converted by the server. `GET /events` returns only the signed-in lecturer's active availability and Accepted appointments. `POST /delete_event` accepts `availability_id` and only deletes the owning lecturer's unbooked window.
 - Student booking history and invoice lookup are scoped to the signed-in student. Lecturer history is scoped to the signed-in lecturer.
+- `/explore` is student-only, read-only, and searches active lecturers by name or faculty. Results are paginated at 12 lecturers per page; booking still uses the normal server-validated `/appointment2` flow.
 
 ## Authentication and invitations
 

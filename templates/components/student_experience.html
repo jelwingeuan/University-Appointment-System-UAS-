@@ -1,0 +1,82 @@
+{% macro status_summary(appointment) -%}
+<div class="student-status-summary">
+    <span class="status-badge status-{{ appointment.status|lower|replace(' ', '-') }}">{{ appointment.status }}</span>
+    <p>{{ appointment.status_description }}</p>
+</div>
+{%- endmacro %}
+
+{% macro appointment_card(appointment, featured=false, show_reference=false, show_cancel=true) -%}
+<article class="student-appointment-card{% if featured %} student-appointment-card--featured{% endif %}">
+    <div class="student-appointment-topline">
+        <div>
+            <p class="student-card-eyebrow">{{ 'Next appointment' if featured else 'Appointment' }}</p>
+            <h3>{{ appointment.lecturer }}</h3>
+            <p class="student-card-subtitle">{{ appointment.lecturer_faculty }}</p>
+        </div>
+        {{ status_summary(appointment) }}
+    </div>
+    <dl class="student-appointment-facts">
+        <div><dt>Date</dt><dd>{{ appointment.date_display }}</dd></div>
+        <div><dt>Time</dt><dd>{{ appointment.time_display }}</dd></div>
+    </dl>
+    <p class="student-appointment-purpose"><span>Purpose</span>{{ appointment.purpose }}</p>
+    {% if show_reference %}
+    <div class="student-reference">
+        <span>Booking reference</span>
+        <code>{{ appointment.public_reference }}</code>
+        <button type="button" class="btn btn-ghost btn-sm" data-copy-text="{{ appointment.public_reference }}" aria-label="Copy booking reference">
+            <i class="fa-regular fa-copy" aria-hidden="true"></i> Copy
+        </button>
+    </div>
+    {% endif %}
+    <div class="student-appointment-actions">
+        <a class="btn btn-secondary" href="{{ url_for('appointments.invoice', reference=appointment.public_reference) }}">View details</a>
+        {% if show_cancel and appointment.can_cancel %}
+        <button class="btn btn-danger" type="button" data-cancel-appointment="{{ appointment.id }}" data-dialog-open="student-cancel-dialog">
+            Cancel appointment
+        </button>
+        {% endif %}
+    </div>
+</article>
+{%- endmacro %}
+
+{% macro lecturer_card(lecturer) -%}
+<article class="student-directory-card student-lecturer-card">
+    <span class="student-person-mark" aria-hidden="true">{{ lecturer.username[:1]|upper }}</span>
+    <div class="student-directory-copy">
+        <h3>{{ lecturer.username }}</h3>
+        <p>{{ lecturer.faculty_record.faculty_name }}</p>
+    </div>
+    <a class="btn btn-secondary" href="{{ url_for('appointments.appointment2', faculty_id=lecturer.faculty_id, lecturer=lecturer.id) }}">Book with lecturer</a>
+</article>
+{%- endmacro %}
+
+{% macro faculty_card(faculty, lecturer_count) -%}
+<article class="student-faculty-card">
+    {% if faculty.faculty_image and image_url(faculty.faculty_image) %}
+    <img class="student-faculty-image" src="{{ image_url(faculty.faculty_image) }}" alt="" loading="lazy">
+    {% else %}
+    <span class="student-faculty-mark" aria-hidden="true">{{ faculty.faculty_name[:1]|upper }}</span>
+    {% endif %}
+    <div class="student-directory-copy">
+        <h3>{{ faculty.faculty_name }}</h3>
+        <p>{{ lecturer_count }} {{ 'lecturer' if lecturer_count == 1 else 'lecturers' }}</p>
+    </div>
+    <a class="btn btn-secondary" href="{{ url_for('faculty.student_explore', faculty_id=faculty.id) }}">Browse lecturers</a>
+</article>
+{%- endmacro %}
+
+{% macro cancel_dialog() -%}
+<dialog class="student-confirm-dialog" id="student-cancel-dialog" aria-labelledby="student-cancel-title" aria-describedby="student-cancel-description">
+    <form method="post" action="{{ url_for('appointments.cancel_booking') }}" id="student-cancel-form" data-submit-loading>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="id" id="cancel-appointment-id">
+        <h2 id="student-cancel-title">Cancel appointment?</h2>
+        <p id="student-cancel-description">The appointment will be cancelled and the lecturer will be notified through the system.</p>
+        <div class="form-actions">
+            <button class="btn btn-secondary" type="button" data-dialog-close>Keep appointment</button>
+            <button class="btn btn-danger" type="submit" data-submit-label="Cancelling…">Confirm cancellation</button>
+        </div>
+    </form>
+</dialog>
+{%- endmacro %}

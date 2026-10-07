@@ -29,10 +29,11 @@ def test_student_shell_uses_only_student_navigation_and_resolvable_links(client,
     assert_app_shell(markup)
     links = links_for(markup)
     paths = {path for path, _, _ in links}
-    assert {"/appointment2", "/bookinghistory", "/profile"} <= paths
+    assert {"/appointment", "/appointment2", "/bookinghistory", "/explore", "/profile"} <= paths
     assert not paths & {"/admin", "/calendar", "/faculty", "/usercontrol"}
-    assert {"Book Appointment", "Appointments", "Profile"} <= {label for _, _, label in links}
-    assert markup.count('aria-current="page"') == 2
+    assert {"Home", "Book", "Appointments", "Explore", "Profile"} <= {label for _, _, label in links}
+    assert markup.count('class="app-nav-link is-active"') == 2
+    assert 'aria-current="step"' in markup
     assert all(app.url_map.bind("localhost").match(path)[0] for path in paths)
     assert "Student One" in markup
     assert "Student" in markup
@@ -84,7 +85,9 @@ def test_public_pages_stay_on_public_layout_with_role_valid_application_menu(cli
     assert 'class="app-shell"' not in markup
     assert 'class="public-nav"' in markup
     assert 'id="uas-theme"' in markup
+    assert 'href="/appointment"' in markup
     assert 'href="/appointment2"' in markup
+    assert 'href="/explore"' in markup
     assert 'href="/bookinghistory"' in markup
     assert 'href="/calendar"' not in markup
     assert 'href="/admin"' not in markup

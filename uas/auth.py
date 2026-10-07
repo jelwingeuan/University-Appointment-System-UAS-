@@ -34,7 +34,11 @@ def login():
         destination = safe_next_url(request.args.get("next"))
         if destination:
             return redirect(destination)
-        return redirect(url_for("admin.admin_dashboard") if user.role == "admin" else url_for("public.home"))
+        if user.role == "admin":
+            return redirect(url_for("admin.admin_dashboard"))
+        if user.role == "student":
+            return redirect(url_for("appointments.appointment"))
+        return redirect(url_for("public.home"))
     return render_template("login.html")
 
 

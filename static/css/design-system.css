@@ -777,3 +777,185 @@ dialog:not([open]) { display: none; }
     .app-page-content .table__body table { width: max-content; min-width: 48rem; }
     .app-nav-drawer { padding: var(--space-4) var(--space-3); }
 }
+
+/* Student experience: same UAS tokens, with a lighter task-focused hierarchy. */
+.student-dashboard, .student-explore-page, .student-history-page, .student-profile-page, .student-detail-page, .student-booking-page {
+    display: grid;
+    gap: clamp(var(--space-6), 4vw, var(--space-10));
+    min-width: 0;
+}
+.student-dashboard-section { display: grid; gap: var(--space-4); min-width: 0; }
+.student-section-heading { margin: 0; font-size: var(--text-h2); }
+.student-section-title-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); }
+.student-section-title-row > div { min-width: 0; }
+.student-section-title-row h2, .student-section-title-row h3 { margin: 0; }
+.student-section-title-row p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); }
+.student-appointment-list, .student-lecturer-list { display: grid; gap: var(--space-3); min-width: 0; }
+.student-appointment-card, .student-profile-card {
+    min-width: 0;
+    padding: clamp(var(--space-4), 2vw, var(--space-6));
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-xs);
+}
+.student-appointment-card--featured { border-color: var(--color-border-strong); box-shadow: var(--shadow-sm); }
+.student-appointment-topline, .student-detail-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+.student-appointment-topline h3, .student-detail-heading h2 { margin: 0; font-size: var(--text-h3); overflow-wrap: anywhere; }
+.student-card-eyebrow { margin: 0 0 var(--space-1); color: var(--color-text-muted); font-size: var(--text-caption); font-weight: var(--weight-semibold); }
+.student-card-subtitle { margin: var(--space-1) 0 0; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.student-status-summary { min-width: min(13rem, 100%); }
+.student-status-summary p { margin: var(--space-2) 0 0; color: var(--color-text-secondary); font-size: var(--text-small); }
+.student-appointment-facts, .student-profile-facts, .student-booking-summary dl, .student-review-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4) var(--space-8);
+    margin: var(--space-5) 0 0;
+}
+.student-appointment-facts > div, .student-profile-facts > div, .student-booking-summary dl > div, .student-review-summary > div { min-width: 0; }
+.student-appointment-facts dt, .student-profile-facts dt, .student-booking-summary dt, .student-review-summary dt {
+    color: var(--color-text-muted);
+    font-size: var(--text-caption);
+    font-weight: var(--weight-semibold);
+}
+.student-appointment-facts dd, .student-profile-facts dd, .student-booking-summary dd, .student-review-summary dd {
+    margin: var(--space-1) 0 0;
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+.student-appointment-purpose { display: grid; gap: var(--space-1); margin: var(--space-4) 0 0; overflow-wrap: anywhere; }
+.student-appointment-purpose > span, .student-reference > span { color: var(--color-text-muted); font-size: var(--text-caption); font-weight: var(--weight-semibold); }
+.student-appointment-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-5); }
+.student-appointment-actions .btn { text-decoration: none; }
+.student-reference { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px solid var(--color-border); }
+.student-reference code { color: var(--color-text); font-family: var(--font-mono); overflow-wrap: anywhere; }
+.student-empty-state { display: grid; justify-items: start; gap: var(--space-3); padding: clamp(var(--space-5), 4vw, var(--space-8)); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-lg); background: var(--color-surface-raised); }
+.student-empty-state h2, .student-empty-state h3 { margin: 0; }
+.student-empty-state p { max-width: 60ch; margin: 0; color: var(--color-text-secondary); }
+.student-empty-state--compact { padding: var(--space-5); }
+.student-empty-mark, .student-faculty-mark, .student-person-mark {
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-primary);
+    background: var(--color-selected-bg);
+    font-weight: var(--weight-bold);
+}
+.student-empty-mark { width: 2.75rem; height: 2.75rem; font-size: 1.25rem; }
+.student-quiet-empty { margin: 0; padding: var(--space-4) 0; color: var(--color-text-secondary); }
+.student-search-form { display: grid; grid-template-columns: minmax(12rem, 2fr) minmax(12rem, 1fr) auto; align-items: end; gap: var(--space-4); padding: var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-raised); }
+.student-search-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.student-faculty-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: var(--space-3); }
+.student-faculty-card, .student-directory-card { display: flex; min-width: 0; align-items: center; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-raised); }
+.student-faculty-card { align-items: flex-start; flex-direction: column; }
+.student-faculty-image, .student-faculty-mark { width: 3.25rem; height: 3.25rem; border-radius: var(--radius-md); object-fit: cover; }
+.student-faculty-mark { display: grid; place-items: center; color: var(--color-primary); background: var(--color-selected-bg); font-size: var(--text-h3); font-weight: var(--weight-bold); }
+.student-directory-copy { flex: 1 1 auto; min-width: 0; }
+.student-directory-copy h3 { margin: 0; font-size: var(--text-h4); overflow-wrap: anywhere; }
+.student-directory-copy p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.student-directory-card .btn, .student-faculty-card .btn { white-space: normal; text-align: center; text-decoration: none; }
+.student-result-count { color: var(--color-text-secondary); }
+.student-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-3); }
+.student-pagination a, .pagination a { min-height: 2.75rem; display: inline-flex; align-items: center; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); text-decoration: none; }
+.student-booking-steps { display: flex; flex-wrap: wrap; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.student-booking-steps li { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text-muted); }
+.student-booking-steps li[aria-current="step"] { color: var(--color-text); font-weight: var(--weight-semibold); }
+.student-booking-steps li span { display: inline-grid; width: 1.75rem; height: 1.75rem; place-items: center; border: 1px solid var(--color-border-strong); border-radius: 50%; font-size: var(--text-caption); }
+.student-booking-steps li[aria-current="step"] span { border-color: var(--color-primary); color: var(--color-on-primary); background: var(--color-primary); }
+.student-booking-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem); align-items: start; gap: var(--space-8); }
+.student-booking-form { display: grid; gap: var(--space-6); min-width: 0; }
+.student-form-section { display: grid; gap: var(--space-4); min-width: 0; padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
+.student-form-section:first-of-type { padding-top: 0; border-top: 0; }
+.student-form-section h2 { margin: 0; font-size: var(--text-h3); }
+.student-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.student-date-field { max-width: 22rem; }
+.student-slot-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.student-slot-fieldset legend { margin-bottom: var(--space-3); font-weight: var(--weight-semibold); }
+.field-required { margin-left: var(--space-2); color: var(--color-text-muted); font-size: var(--text-caption); font-weight: var(--weight-normal); }
+.student-slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9rem), 1fr)); gap: var(--space-2); min-width: 0; }
+.student-slot-option { display: flex; min-height: 3.25rem; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); background: var(--color-surface-raised); cursor: pointer; }
+.student-slot-option:focus-within, .student-slot-option:has(input:checked) { border-color: var(--color-focus); background: var(--color-selected-bg); box-shadow: 0 0 0 2px var(--color-focus-shadow); }
+.student-slot-option input { flex: 0 0 auto; width: 1.125rem; height: 1.125rem; accent-color: var(--color-primary); }
+.student-slot-option input:checked + span { font-weight: var(--weight-semibold); }
+.student-slot-option.is-unavailable { color: var(--color-text-muted); background: var(--color-surface-muted); cursor: not-allowed; }
+.student-slot-option[aria-disabled="true"] { text-decoration: line-through; }
+.student-slot-grid[aria-busy="true"] { min-height: 3.25rem; opacity: 0.7; }
+.student-character-count { margin: 0; color: var(--color-text-muted); font-size: var(--text-caption); text-align: right; }
+.student-booking-submit { display: grid; justify-items: start; gap: var(--space-2); padding-top: var(--space-4); border-top: 1px solid var(--color-border); }
+.student-booking-submit p { margin: 0; color: var(--color-text-secondary); font-size: var(--text-small); }
+.student-booking-summary { position: sticky; top: var(--space-6); min-width: 0; padding: var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-raised); }
+.student-booking-summary h2 { margin: 0; font-size: var(--text-h3); }
+.student-booking-summary dl { grid-template-columns: 1fr; gap: var(--space-3); margin-top: var(--space-4); }
+.student-booking-summary > p { margin: var(--space-5) 0 0; color: var(--color-text-secondary); font-size: var(--text-small); }
+.student-confirm-dialog { width: min(34rem, calc(100vw - 2rem)); max-width: none; max-height: min(90vh, 48rem); margin: auto; padding: clamp(var(--space-5), 4vw, var(--space-8)); border: 1px solid var(--color-border); border-radius: var(--radius-lg); color: var(--color-text); background: var(--color-surface-raised); box-shadow: var(--shadow-lg); }
+.student-confirm-dialog::backdrop { background: rgb(9 19 28 / 58%); }
+.student-confirm-dialog h2 { margin: 0; font-size: var(--text-h2); }
+.student-confirm-dialog > form > p, .student-confirm-dialog > div > p { color: var(--color-text-secondary); }
+.student-review-summary { grid-template-columns: 1fr; gap: var(--space-3); max-height: 48vh; overflow: auto; }
+.student-review-summary dd { overflow-wrap: anywhere; }
+.student-profile-page { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); align-items: start; }
+.student-profile-heading { display: flex; align-items: center; gap: var(--space-3); }
+.student-profile-heading h2 { margin: 0; font-size: var(--text-h3); }
+.student-profile-heading p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.student-profile-facts { grid-template-columns: 1fr; gap: var(--space-3); }
+.student-profile-facts dd { font-weight: var(--weight-medium); }
+.student-profile-card h2 { margin: 0; font-size: var(--text-h3); }
+.student-profile-card > p { color: var(--color-text-secondary); }
+.student-profile-form { display: grid; gap: var(--space-4); margin-top: var(--space-5); }
+.student-profile-form .field { display: grid; gap: var(--space-2); }
+.student-profile-form label { font-weight: var(--weight-medium); }
+.student-password-card { width: min(100%, 42rem); }
+.student-password-card > p { margin-bottom: 0; }
+.student-detail-page { grid-template-columns: minmax(0, 1.25fr) minmax(16rem, 0.75fr); align-items: start; }
+.student-appointment-detail { min-width: 0; }
+.student-appointment-facts--detail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.student-appointment-facts--detail .student-purpose-detail { grid-column: 1 / -1; }
+.student-purpose-detail dd { white-space: pre-wrap; }
+.student-timeline-card h2 { margin: 0 0 var(--space-5); font-size: var(--text-h3); }
+.student-timeline { display: grid; gap: var(--space-5); margin: 0; padding: 0; list-style: none; }
+.student-timeline li { position: relative; display: grid; grid-template-columns: 1rem minmax(0, 1fr); gap: var(--space-3); }
+.student-timeline li:not(:last-child)::after { position: absolute; top: 1rem; bottom: calc(-1 * var(--space-5)); left: 0.45rem; width: 1px; background: var(--color-border); content: ""; }
+.student-timeline-marker { z-index: 1; width: 0.875rem; height: 0.875rem; margin-top: 0.2rem; border: 2px solid var(--color-primary); border-radius: 50%; background: var(--color-surface-raised); }
+.student-timeline h3 { margin: 0; font-size: var(--text-body); }
+.student-timeline p { margin: var(--space-1) 0; color: var(--color-text-secondary); font-size: var(--text-small); }
+.student-timeline time { color: var(--color-text-muted); font-size: var(--text-caption); }
+.student-detail-page .student-appointment-actions .btn { white-space: nowrap; }
+
+@media (min-width: 1280px) {
+    .student-faculty-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1023px) {
+    .student-booking-summary { position: static; }
+    .student-booking-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+    .student-booking-summary { order: -1; }
+    .student-detail-page { grid-template-columns: 1fr; }
+}
+@media (max-width: 767px) {
+    .student-profile-page { grid-template-columns: minmax(0, 1fr); }
+    .student-search-form { grid-template-columns: minmax(0, 1fr); }
+    .student-search-actions > * { flex: 1 1 auto; }
+}
+@media (max-width: 639px) {
+    .student-appointment-topline, .student-detail-heading { display: grid; }
+    .student-status-summary { min-width: 0; }
+    .student-appointment-facts, .student-appointment-facts--detail, .student-field-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+    .student-appointment-facts--detail .student-purpose-detail { grid-column: auto; }
+    .student-appointment-actions, .student-search-actions { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .student-appointment-actions .btn, .student-search-actions .btn { width: 100%; }
+    .student-directory-card { align-items: flex-start; flex-wrap: wrap; }
+    .student-directory-card .btn { width: 100%; }
+    .student-booking-steps { gap: var(--space-2); }
+    .student-booking-steps li { flex: 1 1 8rem; font-size: var(--text-small); }
+    .student-booking-steps li span { width: 1.5rem; height: 1.5rem; }
+    .student-reference { align-items: flex-start; }
+    .student-reference code { flex: 1 1 12rem; }
+    .student-detail-page .student-appointment-actions .btn { white-space: normal; }
+}
+@media print {
+    .app-sidebar, .app-topbar, .app-page-header, .app-breadcrumbs, .student-appointment-actions, .student-confirm-dialog, .toast-region { display: none !important; }
+    .student-profile-card, .student-appointment-card { box-shadow: none; break-inside: avoid; }
+}

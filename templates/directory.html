@@ -1,98 +1,66 @@
-{% extends "base.html" %}
-{% block title %}Directory{% endblock %}
-{% block head %}
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css'rel='stylesheet'>
-{% endblock %}
-{% block navigation %}
-{% include "components/public_navigation.html" %}
-{% endblock %}
+{% extends "app_shell.html" %}
+{% from "components/student_experience.html" import faculty_card, lecturer_card with context %}
+{% from "components/pagination.html" import pagination_nav %}
+{% block title %}Explore - UAS{% endblock %}
+{% block body_class %}app-page student-page{% endblock %}
+{% block content_width %}wide{% endblock %}
+{% block page_title %}Explore faculties and lecturers{% endblock %}
+{% block page_description %}Choose a faculty or find a lecturer to book an appointment.{% endblock %}
 {% block content %}
-<div class="dir">
-        <h1>Directory</h1>
-    </div>
-    <div class="card-container"> 
-        <div class="card">
-            <div class="card-image">
-                <img src="https://mmuexpert.mmu.edu.my/images/staff/1001060633.jpg" alt="Profile image">
-            </div>
-            <p class="name">Willie Poh Kaw Lik</p>
-            <p>FCI Lecturer</p>
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            <div class="socials">
-                <button class="instagram"><i class='bx bxl-instagram'></i>
-                <button class="linkedin"><i class='bx bxl-linkedin'></i>
-            </div>
+<div class="student-explore-page">
+    <form class="student-search-form" method="get" action="{{ url_for('faculty.student_explore') }}" role="search">
+        <div class="field">
+            <label for="lecturer-search">Search lecturers</label>
+            <input class="form-control" id="lecturer-search" name="q" type="search" maxlength="100" value="{{ search }}" placeholder="Enter a lecturer or faculty name">
         </div>
-        <div class="card">
-            <div class="card-image">
-                <img src="https://mmuexpert.mmu.edu.my/images/staff/1001060633.jpg" alt="Profile image">
-            </div>
-            <p class="name">Willie Poh Kaw Lik</p>
-            <p>FCI Lecturer</p>
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            <div class="socials">
-                <button class="instagram"><i class='bx bxl-instagram'></i>
-                <button class="linkedin"><i class='bx bxl-linkedin'></i>
-            </div>
+        <div class="field">
+            <label for="faculty-filter">Faculty</label>
+            <select class="form-control" id="faculty-filter" name="faculty_id">
+                <option value="">All faculties</option>
+                {% for faculty in faculties %}
+                <option value="{{ faculty.id }}"{% if selected_faculty and selected_faculty.id == faculty.id %} selected{% endif %}>{{ faculty.faculty_name }}</option>
+                {% endfor %}
+            </select>
         </div>
-        <div class="card">
-            <div class="card-image">
-                <img src="https://mmuexpert.mmu.edu.my/images/staff/1001060633.jpg" alt="Profile image">
-            </div>
-            <p class="name">Willie Poh Kaw Lik</p>
-            <p>FCI Lecturer</p>
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            <div class="socials">
-                <button class="instagram"><i class='bx bxl-instagram'></i>
-                <button class="linkedin"><i class='bx bxl-linkedin'></i>
-            </div>
+        <div class="student-search-actions">
+            <button class="btn btn-primary" type="submit">Search</button>
+            {% if search or selected_faculty %}<a class="btn btn-ghost" href="{{ url_for('faculty.student_explore') }}">Clear filters</a>{% endif %}
         </div>
-        <div class="card">
-            <div class="card-image">
-                <img src="https://mmuexpert.mmu.edu.my/images/staff/1001060633.jpg" alt="Profile image">
-            </div>
-            <p class="name">Willie Poh Kaw Lik</p>
-            <p>FCI Lecturer</p>
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            <div class="socials">
-                <button class="instagram"><i class='bx bxl-instagram'></i>
-                <button class="linkedin"><i class='bx bxl-linkedin'></i>
-            </div>
+    </form>
+
+    {% if faculties %}
+    <section class="student-dashboard-section" aria-labelledby="faculty-heading">
+        <div class="student-section-title-row">
+            <h2 id="faculty-heading" class="student-section-heading">Browse by faculty</h2>
+            {% if selected_faculty %}<a href="{{ url_for('faculty.student_explore', q=search) }}">Show all faculties</a>{% endif %}
         </div>
-        <div class="card">
-            <div class="card-image">
-                <img src="https://mmuexpert.mmu.edu.my/images/staff/1001060633.jpg" alt="Profile image">
-            </div>
-            <p class="name">Willie Poh Kaw Lik</p>
-            <p>FCI Lecturer</p>
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            <div class="socials">
-                <button class="instagram"><i class='bx bxl-instagram'></i>
-                <button class="linkedin"><i class='bx bxl-linkedin'></i>
-            </div>
+        <div class="student-faculty-grid">
+            {% for faculty in faculties %}
+                {{ faculty_card(faculty, faculty_counts.get(faculty.id, 0)) }}
+            {% endfor %}
         </div>
-        <div class="card">
-            <div class="card-image">
-                <img src="https://mmuexpert.mmu.edu.my/images/staff/1001060633.jpg" alt="Profile image">
-            </div>
-            <p class="name">Willie Poh Kaw Lik</p>
-            <p>FCI Lecturer</p>
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Pariatur delectus, mollitia tenetur libero quam recusandae alias in incidunt.</p>
-            <div class="socials">
-                <button class="instagram"><i class='bx bxl-instagram'></i>
-                <button class="linkedin"><i class='bx bxl-linkedin'></i>
-            </div>
+    </section>
+    {% endif %}
+
+    <section class="student-dashboard-section" aria-labelledby="lecturers-heading">
+        <div class="student-section-title-row">
+            <h2 id="lecturers-heading" class="student-section-heading">{{ 'Lecturers in ' ~ selected_faculty.faculty_name if selected_faculty else 'Lecturers' }}</h2>
+            <span class="student-result-count">{{ pagination.total }} {{ 'lecturer' if pagination.total == 1 else 'lecturers' }}</span>
         </div>
-    </div>
-    <div class="footer-wrapper">
-        <footer class="footer">
-            <div class="footer-col">
-                <h4>Universal Appointment Booking System</h4>
-                <ul>
-                    <li><a href="/appointment">Book Now</a></li>
-                    <li><a href="/signup">Join Now</a></li>
-                </ul>
-            </div>
-        </footer>
-    </div>
+        {% if lecturers %}
+        <div class="student-lecturer-list">
+            {% for lecturer in lecturers %}{{ lecturer_card(lecturer) }}{% endfor %}
+        </div>
+        {{ pagination_nav(pagination, 'faculty.student_explore', q=search, faculty_id=selected_faculty.id if selected_faculty else none) }}
+        {% elif search or selected_faculty %}
+        <div class="student-empty-state student-empty-state--compact">
+            <h3>No lecturers found</h3>
+            <p>Try a different name or faculty.</p>
+            <a class="btn btn-secondary" href="{{ url_for('faculty.student_explore') }}">Clear filters</a>
+        </div>
+        {% else %}
+        <p class="student-quiet-empty">No active lecturers are available to browse right now.</p>
+        {% endif %}
+    </section>
+</div>
 {% endblock %}

@@ -1,9 +1,9 @@
-{% macro pagination_nav(pagination, endpoint, search='', faculty_id=None) -%}
+{% macro pagination_nav(pagination, endpoint, search='', faculty_id=None, q=None) -%}
     {% if pagination.pages > 1 %}
     <nav class="pagination" aria-label="Pagination">
-        {% if pagination.page > 1 %}<a href="{{ url_for(endpoint, page=pagination.page - 1, search=search, faculty_id=faculty_id) }}">Previous</a>{% endif %}
+        {% if pagination.page > 1 %}<a href="{{ url_for(endpoint, page=pagination.page - 1, search=search, faculty_id=faculty_id, q=q) }}">Previous</a>{% endif %}
         <span aria-current="page">Page {{ pagination.page }} of {{ pagination.pages }}</span>
-        {% if pagination.page < pagination.pages %}<a href="{{ url_for(endpoint, page=pagination.page + 1, search=search, faculty_id=faculty_id) }}">Next</a>{% endif %}
+        {% if pagination.page < pagination.pages %}<a href="{{ url_for(endpoint, page=pagination.page + 1, search=search, faculty_id=faculty_id, q=q) }}">Next</a>{% endif %}
     </nav>
     {% endif %}
 {%- endmacro %}

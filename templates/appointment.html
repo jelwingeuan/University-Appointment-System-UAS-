@@ -1,8 +1,63 @@
 {% extends "app_shell.html" %}
-{% block title %}Appointment{% endblock %}
+{% from "components/student_experience.html" import appointment_card, cancel_dialog with context %}
+{% block title %}Home - UAS{% endblock %}
+{% block body_class %}app-page student-page{% endblock %}
+{% block page_title %}Welcome, {{ current_user.username }}{% endblock %}
+{% block page_description %}Your appointment requests and upcoming meetings, in one place.{% endblock %}
+{% block page_actions %}<a class="btn btn-primary" href="{{ url_for('appointments.appointment2') }}">Book appointment</a>{% endblock %}
 {% block content %}
-<div class="appointmentcontainer">
-        <a href="/appointment2"><button>Book Your Appointment here</button></a>   
-    </div>
+<div class="student-dashboard">
+    <section class="student-dashboard-section" aria-labelledby="next-appointment-heading">
+        <h2 id="next-appointment-heading" class="student-section-heading">Next appointment</h2>
+        {% if next_appointment %}
+            {{ appointment_card(next_appointment, featured=true, show_reference=false) }}
+        {% else %}
+        <div class="student-empty-state">
+            <span class="student-empty-mark" aria-hidden="true"><i class="fa-regular fa-calendar"></i></span>
+            <h3>No confirmed appointments coming up</h3>
+            <p>When a lecturer accepts a request, the appointment will appear here.</p>
+            {% if not has_appointments %}<a class="btn btn-primary" href="{{ url_for('appointments.appointment2') }}">Book appointment</a>{% endif %}
+        </div>
+        {% endif %}
+    </section>
 
+    <section class="student-dashboard-section" aria-labelledby="pending-heading">
+        <div class="student-section-title-row">
+            <h2 id="pending-heading" class="student-section-heading">Waiting for a response</h2>
+            <a href="{{ url_for('appointments.booking_history') }}">View appointments</a>
+        </div>
+        {% if pending_appointments %}
+        <div class="student-appointment-list">
+            {% for item in pending_appointments %}{{ appointment_card(item, show_cancel=true) }}{% endfor %}
+        </div>
+        {% else %}
+        <p class="student-quiet-empty">No appointment requests are waiting for lecturer confirmation.</p>
+        {% endif %}
+    </section>
+
+    {% if upcoming_appointments %}
+    <section class="student-dashboard-section" aria-labelledby="upcoming-heading">
+        <div class="student-section-title-row">
+            <h2 id="upcoming-heading" class="student-section-heading">Also coming up</h2>
+            <a href="{{ url_for('appointments.booking_history') }}">View all appointments</a>
+        </div>
+        <div class="student-appointment-list">
+            {% for item in upcoming_appointments %}{{ appointment_card(item, show_cancel=true) }}{% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if recent_appointments %}
+    <section class="student-dashboard-section" aria-labelledby="recent-heading">
+        <div class="student-section-title-row">
+            <h2 id="recent-heading" class="student-section-heading">Recent appointments</h2>
+            <a href="{{ url_for('appointments.booking_history') }}">View appointment history</a>
+        </div>
+        <div class="student-appointment-list">
+            {% for item in recent_appointments %}{{ appointment_card(item, show_reference=false, show_cancel=false) }}{% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{{ cancel_dialog() }}
 {% endblock %}

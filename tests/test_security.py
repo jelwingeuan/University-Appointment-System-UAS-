@@ -8,7 +8,7 @@ from tests.conftest import login
 
 def test_valid_logins_and_logout(client):
     for email, destination in [
-        ("student1@student.mmu.edu.my", "/"),
+        ("student1@student.mmu.edu.my", "/appointment"),
         ("lecturer1@mmu.edu.my", "/"),
         ("admin@mmu.edu.my", "/admin"),
     ]:

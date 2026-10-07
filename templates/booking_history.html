@@ -1,154 +1,103 @@
 {% extends "app_shell.html" %}
-{% block title %}Booking History{% endblock %}
+{% block title %}{{ 'Appointments - UAS' if role == 'student' else 'Appointment History' }}{% endblock %}
+{% block body_class %}app-page{% if role == 'student' %} student-page{% endif %}{% endblock %}
+{% block content_width %}wide{% endblock %}
+{% block page_title %}{{ 'Appointments' if role == 'student' else 'Appointment History' }}{% endblock %}
+{% block page_description %}{{ 'Review appointment times, requests, and outcomes.' if role == 'student' else '' }}{% endblock %}
+{% block page_actions %}
+{% if role == 'student' and pagination.total %}<a class="btn btn-primary" href="{{ url_for('appointments.appointment2') }}">Book appointment</a>{% endif %}
+{% endblock %}
 {% block page_styles %}
+{% if role != 'student' %}
 <style>
-        button {
-        border: none; /* Remove border */
-        padding: 10px 20px; /* Add padding */
-        text-align: center; /* Center the text */
-        text-decoration: none; /* Remove underline */
-        display: inline-block; /* Get the block to wrap content */
-        font-size: 16px; /* Increase font size */
-        margin: 4px 2px; /* Small margin */
-        cursor: pointer; /* Add a pointer cursor on hover */
-        border-radius: 12px; /* Rounded corners */
-        transition: transform 0.3s ease, background-color 0.3s ease; /* Smooth transition */
-    }
-
-    button:hover {
-        transform: translateY(-5px); /* Move up on hover */
-    }
-
-    button.accept {
-        background-color: #86e49d;
-        color: #006b21;
-    }
-
-    button.accept:hover {
-        background-color: #45a049; /* Darker green background */
-        
-    }
-
-    button.reject {
-        background-color: red;
-        color: white; /* Changed to ensure text color is readable */
-    }
-
-    button.reject:hover {
-        background-color: #d32f2f; /* Darker red background */
-    }
-
-    button.cancel {
-        background-color: red;
-        color: white; /* Changed to ensure text color is readable */
-    }
-
-    button.cancel:hover {
-        background-color: #e68900; /* Darker orange background */
-    }
-
-    button.pending {
-        background-color: orange;
-        color: white; /* Ensure text color is readable */
-    }
-
-    button.pending:hover {
-        background-color: #e68900; /* Darker orange background */
-    }
-
-    </style>
+    .lecturer-history button { border: 0; padding: 0.625rem 1rem; border-radius: 0.5rem; cursor: pointer; }
+    .lecturer-history button.accept { color: #006b21; background: #86e49d; }
+    .lecturer-history button.reject { color: white; background: #b4232f; }
+</style>
+{% endif %}
 {% endblock %}
 {% block content %}
-<div class="profilecontainer">
-        <div class="profilewrapper">
-            <div class="profilesubwrapper">
-                <div class="profilemain" style="width: 800px;">
-                    <div class="table__body" role="region" aria-label="Appointment history" tabindex="0">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>No.</th>
-                                    <th>{{ display_role }}</th>
-                                    <th>Date</th>
-                                    <th>Time</th>
-                                    <th>Purpose</th>
-                                    <th>Status</th>
-                                    {% if role == 'teacher' %}                                  
-                                    <th>Action</th>
-                                    <th>Action</th>
-                                    {% endif %}
-                                    {% if role == 'student' %}                                  
-                                    <th>Action</th>
-                                    {% endif %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for appointment in appointments %}
-                                <tr>
-                                    <td>{{ loop.index }}</td>
-                                    <td>{{ appointment[display_role] }}</td>
-                                    <td>{{ appointment['appointment_date'] }}</td>
-                                    <td>{{ appointment['appointment_time'] }}</td>
-                                    <td>{{ appointment['purpose'] }}</td>
-                                    <td><span class="status-badge status-{{ appointment['status']|lower|replace(' ', '-') }}">{{ appointment['status'] }}</span></td>
-                                    {% if role == "teacher" %}
-                                    <td>
-                                        <form method="post" action="/accept_booking">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            {% if appointment['status'] != 'Pending' %}
-                                                <button type="submit" disabled style="pointer-events: none;">Accept</button>
-                                            {% else %}
-                                                <button type="submit" value="Accepted">Accept</button>
-                                            {% endif %}
-                                        </form>
-                                    </td>
-                                    
-                                    <td>
-                                        <form method="post" action="/reject_booking">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            {% if appointment['status'] != 'Pending' %}
-                                                <button type="button" disabled style="pointer-events: none;">Reject</button>
-                                            {% else %}
-                                                <button type="submit" value="Rejected">Reject</button>
-                                            {% endif %}
-                                        </form>
-                                        {% if appointment['status'] == 'Accepted' %}
-                                        <form method="post" action="/complete_booking">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            <button type="submit">Complete</button>
-                                        </form>
-                                        <form method="post" action="/no_show_booking">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            <button type="submit">No Show</button>
-                                        </form>
-                                        {% endif %}
-                                    </td>
-                                    {% endif %}
-
-                                    {% if role == "student" %}
-                                    <td>
-                                        <form method="post" action="/cancel_booking">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <input type="hidden" name="id" value="{{ appointment['id'] }}">
-                                            {% if appointment['status'] not in ['Pending', 'Accepted'] %}
-                                                <button type="button" disabled>Cancel</button>
-                                            {% else %}
-                                                <button type="submit" value="cancelled">Cancel</button>
-                                            {% endif %}
-                                        </form>
-                                    </td>
-                                    {% endif %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>                           
-                        </table>
-                    </div>                     
-                </div>
+{% if role == 'student' %}
+{% from "components/student_experience.html" import appointment_card, cancel_dialog with context %}
+{% from "components/pagination.html" import pagination_nav %}
+<div class="student-history-page">
+    {% if pagination.total %}
+        {% if upcoming_appointments %}
+        <section class="student-dashboard-section" aria-labelledby="upcoming-appointments-heading">
+            <h2 class="student-section-heading" id="upcoming-appointments-heading">Upcoming</h2>
+            <div class="student-appointment-list">
+                {% for item in upcoming_appointments %}{{ appointment_card(item, show_reference=true) }}{% endfor %}
             </div>
-        </div>
+        </section>
+        {% endif %}
+        {% if past_appointments %}
+        <section class="student-dashboard-section" aria-labelledby="past-appointments-heading">
+            <h2 class="student-section-heading" id="past-appointments-heading">Past appointments</h2>
+            <div class="student-appointment-list">
+                {% for item in past_appointments %}{{ appointment_card(item, show_reference=true, show_cancel=false) }}{% endfor %}
+            </div>
+        </section>
+        {% endif %}
+        {{ pagination_nav(pagination, 'appointments.booking_history') }}
+    {% else %}
+    <div class="student-empty-state">
+        <span class="student-empty-mark" aria-hidden="true"><i class="fa-regular fa-calendar"></i></span>
+        <h2>You do not have any appointments yet</h2>
+        <p>Choose a lecturer and a time to send your first appointment request.</p>
+        <a class="btn btn-primary" href="{{ url_for('appointments.appointment2') }}">Book appointment</a>
     </div>
+    {% endif %}
+</div>
+{{ cancel_dialog() }}
+{% else %}
+<div class="lecturer-history">
+    <div class="table__body" role="region" aria-label="Appointment history" tabindex="0">
+        <table>
+            <thead>
+                <tr>
+                    <th>No.</th><th>{{ display_role }}</th><th>Date</th><th>Time</th><th>Purpose</th><th>Status</th>
+                    {% if role == 'teacher' %}<th>Actions</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ appointment[display_role] }}</td>
+                    <td>{{ appointment['appointment_date'] }}</td>
+                    <td>{{ appointment['appointment_time'] }}</td>
+                    <td>{{ appointment['purpose'] }}</td>
+                    <td><span class="status-badge status-{{ appointment['status']|lower|replace(' ', '-') }}">{{ appointment['status'] }}</span></td>
+                    {% if role == 'teacher' %}
+                    <td class="lecturer-history-actions">
+                        {% if appointment['status'] == 'Pending' %}
+                        <form method="post" action="{{ url_for('appointments.accept_booking') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment['id'] }}">
+                            <button class="accept" type="submit">Accept</button>
+                        </form>
+                        <form method="post" action="{{ url_for('appointments.reject_booking') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment['id'] }}">
+                            <button class="reject" type="submit">Decline</button>
+                        </form>
+                        {% elif appointment['status'] == 'Accepted' %}
+                        <form method="post" action="{{ url_for('appointments.complete_booking') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment['id'] }}">
+                            <button type="submit">Mark completed</button>
+                        </form>
+                        <form method="post" action="{{ url_for('appointments.no_show_booking') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment['id'] }}">
+                            <button type="submit">Mark no show</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr><td class="empty-row" colspan="7">No appointments to show.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

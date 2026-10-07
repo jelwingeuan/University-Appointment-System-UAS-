@@ -19,6 +19,8 @@ def profile():
         faculty=current_user.faculty,
         phone_number=current_user.phone_number,
         role=current_user.role,
+        email_verified=bool(current_user.email_verified_at),
+        verification_required=current_app.config.get("REQUIRE_EMAIL_VERIFICATION", False),
         form_values={},
         form_errors={},
     )
@@ -38,6 +40,8 @@ def update_user():
             faculty=current_user.faculty,
             phone_number=current_user.phone_number,
             role=current_user.role,
+            email_verified=bool(current_user.email_verified_at),
+            verification_required=current_app.config.get("REQUIRE_EMAIL_VERIFICATION", False),
             form_values=form_values,
             form_errors=exc.errors,
         ), 400
@@ -62,7 +66,7 @@ def update_user():
 @login_required
 def change_password():
     if request.method == "GET":
-        return render_template("changepassword.html")
+        return render_template("changepassword.html", role=current_user.role)
     current_password, new_password = request.form.get("current_password", ""), request.form.get("new_password", "")
     if new_password != request.form.get("confirm_password", ""):
         flash("Password change could not be completed", "error")

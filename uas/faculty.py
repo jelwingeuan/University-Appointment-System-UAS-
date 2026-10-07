@@ -1,15 +1,74 @@
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, abort, redirect, render_template, request, url_for
 from flask_login import current_user
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 
 from .common import page_number, pagination, record_audit, require_actor, role_required, transaction
 from .content_service import remove_uploaded_image, save_image
 from .extensions import db
 from .models import Faculty, User
-from .validation import InputValidationError, clean_text
+from .validation import InputValidationError, clean_text, validate_search
 
 bp = Blueprint("faculty", __name__)
+
+
+@bp.get("/explore")
+@role_required("student")
+def student_explore():
+    search = request.args.get("q", "")
+    try:
+        search = validate_search(search)
+    except InputValidationError:
+        abort(400)
+    faculty_id = request.args.get("faculty_id", type=int)
+    selected = db.session.get(Faculty, faculty_id) if faculty_id else None
+    if faculty_id and not selected:
+        abort(404)
+
+    faculties = db.session.scalars(select(Faculty).order_by(Faculty.faculty_name)).all()
+    counts = dict(
+        db.session.execute(
+            select(User.faculty_id, func.count(User.id))
+            .where(User.role == "teacher", User.active.is_(True))
+            .group_by(User.faculty_id)
+        ).all()
+    )
+    filters = [User.role == "teacher", User.active.is_(True)]
+    if faculty_id:
+        filters.append(User.faculty_id == faculty_id)
+    if search:
+        filters.append(
+            or_(
+                User.username.contains(search, autoescape=True),
+                Faculty.faculty_name.contains(search, autoescape=True),
+            )
+        )
+    total = (
+        db.session.scalar(
+            select(func.count(User.id)).join(User.faculty_record).where(*filters)
+        )
+        or 0
+    )
+    pages = pagination(page_number(request.args.get("page")), total, per_page=12)
+    lecturers = db.session.scalars(
+        select(User)
+        .join(User.faculty_record)
+        .options(joinedload(User.faculty_record))
+        .where(*filters)
+        .order_by(Faculty.faculty_name, User.username)
+        .limit(pages["per_page"])
+        .offset((pages["page"] - 1) * pages["per_page"])
+    ).all()
+    return render_template(
+        "directory.html",
+        faculties=faculties,
+        faculty_counts=counts,
+        selected_faculty=selected,
+        lecturers=lecturers,
+        search=search,
+        pagination=pages,
+    )
 
 
 @bp.get("/faculty")

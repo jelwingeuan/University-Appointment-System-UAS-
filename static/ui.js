@@ -120,7 +120,11 @@
                 event.target.closest(".app-account-menu")?.removeAttribute("open");
             }
             const opener = event.target.closest("[data-dialog-open]");
-            if (opener) openDialog(opener.dataset.dialogOpen, opener);
+            if (opener) {
+                const cancelId = opener.dataset.cancelAppointment;
+                if (cancelId) document.getElementById("cancel-appointment-id").value = cancelId;
+                openDialog(opener.dataset.dialogOpen, opener);
+            }
             const closer = event.target.closest("[data-dialog-close]");
             if (closer) closeDialog(closer.closest("dialog"));
             const alertCloser = event.target.closest("[data-alert-dismiss]");
@@ -133,6 +137,27 @@
                     message: toastTrigger.dataset.toastMessage || "",
                 });
             }
+            const copyButton = event.target.closest("[data-copy-text]");
+            if (copyButton) {
+                if (!navigator.clipboard?.writeText) {
+                    toast({ kind: "error", message: "Copy is unavailable. Select and copy the reference instead." });
+                    return;
+                }
+                navigator.clipboard.writeText(copyButton.dataset.copyText).then(() => {
+                    toast({ kind: "success", message: "Booking reference copied." });
+                }).catch(() => {
+                    toast({ kind: "error", message: "The reference could not be copied. Select and copy it instead." });
+                });
+            }
+        });
+        document.addEventListener("submit", (event) => {
+            const form = event.target;
+            if (event.defaultPrevented || !form.matches("[data-submit-loading]")) return;
+            const button = event.submitter || form.querySelector('button[type="submit"]');
+            if (!button) return;
+            button.disabled = true;
+            button.setAttribute("aria-busy", "true");
+            button.textContent = button.dataset.submitLabel || "Saving…";
         });
         document.addEventListener("keydown", (event) => {
             if (event.key !== "Escape") return;

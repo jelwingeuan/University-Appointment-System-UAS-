@@ -1,93 +1,98 @@
 {% extends "app_shell.html" %}
-{% block title %}Profile{% endblock %}
-{% block head %}
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-{% endblock %}
+{% block title %}Profile - UAS{% endblock %}
+{% block body_class %}app-page{% if role == 'student' %} student-page{% endif %}{% endblock %}
+{% block page_title %}Profile{% endblock %}
+{% block page_description %}Manage your contact details and sign-in security.{% endblock %}
 {% block page_styles %}
+{% if role != 'student' %}
 <style>
-            /* CSS to style the edit container as a popup layer */
-    /* CSS to style the edit container as a popup layer */
-    .edit-container {
-    position: absolute;
-    top: 59%;
-    left: 57.5%;
-    transform: translate(-50%, -50%) scale(1); /* Start with normal scale */
-    background-color: white;
-    padding: 20px;
-    border: 1px solid #ccc;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 9999;
-    display: none; /* Hide the edit container by default */
-    transition: opacity 0.3s ease, transform 0.3s ease; /* Add transition for opacity and transform */
-    width: 700px;
-    height: 500px;
-
-}
-
-/* Show the edit container when its display property changes */
-    .edit-container.active {
-        opacity: 1; /* Make the container fully visible */
-        transform: translate(-50%, -50%) scale(1.1); /* Increase scale for "float out" effect */
-    }
-
-
-    </style>
+    .edit-container { position: absolute; top: 59%; left: 57.5%; transform: translate(-50%, -50%); z-index: 30; display: none; width: min(700px, calc(100vw - 2rem)); padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-raised); box-shadow: var(--shadow-md); }
+</style>
+{% endif %}
 {% endblock %}
 {% block content %}
+{% if role == 'student' %}
 {% from "components/forms.html" import field_error %}
-
-    <div class="profilecontainer">
-        <div class="profilewrapper">
-            <div class="profilesubwrapper">
-                <div class="profilemain">
-                    <h2 style="margin-top: 20px;">Account Setting</h2>
-                    <div class="profileinput" style="margin-left: 20px;">
-                        <div class="subprofileinput">
-                            <label>Name</label>
-                            <div id="nameDisplay" class="profiledata">{{ username }}</div>
-                            
-                            <label>Email</label>
-                            <div id="emailDisplay" class="profiledata">{{ email }}</div>
-                        </div>
-                        <div class="profileinput">
-                            <h2>Faculty : {{ faculty }}</h2>
-                            
-                            <label>Phone Number</label>
-                            <div id="phoneDisplay" class="profiledata">{{ phone_number }}</div>
-                            
-                            <h2>Role : {{ role }}</h2>
-                        </div>  
-                    </div>                       
-                </div>
-            </div>
-            <div class="profilefooter">
-                <button id="cancelButton">Cancel</button>
-                <button id="editButton">Edit</button>
-            </div>
+<div class="student-profile-page">
+    <section class="student-profile-card" aria-labelledby="account-details-heading">
+        <div class="student-profile-heading">
+            <span class="student-person-mark" aria-hidden="true">{{ account_initials }}</span>
+            <div><h2 id="account-details-heading">Account details</h2><p>{{ username }}</p></div>
         </div>
-    </div>
-    <div id="profileEditContainer" class="edit-container" style="display: {{ 'block' if form_errors else 'none' }};">
-        <form id="updateForm" method="post" action="/update_user_info">
+        <dl class="student-profile-facts">
+            <div><dt>Email</dt><dd>{{ email }}</dd></div>
+            <div><dt>Phone</dt><dd>{{ phone_number }}</dd></div>
+            <div><dt>Faculty</dt><dd>{{ faculty }}</dd></div>
+            <div><dt>Account type</dt><dd>{{ account_role }}</dd></div>
+            <div><dt>Email status</dt><dd>
+                {% if verification_required %}{{ 'Verified' if email_verified else 'Verification required' }}
+                {% else %}Email verification is not required{% endif %}
+            </dd></div>
+        </dl>
+    </section>
+
+    <section class="student-profile-card" aria-labelledby="edit-account-heading">
+        <div class="student-section-title-row">
+            <div><h2 id="edit-account-heading">Contact details</h2><p>These details help the university contact you about appointments.</p></div>
+            <a class="btn btn-secondary" href="{{ url_for('profile.change_password') }}">Change password</a>
+        </div>
+        <form id="student-profile-form" method="post" action="{{ url_for('profile.update_user') }}" class="student-profile-form" data-submit-loading>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            
-            <label for="username">Username:</label>
-            <input type="text" id="usernameInput" name="username" maxlength="100" value="{{ form_values.get('username', username) }}" aria-describedby="username-error">
-            {{ field_error(form_errors, 'username') }}
-            <br>
-            <label for="email">Email:</label>
-            <input type="email" id="emailInput" name="email" maxlength="254" value="{{ form_values.get('email', email) }}" aria-describedby="email-error">
-            {{ field_error(form_errors, 'email') }}
-            <br>
-            <br>
-            
-            <label for="phone_number">Phone Number:</label>
-            <input type="tel" id="phoneInput" name="phone_number" maxlength="20" value="{{ form_values.get('phone_number', phone_number) }}" aria-describedby="phone_number-error">
-            {{ field_error(form_errors, 'phone_number') }}
-            <br>
-            
-            <div class="profilefooter">
-                <button id="updateButton" type="submit" >Update</button>
+            <div class="field">
+                <label for="username">Name</label>
+                <input class="form-control" type="text" id="username" name="username" maxlength="100" value="{{ form_values.get('username', username) }}"{% if form_errors.get('username') %} aria-invalid="true" aria-describedby="username-error"{% endif %} required>
+                {{ field_error(form_errors, 'username') }}
+            </div>
+            <div class="field">
+                <label for="email">University email</label>
+                <input class="form-control" type="email" id="email" name="email" maxlength="254" value="{{ form_values.get('email', email) }}"{% if form_errors.get('email') %} aria-invalid="true" aria-describedby="email-error"{% endif %} required>
+                {{ field_error(form_errors, 'email') }}
+            </div>
+            <div class="field">
+                <label for="phone_number">Phone number</label>
+                <input class="form-control" type="tel" id="phone_number" name="phone_number" maxlength="20" value="{{ form_values.get('phone_number', phone_number) }}"{% if form_errors.get('phone_number') %} aria-invalid="true" aria-describedby="phone_number-error"{% endif %} required>
+                {{ field_error(form_errors, 'phone_number') }}
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" type="submit" data-submit-label="Saving details…">Save changes</button>
             </div>
         </form>
+    </section>
+</div>
+{% else %}
+{% from "components/forms.html" import field_error %}
+<div class="profilecontainer">
+    <div class="profilewrapper">
+        <div class="profilesubwrapper">
+            <div class="profilemain">
+                <h2>Account Setting</h2>
+                <div class="profileinput">
+                    <div class="subprofileinput">
+                        <label>Name</label><div class="profiledata">{{ username }}</div>
+                        <label>Email</label><div class="profiledata">{{ email }}</div>
+                    </div>
+                    <div class="profileinput">
+                        <h2>Faculty: {{ faculty }}</h2>
+                        <label>Phone Number</label><div class="profiledata">{{ phone_number }}</div>
+                        <h2>Role: {{ role }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="profilefooter"><button id="cancelButton" type="button">Cancel</button><button id="editButton" type="button">Edit</button></div>
     </div>
+</div>
+<div id="profileEditContainer" class="edit-container" style="display: {{ 'block' if form_errors else 'none' }};">
+    <form id="updateForm" method="post" action="{{ url_for('profile.update_user') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label for="username">Username</label><input type="text" id="username" name="username" maxlength="100" value="{{ form_values.get('username', username) }}" aria-describedby="username-error">
+        {{ field_error(form_errors, 'username') }}
+        <label for="email">Email</label><input type="email" id="email" name="email" maxlength="254" value="{{ form_values.get('email', email) }}" aria-describedby="email-error">
+        {{ field_error(form_errors, 'email') }}
+        <label for="phone_number">Phone number</label><input type="tel" id="phone_number" name="phone_number" maxlength="20" value="{{ form_values.get('phone_number', phone_number) }}" aria-describedby="phone_number-error">
+        {{ field_error(form_errors, 'phone_number') }}
+        <div class="profilefooter"><button id="updateButton" type="submit">Update</button></div>
+    </form>
+</div>
+{% endif %}
 {% endblock %}

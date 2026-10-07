@@ -31,7 +31,7 @@ def test_login_only_accepts_same_origin_next(client):
         "/login?next=https://attacker.invalid/",
         data={"email": "student1@student.mmu.edu.my", "password": "CorrectHorse1"},
     )
-    assert response.headers["Location"].endswith("/")
+    assert response.headers["Location"].endswith("/appointment")
     client.post("/logout")
     response = client.post(
         "/login?next=/profile", data={"email": "student1@student.mmu.edu.my", "password": "CorrectHorse1"}

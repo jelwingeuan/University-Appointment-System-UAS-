@@ -3,8 +3,10 @@ from flask import url_for
 _ROLE_LABELS = {"student": "Student", "teacher": "Lecturer", "admin": "Administrator"}
 _ROLE_LINKS = {
     "student": (
-        ("Book Appointment", "appointments.appointment2", "fa-calendar-plus", ("appointments.appointment", "appointments.appointment2")),
+        ("Home", "appointments.appointment", "fa-house", ("appointments.appointment",)),
+        ("Book", "appointments.appointment2", "fa-calendar-plus", ("appointments.appointment2",)),
         ("Appointments", "appointments.booking_history", "fa-calendar-check", ("appointments.booking_history", "appointments.invoice")),
+        ("Explore", "faculty.student_explore", "fa-building-columns", ("faculty.student_explore",)),
         ("Profile", "profile.profile", "fa-user", ("profile.profile", "profile.change_password", "profile.changepassword")),
     ),
     "teacher": (

@@ -1,215 +1,54 @@
 {% extends "app_shell.html" %}
-{% block title %}Invoice{% endblock %}
-{% block page_styles %}
-<style>
-        .print-btn {
-        width: 100px;
-        height: 45px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: white;
-        border: 1px solid rgb(213, 213, 213);
-        border-radius: 10px;
-        gap: 10px;
-        font-size: 16px;
-        cursor: pointer;
-        overflow: hidden;
-        font-weight: 500;
-        box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.065);
-        transition: all 0.3s;
-        }
-        .printer-wrapper {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 20px;
-        height: 100%;
-        }
-        .printer-container {
-        height: 50%;
-        width: 100%;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        }
-
-        .printer-container svg {
-        width: 100%;
-        height: auto;
-        transform: translateY(4px);
-        }
-        .printer-page-wrapper {
-        width: 100%;
-        height: 50%;
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        }
-        .printer-page {
-        width: 70%;
-        height: 10px;
-        border: 1px solid black;
-        background-color: white;
-        transform: translateY(0px);
-        transition: all 0.3s;
-        transform-origin: top;
-        }
-        .print-btn:hover .printer-page {
-        height: 16px;
-        background-color: rgb(239, 239, 239);
-        }
-        .print-btn:hover {
-        background-color: rgb(239, 239, 239);
-        }
-
-    </style>
-{% endblock %}
 {% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% from "components/student_experience.html" import status_summary, cancel_dialog with context %}
+{% block title %}Appointment details - UAS{% endblock %}
+{% block body_class %}app-page student-page{% endblock %}
 {% block content_width %}wide{% endblock %}
-{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Appointments', 'url': url_for('appointments.booking_history')}, {'label': 'Invoice'}]) }}{% endblock %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Appointments', 'url': url_for('appointments.booking_history')}, {'label': 'Appointment details'}]) }}{% endblock %}
+{% block page_title %}Appointment details{% endblock %}
+{% block page_description %}{{ student_appointment.status_description }}{% endblock %}
 {% block content %}
-<div class="invoice-wrapper" id="print-area">
-        <div class="invoice">
-            <div class="invoice-container">
-                <div class="invoice-head">
-                    <div class="invoice-head-top">
-                        <div class="invoice-head-top-right text-end">
-                            <h3>Booking Details</h3>
-                        </div>
-                    </div>
-                    <div class="hr"></div>
-                    <div class="invoice-head-middle">
-                        <div class="invoice-head-middle-left text-start">
-                            <p><span class="text-bold">Date</span>: {{ appointment[4] }}</p>
-                        </div>
-                        <div class="invoice-head-middle-right text-end">
-                            <p><span class="text-bold">Booking ID:</span> {{ booking_id }}</p>
-                        </div>
-                    </div>
-                    <div class="hr"></div>
-                    <div class="invoice-head-bottom">
-                        <div class="invoice-head-bottom-left">
-                            <ul>
-                                <li>{{ username }}</li>
-                                <li>{{ faculty }}</li>
-                                <li>{{ university }}</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="overflow-view">
-                    <div class="invoice-body">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <td class="text-bold">Purpose</td>
-                                    <td class="text-bold">Appointment Date</td>
-                                    <td class="text-bold">Appointment Time</td>
-                                    <td class="text-bold">Lecturer</td>
-                                    <td class="text-bold">Faculty</td>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>{{ appointment[6] }}</td>
-                                    <td>{{ appointment[4] }}</td>
-                                    <td>{{ appointment[5] }}</td>
-                                    <td>{{ appointment[3] }}</td>
-                                    <td>{{ faculty }}</td>
-                                </tr>
-                            </tbody>
-                        </table> 
-                    </div>
-                    <div class="rules">
-                        <h4>important Notes</h4>
-                        <ul>
-                            <li><b>Before Your Appointment: </b>
-                            <ul>
-                            <li>Gather relevant documents related to your reason for consultation.</li>
-                            <li>Write down your questions and prioritize the most important ones.</li>
-                            <li>Consider your goals for the consultation.</li>
-                            <li>(Optional) Research the professional's background and expertise.</li>
-                            <li>(Optional) Prepare for fees by calling the office beforehand.</li>
-                            </ul>
-                            </li>
-                            <li><b>During Your Appointment:</b>
-                            <ul>
-                            <li>Arrive early to allow for parking, check-in, and delays.</li>
-                            <li>Be clear and concise when explaining your situation.</li>
-                            <li>Be open and honest, providing all relevant information.</li>
-                            <li>Take notes on key points, recommendations, and next steps.</li>
-                            <li>Ask clarifying questions if anything is unclear.</li>
-                            <li>Discuss fees (if not done beforehand) to understand the cost structure.</li>
-                            </ul>
-                            </li>
-                            <li><b>After Your Appointment:</b>
-                            <ul>
-                            <li>Review your notes to organize the information gathered.</li>
-                            <li>Follow up on any next steps or tasks assigned to you.</li>
-                            <li>(Optional) Consider seeking a second opinion for reassurance.</li>
-                            </ul>
-                            </li>
-                            <li><b>Additional Tips:</b>
-                            <ul>
-                            <li>Dress professionally to make a good first impression.</li>
-                            <li>Be respectful of the professional's time by sticking to the appointment time.</li>
-                            <li>Be polite and courteous to everyone you interact with during your visit.</li>
-                            </ul>
-                            </li>
-                            </ul>
-                    </div>                    
-                </div>
-                <div class = "invoice-foot text-center">
-                    <p><span class = "text-bold text-center">NOTE:&nbsp;</span>This is computer generated receipt and does not require physical signature.</p>
-
-                    <div class="invoice-btns">
-                        <button class="print-btn" type="button" class="invoice-btn" onclick="printInvoice()">
-                            <span class="printer-wrapper">
-                                <span class="printer-container">
-                                    <!-- SVG icon of a printer -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 92 75">
-                                        <!-- Printer outline path -->
-                                        <path stroke-width="5" stroke="black" d="M12 37.5H80C85.2467 37.5 89.5 41.7533 89.5 47V69C89.5 70.933 87.933 72.5 86 72.5H6C4.067 72.5 2.5 70.933 2.5 69V47C2.5 41.7533 6.75329 37.5 12 37.5Z"></path>
-                                        <!-- Mask for the printer -->
-                                        <mask fill="white" id="path-2-inside-1_30_7">
-                                            <path d="M12 12C12 5.37258 17.3726 0 24 0H57C70.2548 0 81 10.7452 81 24V29H12V12Z"></path>
-                                        </mask>
-                                        <!-- Filled printer path using mask -->
-                                        <path mask="url(#path-2-inside-1_30_7)" fill="black" d="M7 12C7 2.61116 14.6112 -5 24 -5H57C73.0163 -5 86 7.98374 86 24H76C76 13.5066 67.4934 5 57 5H24C20.134 5 17 8.13401 17 12H7ZM81 29H12H81ZM7 29V12C7 2.61116 14.6112 -5 24 -5V5C20.134 5 17 8.13401 17 12V29H7ZM57 -5C73.0163 -5 86 7.98374 86 24V29H76V24C76 13.5066 67.4934 5 57 5V-5Z"></path>
-                                        <!-- Circle indicating printer status -->
-                                        <circle fill="black" r="3" cy="49" cx="78"></circle>
-                                    </svg>
-                                </span>
-                                <!-- Container for the printer page count -->
-                                <span class="printer-page-wrapper">
-                                    <span class="printer-page"></span>
-                                </span>
-                            </span>
-                            <!-- Text content -->
-                            Print
-                        </button>
-                    </div>
-                    
-                          
-                    </div> 
-                </div>
+<div class="student-detail-page">
+    <section class="student-profile-card student-appointment-detail" aria-labelledby="appointment-detail-heading">
+        <div class="student-detail-heading">
+            <div>
+                <p class="student-card-eyebrow">Appointment with</p>
+                <h2 id="appointment-detail-heading">{{ student_appointment.lecturer }}</h2>
+                <p class="student-card-subtitle">{{ student_appointment.lecturer_faculty }}</p>
             </div>
+            {{ status_summary(student_appointment) }}
         </div>
-    </div>
-{% endblock %}
-{% block scripts %}
-<script>
-        // Your other JavaScript functions and scripts
-        
-        function printInvoice() {
-            var printContent = document.getElementById("print-area").innerHTML; // Get the HTML content of the print area
-            var originalContents = document.body.innerHTML; // Store the original HTML content of the body
-            document.body.innerHTML = printContent; // Replace the body content with the print area content
-            window.print(); // Print the document
-            document.body.innerHTML = originalContents; // Restore the original body content
-        }
+        <dl class="student-appointment-facts student-appointment-facts--detail">
+            <div><dt>Date</dt><dd>{{ student_appointment.date_display }}</dd></div>
+            <div><dt>Time</dt><dd>{{ student_appointment.time_display }}</dd></div>
+            <div class="student-purpose-detail"><dt>Purpose</dt><dd>{{ student_appointment.purpose }}</dd></div>
+        </dl>
+        <div class="student-reference">
+            <span>Booking reference</span>
+            <code>{{ student_appointment.public_reference }}</code>
+            <button type="button" class="btn btn-ghost btn-sm" data-copy-text="{{ student_appointment.public_reference }}" aria-label="Copy booking reference">
+                <i class="fa-regular fa-copy" aria-hidden="true"></i> Copy
+            </button>
+        </div>
+        <div class="student-appointment-actions">
+            <a class="btn btn-secondary" href="{{ url_for('appointments.booking_history') }}">All appointments</a>
+            {% if student_appointment.can_cancel %}
+            <button class="btn btn-danger" type="button" data-cancel-appointment="{{ student_appointment.id }}" data-dialog-open="student-cancel-dialog">Cancel appointment</button>
+            {% endif %}
+        </div>
+    </section>
 
-    </script>
+    <section class="student-profile-card student-timeline-card" aria-labelledby="appointment-timeline-heading">
+        <h2 id="appointment-timeline-heading">Appointment updates</h2>
+        <ol class="student-timeline">
+            {% for event in status_events %}
+            <li>
+                <span class="student-timeline-marker" aria-hidden="true"></span>
+                <div><h3>{{ event.label }}</h3><p>{{ event.description }}</p><time>{{ event.timestamp }}</time></div>
+            </li>
+            {% endfor %}
+        </ol>
+    </section>
+</div>
+{{ cancel_dialog() }}
 {% endblock %}
