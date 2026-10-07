@@ -9,7 +9,8 @@ from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import expect, sync_playwright
 
 from uas.extensions import db
-from uas.models import Appointment
+from uas.models import Appointment, NotificationType
+from uas.notification_service import create_notification
 
 
 @pytest.fixture
@@ -85,6 +86,44 @@ def test_lecturer_can_review_accept_and_reject_requests(
     with app.app_context():
         assert db.session.get(Appointment, accepted_request.id).status == "Accepted"
         assert db.session.get(Appointment, rejected_request.id).status == "Rejected"
+
+
+def test_lecturer_can_open_private_request_notification(app, lecturer_live_server, appointment_factory):
+    appointment = appointment_factory(purpose="A private request purpose")
+    with app.app_context():
+        row = db.session.get(Appointment, appointment.id)
+        create_notification(
+            db.session,
+            user_id=row.lecturer_id,
+            appointment=row,
+            notification_type=NotificationType.APPOINTMENT_REQUESTED.value,
+            deduplication_key=f"e2e-lecturer-request:{row.id}",
+            title="New appointment request",
+            message="A student requested an appointment.",
+        )
+        db.session.commit()
+
+    with sync_playwright() as playwright_session:
+        try:
+            browser = playwright_session.chromium.launch()
+        except PlaywrightError as exc:
+            pytest.skip(f"Chromium is not installed: {exc}")
+        try:
+            page = browser.new_page(viewport={"width": 390, "height": 844})
+            login_lecturer(page, lecturer_live_server)
+            open_lecturer_home_from_public_navigation(page, lecturer_live_server)
+            bell = page.locator(".app-notification-menu > summary")
+            bell.click()
+            page.get_by_role("link", name="View all notifications").click()
+            assert "New appointment request" in page.locator("main").inner_text()
+            page.get_by_role("button", name="View appointment").click()
+            expect(page).to_have_url(
+                f"{lecturer_live_server}/lecturer/appointments/{appointment.public_reference}"
+            )
+            assert "A private request purpose" in page.locator("main").inner_text()
+            assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+        finally:
+            browser.close()
 
 
 def test_lecturer_detail_confirms_completion_and_no_show(

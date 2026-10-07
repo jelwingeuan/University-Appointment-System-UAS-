@@ -49,6 +49,15 @@ Only Pending and Accepted appointments block a slot. Rejected, Cancelled, Comple
 - Lecturer signup is invitation-only in production. An admin-created invitation is single-use, expires after seven days, and may be bound to an email; the raw token is shown once while only its hash is stored. Development may use `LECTURER_REGISTRATION_SECRET` instead.
 - Inactive or unverified accounts where verification is required cannot establish a session. Deactivation invalidates existing sessions.
 
+## Notifications and appointment reminders
+
+- Students and lecturers may open `/notifications`, filter All/Unread, mark an item read, mark all unread items read, or mark a notification read while opening its appointment. Every operation is scoped to the signed-in recipient; another user's notification returns 404.
+- A request notifies its lecturer; acceptance or rejection notifies the student; student cancellation notifies the lecturer. Completed and No Show do not notify. The acting user and administrators are not recipients. Copy includes date/time only, never appointment purpose.
+- The shell shows up to five recent notifications and an unread count, only when the account has a notification. It does not poll. Appointment links are derived at request time from role and ownership; notification data cannot supply an arbitrary URL.
+- In-app updates are always enabled. Email update, 24-hour reminder, and 1-hour reminder preferences default to enabled and are editable from Profile. They affect appointment email/reminder behavior only; password-reset and verification email are independent. If appointment email is not configured, in-app notifications remain available and Profile explains the limitation.
+- `flask --app app process-reminders` creates idempotent reminders only for Accepted appointments and dispatches pending email outbox rows. A deployment scheduler runs it periodically; the worker is a separate process. The worker rechecks eligibility, retries delivery at most five times, and records safe error codes. External email is at-least-once if the provider does not support the stable idempotency key.
+- Notifications and delivery records are retained; there is no automatic purge. Use an institution-approved retention process and preserve required backup/audit data. See [notifications operations](notifications.md) for the provider, worker, retry, and retention contract.
+
 ## Administration, audit, and uploads
 
 - Admin user deactivation invalidates sessions and disables a lecturer's availability; reactivation does not re-enable availability. Admins cannot deactivate themselves or the final active administrator. Faculty membership remains linked to stable user/faculty IDs.
@@ -69,4 +78,4 @@ Only Pending and Accepted appointments block a slot. Rejected, Cancelled, Comple
 
 ## Security headers
 
-Existing security headers remain in force. A restrictive Content Security Policy is intentionally deferred until the UI redesign establishes its script, style, font, image, and third-party resource requirements.
+Existing security headers remain in force with a restrictive Content Security Policy. Inline script/eval are not permitted; nonce-based inline styles and the explicitly required existing icon, calendar, map, and homepage image origins are documented in [the design-system guide](design-system.md). CSP can be tightened further when those external resources are removed.

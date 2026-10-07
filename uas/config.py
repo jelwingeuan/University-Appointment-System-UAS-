@@ -2,6 +2,7 @@ import os
 import tempfile
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from sqlalchemy.engine import make_url
@@ -86,10 +87,19 @@ def configure(app, overrides):
         ),
         IMAGE_STORAGE_FACTORY=None if testing else os.getenv("IMAGE_STORAGE_FACTORY"),
         MAIL_DELIVERY_FACTORY=None if testing else os.getenv("MAIL_DELIVERY_FACTORY"),
+        APPOINTMENT_MAIL_DELIVERY_FACTORY=None if testing else os.getenv("APPOINTMENT_MAIL_DELIVERY_FACTORY"),
+        PUBLIC_APP_ORIGIN=(
+            "http://127.0.0.1:5000" if environment == "development" else os.getenv("PUBLIC_APP_ORIGIN")
+        ),
         REQUIRE_EMAIL_VERIFICATION=False if testing else flag("REQUIRE_EMAIL_VERIFICATION"),
         TRUSTED_HOSTS=None if testing else _csv(os.getenv("TRUSTED_HOSTS")),
     )
     app.config.update(overrides)
+    if not testing:
+        app.config.setdefault(
+            "NOTIFICATION_QUEUE_REDIS_URL",
+            os.getenv("NOTIFICATION_QUEUE_REDIS_URL") or app.config.get("RATELIMIT_STORAGE_URI"),
+        )
     if overrides.get("DATABASE_URL"):
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url(overrides["DATABASE_URL"])
     if testing and overrides.get("DATABASE_PATH"):
@@ -135,6 +145,29 @@ def configure(app, overrides):
             raise RuntimeError("IMAGE_STORAGE_FACTORY must configure durable image storage in production")
         if app.config.get("REQUIRE_EMAIL_VERIFICATION") and not app.config.get("MAIL_DELIVERY_FACTORY"):
             raise RuntimeError("MAIL_DELIVERY_FACTORY is required when email verification is enabled")
+        appointment_mail_factory = app.config.get("APPOINTMENT_MAIL_DELIVERY_FACTORY")
+        if appointment_mail_factory:
+            if appointment_mail_factory == "uas.dev_mail:create_sender":
+                raise RuntimeError("The local development mailbox cannot be enabled in production")
+            origin = str(app.config.get("PUBLIC_APP_ORIGIN") or "")
+            parsed_origin = urlparse(origin)
+            if (
+                not parsed_origin.netloc
+                or parsed_origin.scheme != "https"
+                or parsed_origin.username
+                or parsed_origin.password
+                or parsed_origin.path not in {"", "/"}
+                or parsed_origin.query
+                or parsed_origin.fragment
+            ):
+                raise RuntimeError("PUBLIC_APP_ORIGIN must be an HTTPS origin when appointment email is enabled")
+            queue_uri = str(app.config.get("NOTIFICATION_QUEUE_REDIS_URL") or "")
+            if not queue_uri.startswith(("redis://", "rediss://")):
+                raise RuntimeError("NOTIFICATION_QUEUE_REDIS_URL must use redis:// or rediss:// when appointment email is enabled")
+            from importlib.util import find_spec
+
+            if find_spec("rq") is None:
+                raise RuntimeError("Install requirements-production.txt to enable appointment email workers")
         app.config["PROXY_FIX_COUNTS"] = {
             name: _nonnegative_int(os.getenv(f"PROXY_FIX_{name.upper()}", "0"))
             for name in ("x_for", "x_proto", "x_host", "x_port", "x_prefix")

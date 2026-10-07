@@ -1,0 +1,7 @@
+{{ school_name }}
+
+{{ title }}
+{{ message }}
+{% if action_url %}View appointment: {{ action_url }}{% endif %}
+
+You can change appointment email preferences in your profile.

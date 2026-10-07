@@ -1,0 +1,53 @@
+{% extends "app_shell.html" %}
+{% from "components/ui.html" import empty_state %}
+{% from "components/ui.html" import filtered_pagination %}
+{% block title %}Notifications - UAS{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block page_description %}Appointment updates for your account.{% endblock %}
+{% block content %}
+<section class="notifications-page" aria-labelledby="notifications-list-heading">
+    <div class="notifications-toolbar">
+        <nav class="notification-filters" aria-label="Notification filter">
+            <a href="{{ url_for('notifications.index', view='all') }}"{% if view == 'all' %} aria-current="page"{% endif %}>All</a>
+            <a href="{{ url_for('notifications.index', view='unread') }}"{% if view == 'unread' %} aria-current="page"{% endif %}>Unread</a>
+        </nav>
+        {% if unread_count %}
+        <form method="post" action="{{ url_for('notifications.mark_all_read') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-secondary btn-sm" type="submit">Mark all as read</button>
+        </form>
+        {% endif %}
+    </div>
+    <h2 id="notifications-list-heading" class="visually-hidden">{{ 'Unread notifications' if view == 'unread' else 'All notifications' }}</h2>
+    {% if notifications %}
+    <ol class="notification-history-list">
+        {% for item in notifications %}
+        <li class="notification-history-item{% if not item.read %} is-unread{% endif %}">
+            <span class="notification-history-icon" aria-hidden="true"><i class="fa-solid {{ item.icon }}"></i></span>
+            <div class="notification-history-copy">
+                <h3>{{ item.title }}{% if not item.read %}<span class="notification-unread-label">Unread</span>{% endif %}</h3>
+                <p>{{ item.message }}</p>
+                <time datetime="{{ item.created_at.isoformat() }}">{{ item.created_at.strftime('%a, %d %b %Y at %I:%M %p') }} · {{ item.relative_time }}</time>
+            </div>
+            <div class="notification-history-actions">
+                {% if item.open_url %}
+                <form method="post" action="{{ url_for('notifications.open_notification', notification_id=item.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-secondary btn-sm" type="submit">View appointment</button>
+                </form>
+                {% elif not item.read %}
+                <form method="post" action="{{ url_for('notifications.mark_read', notification_id=item.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-secondary btn-sm" type="submit">Mark as read</button>
+                </form>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ol>
+    {{ filtered_pagination(pagination, 'notifications.index', {'view': view}) }}
+    {% else %}
+        {{ empty_state('No notifications yet', 'Appointment updates will appear here when there is something new to share.') }}
+    {% endif %}
+</section>
+{% endblock %}

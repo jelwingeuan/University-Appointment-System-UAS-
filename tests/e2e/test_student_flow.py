@@ -10,7 +10,8 @@ from playwright.sync_api import sync_playwright
 from werkzeug.serving import make_server
 
 from uas.extensions import db
-from uas.models import User
+from uas.models import Appointment, NotificationType, User
+from uas.notification_service import create_notification
 
 
 @pytest.fixture
@@ -97,6 +98,67 @@ def test_student_can_book_review_cancel_and_is_blocked_from_other_roles(app, liv
             assert "Access denied" in page.locator("main").inner_text()
             page.goto(f"{live_server}/admin")
             assert "Access denied" in page.locator("main").inner_text()
+        finally:
+            browser.close()
+
+
+def test_student_notification_flow_preferences_and_mobile_keyboard(app, live_server, appointment_factory):
+    appointment = appointment_factory(status="Accepted")
+    with app.app_context():
+        row = db.session.get(Appointment, appointment.id)
+        create_notification(
+            db.session,
+            user_id=row.student_id,
+            appointment=row,
+            notification_type=NotificationType.APPOINTMENT_ACCEPTED.value,
+            deduplication_key=f"e2e-student-accepted:{row.id}",
+            title="Appointment accepted",
+            message="Your appointment has been accepted.",
+        )
+        db.session.commit()
+
+    with sync_playwright() as playwright_session:
+        try:
+            browser = playwright_session.chromium.launch()
+        except PlaywrightError as exc:
+            pytest.skip(f"Chromium is not installed: {exc}")
+        try:
+            page = browser.new_page(viewport={"width": 390, "height": 844})
+            page.goto(f"{live_server}/login")
+            login_form = page.locator("form").filter(has=page.locator('input[name="password"]'))
+            login_form.locator('input[name="email"]').fill("student1@student.mmu.edu.my")
+            login_form.locator('input[name="password"]').fill("CorrectHorse1")
+            login_form.locator('input[name="password"]').press("Enter")
+            page.wait_for_url("**/appointment")
+
+            bell = page.locator(".app-notification-menu > summary")
+            bell.click()
+            page.keyboard.press("Escape")
+            assert page.locator(".app-notification-menu").evaluate("el => !el.open")
+            assert bell.evaluate("el => el === document.activeElement")
+            bell.click()
+            page.get_by_role("link", name="View all notifications").click()
+            assert "Appointment accepted" in page.locator("main").inner_text()
+            page.get_by_role("button", name="View appointment").click()
+            page.wait_for_url(f"**/invoice?reference={appointment.public_reference}")
+
+            page.goto(f"{live_server}/profile")
+            email_updates = page.locator('input[name="email_updates"]')
+            reminder_24h = page.locator('input[name="reminder_24h"]')
+            reminder_1h = page.locator('input[name="reminder_1h"]')
+            assert email_updates.is_checked() and reminder_24h.is_checked() and reminder_1h.is_checked()
+            reminder_24h.uncheck()
+            page.get_by_role("button", name="Save email preferences").click()
+            assert not page.locator('input[name="reminder_24h"]').is_checked()
+
+            theme = page.locator("#uas-theme")
+            for selected in ("light", "dark", "system"):
+                theme.select_option(selected)
+                assert page.locator("html").get_attribute("data-theme") == selected
+                assert page.evaluate("localStorage.getItem('uas-theme')") == selected
+            for width in (360, 390, 768, 1024, 1280, 1440):
+                page.set_viewport_size({"width": width, "height": 844})
+                assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
         finally:
             browser.close()
 

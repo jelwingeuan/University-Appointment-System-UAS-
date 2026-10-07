@@ -3,27 +3,35 @@ from flask_login import current_user, login_required, logout_user
 from sqlalchemy.exc import IntegrityError
 
 from .account_service import check_password, deliver_account_token, hash_password, issue_account_token
-from .common import record_audit, require_actor, transaction, utc_now
+from .common import record_audit, require_actor, role_required, transaction, utc_now
+from .extensions import db, limiter
+from .notification_service import preferences_for, update_preferences
 from .validation import InputValidationError, validate_account, validate_password
 
 bp = Blueprint("profile", __name__)
 
 
+def _profile_context(*, form_values=None, form_errors=None):
+    preferences = preferences_for(db.session, current_user.id)
+    return {
+        "username": current_user.username,
+        "email": current_user.email,
+        "faculty": current_user.faculty,
+        "phone_number": current_user.phone_number,
+        "role": current_user.role,
+        "email_verified": bool(current_user.email_verified_at),
+        "verification_required": current_app.config.get("REQUIRE_EMAIL_VERIFICATION", False),
+        "form_values": form_values or {},
+        "form_errors": form_errors or {},
+        "notification_preferences": preferences,
+        "appointment_email_available": bool(current_app.config.get("APPOINTMENT_MAIL_DELIVERY_FACTORY")),
+    }
+
+
 @bp.get("/profile")
 @login_required
 def profile():
-    return render_template(
-        "profile.html",
-        username=current_user.username,
-        email=current_user.email,
-        faculty=current_user.faculty,
-        phone_number=current_user.phone_number,
-        role=current_user.role,
-        email_verified=bool(current_user.email_verified_at),
-        verification_required=current_app.config.get("REQUIRE_EMAIL_VERIFICATION", False),
-        form_values={},
-        form_errors={},
-    )
+    return render_template("profile.html", **_profile_context())
 
 
 @bp.post("/update_user_info")
@@ -35,15 +43,7 @@ def update_user():
     except InputValidationError as exc:
         return render_template(
             "profile.html",
-            username=current_user.username,
-            email=current_user.email,
-            faculty=current_user.faculty,
-            phone_number=current_user.phone_number,
-            role=current_user.role,
-            email_verified=bool(current_user.email_verified_at),
-            verification_required=current_app.config.get("REQUIRE_EMAIL_VERIFICATION", False),
-            form_values=form_values,
-            form_errors=exc.errors,
+            **_profile_context(form_values=form_values, form_errors=exc.errors),
         ), 400
     try:
         with transaction() as session:
@@ -59,6 +59,23 @@ def update_user():
         flash("User information updated successfully", "success")
     except IntegrityError:
         flash("Those account details are already in use", "error")
+    return redirect(url_for("profile.profile"))
+
+
+@bp.post("/profile/notification-preferences")
+@role_required("student", "teacher")
+@limiter.limit("10 per hour")
+def update_notification_preferences():
+    with transaction() as session:
+        require_actor(session, current_user.id, current_user.role)
+        update_preferences(
+            session,
+            current_user.id,
+            email_updates=request.form.get("email_updates") == "1",
+            reminder_24h=request.form.get("reminder_24h") == "1",
+            reminder_1h=request.form.get("reminder_1h") == "1",
+        )
+    flash("Notification preferences saved.", "success")
     return redirect(url_for("profile.profile"))
 
 

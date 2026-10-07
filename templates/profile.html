@@ -98,4 +98,33 @@
     </div>
 </dialog>
 {% endif %}
+{% if role in ['student', 'teacher'] %}
+<section class="notification-preferences ui-card" aria-labelledby="notification-preferences-heading">
+    <header class="ui-card-header">
+        <div>
+            <h2 id="notification-preferences-heading">Appointment email updates</h2>
+            <p>In-app notifications are always on. Choose which appointment emails you receive.</p>
+        </div>
+    </header>
+    {% if not appointment_email_available %}
+    <p class="alert alert-info" role="status">Appointment email is not configured for this service. Your in-app notifications will continue to work.</p>
+    {% endif %}
+    <form method="post" action="{{ url_for('profile.update_notification_preferences') }}" class="notification-preferences-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="notification-preference-option">
+            <span><strong>Appointment updates</strong><small>Requests, decisions, and cancellations</small></span>
+            <input type="checkbox" name="email_updates" value="1"{% if notification_preferences.email_updates %} checked{% endif %}>
+        </label>
+        <label class="notification-preference-option">
+            <span><strong>24-hour reminder</strong><small>A reminder one day before an accepted appointment</small></span>
+            <input type="checkbox" name="reminder_24h" value="1"{% if notification_preferences.reminder_24h %} checked{% endif %}>
+        </label>
+        <label class="notification-preference-option">
+            <span><strong>1-hour reminder</strong><small>A reminder one hour before an accepted appointment</small></span>
+            <input type="checkbox" name="reminder_1h" value="1"{% if notification_preferences.reminder_1h %} checked{% endif %}>
+        </label>
+        <div class="form-actions"><button class="btn btn-primary" type="submit">Save email preferences</button></div>
+    </form>
+</section>
+{% endif %}
 {% endblock %}

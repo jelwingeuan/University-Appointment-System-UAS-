@@ -11,6 +11,7 @@ from sqlalchemy import (
     Index,
     Text,
     UniqueConstraint,
+    event,
     func,
 )
 from sqlalchemy.types import DateTime, TypeDecorator
@@ -25,6 +26,22 @@ class Status(StrEnum):
     CANCELLED = "Cancelled"
     COMPLETED = "Completed"
     NO_SHOW = "No Show"
+
+
+class NotificationType(StrEnum):
+    APPOINTMENT_REQUESTED = "appointment_requested"
+    APPOINTMENT_ACCEPTED = "appointment_accepted"
+    APPOINTMENT_REJECTED = "appointment_rejected"
+    APPOINTMENT_CANCELLED = "appointment_cancelled"
+    APPOINTMENT_REMINDER = "appointment_reminder"
+
+
+class DeliveryStatus(StrEnum):
+    PENDING = "Pending"
+    PROCESSING = "Processing"
+    SENT = "Sent"
+    FAILED = "Failed"
+    SKIPPED = "Skipped"
 
 
 BLOCKING_STATUSES = (Status.PENDING.value, Status.ACCEPTED.value)
@@ -83,6 +100,9 @@ class User(UserMixin, db.Model):
     email_verified_at = db.Column(UTCDateTime())
     session_version = db.Column(db.Integer, nullable=False, default=0, server_default="0")
     faculty_record = db.relationship("Faculty", back_populates="members")
+    notification_preference = db.relationship(
+        "NotificationPreference", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
     __table_args__ = (
         CheckConstraint("role IN ('student', 'teacher', 'admin')", name="role"),
         Index("uq_users_email_lower", func.lower(email), unique=True),
@@ -156,6 +176,82 @@ class Appointment(db.Model):
         Index("ix_appointments_lecturer_start", "lecturer_id", "starts_at"),
         Index("ix_appointments_student_start", "student_id", "starts_at"),
         Index("ix_appointments_status", "status"),
+    )
+
+
+class NotificationPreference(db.Model):
+    __tablename__ = "notification_preferences"
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    email_updates = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    reminder_24h = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    reminder_1h = db.Column(db.Boolean, nullable=False, default=True, server_default=db.true())
+    created_at = db.Column(UTCDateTime(), nullable=False, default=_utc_now, server_default=func.now())
+    updated_at = db.Column(UTCDateTime(), nullable=False, default=_utc_now, onupdate=_utc_now, server_default=func.now())
+    user = db.relationship("User", back_populates="notification_preference")
+
+
+@event.listens_for(User, "after_insert")
+def _create_default_notification_preferences(_mapper, connection, user):
+    connection.execute(NotificationPreference.__table__.insert().values(user_id=user.id))
+
+
+class Notification(db.Model):
+    __tablename__ = "notifications"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    appointment_id = db.Column(db.Integer, db.ForeignKey("appointments.id", ondelete="SET NULL"))
+    deduplication_key = db.Column(db.String(200), nullable=False, unique=True)
+    type = db.Column(db.String(40), nullable=False)
+    title = db.Column(db.String(160), nullable=False)
+    message = db.Column(db.String(300), nullable=False)
+    reminder_offset_minutes = db.Column(db.Integer)
+    read_at = db.Column(UTCDateTime())
+    created_at = db.Column(UTCDateTime(), nullable=False, default=_utc_now, server_default=func.now())
+    updated_at = db.Column(UTCDateTime(), nullable=False, default=_utc_now, onupdate=_utc_now, server_default=func.now())
+    user = db.relationship("User")
+    appointment = db.relationship("Appointment")
+    deliveries = db.relationship("NotificationDelivery", back_populates="notification")
+    __table_args__ = (
+        CheckConstraint(
+            "type IN ('appointment_requested', 'appointment_accepted', 'appointment_rejected', "
+            "'appointment_cancelled', 'appointment_reminder')",
+            name="notification_type",
+        ),
+        CheckConstraint(
+            "reminder_offset_minutes IS NULL OR reminder_offset_minutes IN (60, 1440)",
+            name="reminder_offset",
+        ),
+        Index("ix_notifications_user_read_created", "user_id", "read_at", "created_at", "id"),
+    )
+
+
+class NotificationDelivery(db.Model):
+    __tablename__ = "notification_deliveries"
+    id = db.Column(db.Integer, primary_key=True)
+    notification_id = db.Column(
+        db.Integer, db.ForeignKey("notifications.id", ondelete="RESTRICT"), nullable=False
+    )
+    channel = db.Column(db.String(20), nullable=False, default="email", server_default="email")
+    status = db.Column(db.String(20), nullable=False, default=DeliveryStatus.PENDING.value, server_default=DeliveryStatus.PENDING.value)
+    attempts = db.Column(db.Integer, nullable=False, default=0, server_default="0")
+    next_attempt_at = db.Column(UTCDateTime(), nullable=False, default=_utc_now, server_default=func.now())
+    enqueued_at = db.Column(UTCDateTime())
+    claim_expires_at = db.Column(UTCDateTime())
+    claim_token = db.Column(db.String(36))
+    sent_at = db.Column(UTCDateTime())
+    last_error_code = db.Column(db.String(64))
+    created_at = db.Column(UTCDateTime(), nullable=False, default=_utc_now, server_default=func.now())
+    updated_at = db.Column(UTCDateTime(), nullable=False, default=_utc_now, onupdate=_utc_now, server_default=func.now())
+    notification = db.relationship("Notification", back_populates="deliveries")
+    __table_args__ = (
+        UniqueConstraint("notification_id", "channel", name="uq_notification_delivery_channel"),
+        CheckConstraint("channel IN ('email')", name="delivery_channel"),
+        CheckConstraint(
+            "status IN ('Pending', 'Processing', 'Sent', 'Failed', 'Skipped')", name="delivery_status"
+        ),
+        CheckConstraint("attempts >= 0", name="delivery_attempts"),
+        Index("ix_notification_deliveries_due", "status", "next_attempt_at", "id"),
+        Index("ix_notification_deliveries_lease", "status", "claim_expires_at", "id"),
     )
 
 

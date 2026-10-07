@@ -118,6 +118,8 @@
             if (!target) return;
             const accountMenu = document.querySelector(".app-account-menu[open]");
             if (accountMenu && !accountMenu.contains(target)) accountMenu.open = false;
+            const notificationMenu = document.querySelector(".app-notification-menu[open]");
+            if (notificationMenu && !notificationMenu.contains(target)) notificationMenu.open = false;
             if (target.closest(".app-account-menu a, .app-account-menu button")) {
                 target.closest(".app-account-menu")?.removeAttribute("open");
             }
@@ -164,9 +166,11 @@
         document.addEventListener("keydown", (event) => {
             if (event.key !== "Escape") return;
             const accountMenu = document.querySelector(".app-account-menu[open]");
-            if (!accountMenu) return;
-            accountMenu.open = false;
-            accountMenu.querySelector("summary")?.focus();
+            const notificationMenu = document.querySelector(".app-notification-menu[open]");
+            const openMenu = notificationMenu || accountMenu;
+            if (!openMenu) return;
+            openMenu.open = false;
+            openMenu.querySelector("summary")?.focus();
         });
     };
 

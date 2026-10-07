@@ -3,7 +3,9 @@ from datetime import timedelta
 from sqlalchemy import select
 
 from .common import lock_lecturer, require_actor, transaction, utc_now
-from .models import Appointment, AppointmentStatusHistory, Availability, Status, User
+from .models import Appointment, AppointmentStatusHistory, Availability, NotificationType, Status, User
+from .notification_delivery import enqueue_delivery_ids
+from .notification_service import notify_appointment_event
 from .validation import validate_purpose
 
 
@@ -71,6 +73,7 @@ def create_booking(student_id, availability_id, requested_start, purpose):
         purpose = validate_purpose(purpose)
     except ValueError as exc:
         raise BookingError(str(exc)) from exc
+    delivery_ids = []
     try:
         requested = parse_requested_time(requested_start)
         with transaction() as session:
@@ -105,9 +108,16 @@ def create_booking(student_id, availability_id, requested_start, purpose):
             )
             session.add(row)
             session.flush()
-            return row.id, row.public_reference
+            appointment_id, reference = row.id, row.public_reference
+            delivery_ids.extend(
+                notify_appointment_event(
+                    session, row, NotificationType.APPOINTMENT_REQUESTED.value
+                )
+            )
     except BookingError:  # noqa: TRY203
         raise
+    enqueue_delivery_ids(delivery_ids)
+    return appointment_id, reference
 
 
 def transition_appointment(appointment_id, actor_id, actor_role, target_status, reason=None):
@@ -132,9 +142,12 @@ def transition_appointment(appointment_id, actor_id, actor_role, target_status, 
         Status.NO_SHOW.value,
     }:
         raise InvalidTransition("Invalid appointment status")
+    delivery_ids = []
     with transaction() as session:
         require_actor(session, actor_id, actor_role)
-        row = session.get(Appointment, appointment_id)
+        row = session.scalar(
+            select(Appointment).where(Appointment.id == appointment_id).with_for_update()
+        )
         if not row:
             raise BookingError("Appointment not found")
         lock_lecturer(session, row.lecturer_id)
@@ -170,3 +183,11 @@ def transition_appointment(appointment_id, actor_id, actor_role, target_status, 
                 reason=(reason or "").strip()[:500] or None,
             )
         )
+        event_type = {
+            Status.ACCEPTED.value: NotificationType.APPOINTMENT_ACCEPTED.value,
+            Status.REJECTED.value: NotificationType.APPOINTMENT_REJECTED.value,
+            Status.CANCELLED.value: NotificationType.APPOINTMENT_CANCELLED.value,
+        }.get(target_status)
+        if event_type:
+            delivery_ids.extend(notify_appointment_event(session, row, event_type))
+    enqueue_delivery_ids(delivery_ids)

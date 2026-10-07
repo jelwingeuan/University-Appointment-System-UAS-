@@ -132,6 +132,12 @@ def test_production_requires_postgres_shared_limits_and_durable_image_store(monk
     assert app.config["SESSION_PROTECTION"] == "strong"
     assert app.config["DEMO_ACCOUNT_PASSWORD"] is None
 
+    monkeypatch.setenv("APPOINTMENT_MAIL_DELIVERY_FACTORY", "uas.dev_mail:create_sender")
+    monkeypatch.setenv("PUBLIC_APP_ORIGIN", "https://uas.example.edu")
+    monkeypatch.setenv("NOTIFICATION_QUEUE_REDIS_URL", "rediss://redis.example.edu:6379/2")
+    with pytest.raises(RuntimeError, match="local development mailbox cannot be enabled in production"):
+        create_app({"APP_ENV": "production"})
+
 
 def test_database_migrations_upgrade_clean_db_and_current_head(tmp_path):
     app = create_app({"TESTING": True, "DATABASE_PATH": str(tmp_path / "migration.db")})

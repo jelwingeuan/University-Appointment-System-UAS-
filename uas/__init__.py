@@ -8,13 +8,14 @@ from zoneinfo import ZoneInfo
 
 from flask import Flask, g, render_template, request, url_for
 from flask_login import current_user
-from sqlalchemy import event, text
+from sqlalchemy import event, func, select, text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import joinedload
 from werkzeug.exceptions import HTTPException
 
 from .config import ROOT, configure
 from .extensions import csrf, db, limiter, login_manager, migrate
-from .models import User
+from .models import Notification, User
 from .navigation import account_initials, navigation_for_user, role_label
 from .observability import configure_logging
 
@@ -154,11 +155,38 @@ def create_app(test_config=None):
             "application_brand_initials": "MU",
             "application_home_url": url_for("public.home"),
             "csp_nonce": getattr(g, "csp_nonce", ""),
+            "notification_preview": [],
+            "notification_unread_count": 0,
         }
         if not current_user.is_authenticated:
             return context
 
         links = navigation_for_user(current_user.role, request.endpoint)
+        is_application_page = any(link["active"] for link in links) or request.endpoint == "notifications.index"
+        if current_user.role in {"student", "teacher"} and is_application_page:
+            from .notification_service import notification_for_display
+
+            unread_count_query = (
+                select(func.count())
+                .select_from(Notification)
+                .where(
+                    Notification.user_id == int(current_user.id),
+                    Notification.read_at.is_(None),
+                )
+                .scalar_subquery()
+            )
+            rows = db.session.execute(
+                select(Notification, unread_count_query)
+                .options(joinedload(Notification.appointment))
+                .where(Notification.user_id == int(current_user.id))
+                .order_by(Notification.created_at.desc(), Notification.id.desc())
+                .limit(5)
+            ).all()
+            context["notification_preview"] = [
+                notification_for_display(row[0], current_user.role) for row in rows
+            ]
+            context["notification_unread_count"] = rows[0][1] if rows else 0
+
         from .content_service import load_content
 
         content = load_content()
@@ -232,9 +260,9 @@ def create_app(test_config=None):
             ), 500
         return "An unexpected error occurred", 500
 
-    from . import admin, appointments, auth, calendar, faculty, profile, public
+    from . import admin, appointments, auth, calendar, faculty, notifications, profile, public
 
-    for module in (public, auth, profile, appointments, calendar, admin, faculty):
+    for module in (public, auth, profile, appointments, calendar, admin, faculty, notifications):
         app.register_blueprint(module.bp)
 
     @app.get("/health")
@@ -312,6 +340,28 @@ def create_app(test_config=None):
             db.session.rollback()
             raise
         click.echo(f"Demo data ready: {counts}")
+
+    @app.cli.command("process-reminders")
+    def process_reminders_command():
+        from .notification_delivery import dispatch_pending_deliveries, enqueue_delivery_ids
+        from .notification_service import process_due_reminders
+
+        created, delivery_ids = process_due_reminders()
+        queued = enqueue_delivery_ids(delivery_ids)
+        queued += dispatch_pending_deliveries()
+        click.echo(f"Created {created} reminder notifications; queued {queued} email deliveries.")
+
+    @app.cli.command("notification-worker")
+    def notification_worker_command():
+        if not app.config.get("APPOINTMENT_MAIL_DELIVERY_FACTORY"):
+            raise click.ClickException("APPOINTMENT_MAIL_DELIVERY_FACTORY is required to run the notification worker")
+        try:
+            from .notification_delivery import notification_worker
+
+            with app.app_context():
+                notification_worker()
+        except (ImportError, RuntimeError) as exc:
+            raise click.ClickException(str(exc)) from exc
 
     if app.config.get("APP_ENV") == "production":
         from werkzeug.middleware.proxy_fix import ProxyFix
