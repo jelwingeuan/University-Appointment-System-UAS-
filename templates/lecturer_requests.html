@@ -1,0 +1,31 @@
+{% extends "app_shell.html" %}
+{% from "components/lecturer_experience.html" import request_card, confirmation_dialog %}
+{% from "components/pagination.html" import pagination_nav %}
+{% from "components/ui.html" import empty_state %}
+{% block title %}Appointment Requests - UAS{% endblock %}
+{% block body_class %}app-page lecturer-page{% endblock %}
+{% block content_width %}wide{% endblock %}
+{% block breadcrumbs %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}{{ render_breadcrumbs([{'label': 'Home', 'url': url_for('appointments.lecturer_dashboard')}, {'label': 'Requests'}]) }}
+{% endblock %}
+{% block page_title %}Appointment Requests{% endblock %}
+{% block page_description %}Review requests and decide which appointment times to accept.{% endblock %}
+{% block page_actions %}<a class="btn btn-secondary" href="{{ url_for('appointments.booking_history') }}">All appointments</a>{% endblock %}
+{% block page_styles_after %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lecturer.css') }}">{% endblock %}
+{% block content %}
+<section class="lecturer-section" aria-labelledby="requests-list-heading">
+    <header class="lecturer-section-heading">
+        <div><p class="lecturer-eyebrow">Oldest requests first</p><h2 id="requests-list-heading">{{ pagination.total }} waiting</h2></div>
+    </header>
+    {% if appointments %}
+    <div class="lecturer-card-list">
+        {% for appointment in appointments %}{{ request_card(appointment) }}{% endfor %}
+    </div>
+    {{ pagination_nav(pagination, 'appointments.lecturer_requests') }}
+    {% else %}
+    {{ empty_state("No pending requests", "There are no appointment requests waiting for your response.", url_for('appointments.booking_history'), "Review appointments", "fa-regular fa-circle-check") }}
+    {% endif %}
+</section>
+{{ confirmation_dialog() }}
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='lecturer.js') }}" defer></script>{% endblock %}

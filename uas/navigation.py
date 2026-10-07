@@ -10,8 +10,10 @@ _ROLE_LINKS = {
         ("Profile", "profile.profile", "fa-user", ("profile.profile", "profile.change_password", "profile.changepassword")),
     ),
     "teacher": (
-        ("Appointments", "appointments.booking_history", "fa-calendar-check", ("appointments.booking_history",)),
+        ("Home", "appointments.lecturer_dashboard", "fa-house", ("appointments.lecturer_dashboard",)),
+        ("Requests", "appointments.lecturer_requests", "fa-inbox", ("appointments.lecturer_requests",)),
         ("Calendar", "calendar.events_page", "fa-calendar-days", ("calendar.events_page", "calendar.calendar_record")),
+        ("Appointments", "appointments.booking_history", "fa-calendar-check", ("appointments.booking_history", "appointments.lecturer_detail")),
         ("Profile", "profile.profile", "fa-user", ("profile.profile", "profile.change_password", "profile.changepassword")),
     ),
     "admin": (

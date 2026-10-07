@@ -40,9 +40,12 @@ def test_student_can_book_review_cancel_and_is_blocked_from_other_roles(app, liv
         try:
             page = browser.new_page(viewport={"width": 390, "height": 844})
             page.goto(f"{live_server}/login")
-            page.locator('input[name="email"]').fill("student1@student.mmu.edu.my")
-            page.locator('input[name="password"]').fill("CorrectHorse1")
-            page.locator('input[name="password"]').press("Enter")
+            login_form = page.locator("form").filter(has=page.locator('input[name="password"]'))
+            email = login_form.locator('input[name="email"]')
+            password = login_form.locator('input[name="password"]')
+            email.fill("student1@student.mmu.edu.my")
+            password.fill("CorrectHorse1")
+            password.press("Enter")
             page.wait_for_url("**/appointment")
 
             for width in (360, 390, 768, 1024, 1280, 1440):
@@ -51,7 +54,7 @@ def test_student_can_book_review_cancel_and_is_blocked_from_other_roles(app, liv
 
             page.set_viewport_size({"width": 390, "height": 844})
             page.get_by_role("button", name="Open application navigation").click()
-            page.get_by_role("link", name="Book").click()
+            page.get_by_role("link", name="Book", exact=True).click()
             page.locator("#faculty-select").select_option("1")
             page.locator("#lecturer-select").select_option("3")
             slot_start = datetime.fromisoformat(app.config["TEST_SLOT_START"])

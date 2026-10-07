@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     {% block page_styles %}{% endblock %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}">
+    {% block page_styles_after %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <a class="skip-link" href="#main-content">Skip to main content</a>

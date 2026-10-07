@@ -1,0 +1,85 @@
+{% extends "app_shell.html" %}
+{% from "components/lecturer_experience.html" import request_card, schedule_item %}
+{% from "components/ui.html" import empty_state, status_badge %}
+{% block title %}Lecturer Dashboard - UAS{% endblock %}
+{% block body_class %}app-page lecturer-page{% endblock %}
+{% block content_width %}wide{% endblock %}
+{% block page_title %}Lecturer Dashboard{% endblock %}
+{% block page_description %}A clear view of what needs your attention today.{% endblock %}
+{% block page_actions %}<a class="btn btn-primary" href="{{ url_for('calendar.events_page') }}">Manage availability</a>{% endblock %}
+{% block page_styles_after %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lecturer.css') }}">{% endblock %}
+{% block content %}
+<div class="lecturer-dashboard">
+    <section class="lecturer-section lecturer-requests-section" aria-labelledby="lecturer-pending-heading">
+        <header class="lecturer-section-heading">
+            <div>
+                <p class="lecturer-eyebrow">Needs your attention</p>
+                <h2 id="lecturer-pending-heading">Appointment requests</h2>
+            </div>
+            <div class="lecturer-section-meta">
+                {% if pending_count %}<span class="lecturer-count">{{ pending_count }} waiting</span>{% endif %}
+                <a href="{{ url_for('appointments.lecturer_requests') }}">View all requests</a>
+            </div>
+        </header>
+        {% if pending_appointments %}
+        <div class="lecturer-card-list">
+            {% for appointment in pending_appointments %}{{ request_card(appointment) }}{% endfor %}
+        </div>
+        {% else %}
+        {{ empty_state("No pending requests", "New appointment requests will appear here.", url_for('appointments.lecturer_requests'), "View requests", "fa-regular fa-circle-check") }}
+        {% endif %}
+    </section>
+
+    <div class="lecturer-dashboard-grid">
+        <section class="lecturer-section lecturer-schedule-section" aria-labelledby="lecturer-today-heading">
+            <header class="lecturer-section-heading">
+                <div><p class="lecturer-eyebrow">{{ today_appointments|length }} confirmed</p><h2 id="lecturer-today-heading">Today</h2></div>
+                <a href="{{ url_for('appointments.booking_history', status='Accepted') }}">Appointments</a>
+            </header>
+            {% if today_appointments %}
+            <div class="lecturer-schedule-list">
+                {% for appointment in today_appointments %}{{ schedule_item(appointment) }}{% endfor %}
+            </div>
+            {% else %}
+            {{ empty_state("No confirmed appointments today", "Your accepted appointments for today will appear here.") }}
+            {% endif %}
+        </section>
+
+        <div class="lecturer-dashboard-side">
+            <section class="lecturer-section lecturer-next-section" aria-labelledby="lecturer-next-heading">
+                <header class="lecturer-section-heading"><div><p class="lecturer-eyebrow">Coming up</p><h2 id="lecturer-next-heading">Next appointment</h2></div></header>
+                {% if next_appointment %}
+                <article class="lecturer-next-card">
+                    <div class="lecturer-next-card-top">{{ status_badge(next_appointment.status) }}<span>{{ next_appointment.duration_minutes }} minutes</span></div>
+                    <h3>{{ next_appointment.student }}</h3>
+                    <p class="lecturer-secondary">{{ next_appointment.date_display }} · {{ next_appointment.time_display }}</p>
+                    <p class="lecturer-purpose">{{ next_appointment.purpose_summary }}</p>
+                    <a class="btn btn-secondary" href="{{ url_for('appointments.lecturer_detail', public_reference=next_appointment.public_reference) }}">View details</a>
+                </article>
+                {% else %}
+                {{ empty_state("No upcoming appointments", "Accepted appointments after today will appear here.", url_for('appointments.booking_history'), "View appointments") }}
+                {% endif %}
+            </section>
+
+            <section class="lecturer-availability-summary" aria-labelledby="lecturer-availability-heading">
+                <div>
+                    <p class="lecturer-eyebrow">Availability</p>
+                    <h2 id="lecturer-availability-heading">{{ availability_count }} future {{ 'window' if availability_count == 1 else 'windows' }}</h2>
+                    <p>{% if availability_count %}Review or add consultation times in your calendar.{% else %}Add a time so students can request an appointment.{% endif %}</p>
+                </div>
+                <a class="btn btn-secondary" href="{{ url_for('calendar.events_page') }}">Open calendar</a>
+            </section>
+        </div>
+    </div>
+
+    {% if upcoming_appointments %}
+    <section class="lecturer-section" aria-labelledby="lecturer-week-heading">
+        <header class="lecturer-section-heading"><div><p class="lecturer-eyebrow">Next seven days</p><h2 id="lecturer-week-heading">Coming up this week</h2></div></header>
+        <div class="lecturer-schedule-list">
+            {% for appointment in upcoming_appointments %}{{ schedule_item(appointment) }}{% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='lecturer.js') }}" defer></script>{% endblock %}

@@ -13,7 +13,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user
-from sqlalchemy import case, func, select
+from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.orm import joinedload
 
 from .booking_service import (
@@ -24,10 +24,19 @@ from .booking_service import (
     slot_is_available,
     transition_appointment,
 )
-from .common import appointment_view, page_number, pagination, role_required, university_zone, utc_now
+from .common import (
+    appointment_view,
+    page_number,
+    pagination,
+    role_required,
+    safe_next_url,
+    university_zone,
+    utc_now,
+)
 from .content_service import load_content
 from .extensions import db
-from .models import Appointment, AppointmentStatusHistory, Availability, Faculty, User
+from .models import Appointment, AppointmentStatusHistory, Availability, Faculty, Status, User
+from .validation import InputValidationError, validate_search
 
 bp = Blueprint("appointments", __name__)
 
@@ -39,6 +48,7 @@ _STUDENT_STATUS_COPY = {
     "Completed": "This appointment is finished.",
     "No Show": "This appointment was marked as unattended.",
 }
+_LECTURER_STATUSES = tuple(status.value for status in Status)
 
 
 def _student_appointment_view(row):
@@ -64,6 +74,190 @@ def _student_appointment_query():
     return select(Appointment).options(
         joinedload(Appointment.lecturer).joinedload(User.faculty_record),
         joinedload(Appointment.student),
+    )
+
+
+def _lecturer_appointment_query():
+    return select(Appointment).options(
+        joinedload(Appointment.student).joinedload(User.faculty_record)
+    )
+
+
+def _lecturer_appointment_view(row):
+    local_start = row.starts_at.astimezone(university_zone())
+    local_end = row.ends_at.astimezone(university_zone())
+    purpose = row.purpose
+    summary = purpose if len(purpose) <= 120 else f"{purpose[:117].rstrip()}…"
+    return {
+        "id": row.id,
+        "public_reference": row.public_reference,
+        "student": row.student.username,
+        "student_faculty": row.student.faculty_record.faculty_name,
+        "date_display": local_start.strftime("%a, %d %b %Y"),
+        "time_display": f"{local_start.strftime('%I:%M %p').lstrip('0')} – {local_end.strftime('%I:%M %p').lstrip('0')}",
+        "starts_at": row.starts_at,
+        "duration_minutes": int((row.ends_at - row.starts_at).total_seconds() // 60),
+        "purpose": purpose,
+        "purpose_summary": summary,
+        "status": row.status,
+        "created_at": row.created_at,
+    }
+
+
+def _lecturer_status_history(row):
+    records = db.session.scalars(
+        select(AppointmentStatusHistory)
+        .options(joinedload(AppointmentStatusHistory.actor))
+        .where(AppointmentStatusHistory.appointment_id == row.id)
+        .order_by(AppointmentStatusHistory.created_at, AppointmentStatusHistory.id)
+    ).all()
+    labels = {
+        "Accepted": "Appointment accepted",
+        "Rejected": "Appointment rejected",
+        "Cancelled": "Appointment cancelled",
+        "Completed": "Appointment completed",
+        "No Show": "Marked as no show",
+    }
+    events = [
+        {
+            "label": "Request received",
+            "description": "The student sent this appointment request.",
+            "actor": row.student.username,
+            "timestamp": _format_local_datetime(row.created_at),
+        }
+    ]
+    events.extend(
+        {
+            "label": labels.get(record.to_status, "Appointment updated"),
+            "description": f"Status changed from {record.from_status} to {record.to_status}.",
+            "actor": record.actor.username,
+            "timestamp": _format_local_datetime(record.created_at),
+        }
+        for record in records
+    )
+    return events
+
+
+def _lecturer_return_location():
+    return safe_next_url(request.referrer) or url_for("appointments.booking_history")
+
+
+@bp.get("/lecturer")
+@role_required("teacher")
+def lecturer_dashboard():
+    owner = int(current_user.id)
+    now = utc_now()
+    zone = university_zone()
+    local_today = now.astimezone(zone).date()
+    today_start = datetime.combine(local_today, time.min, zone).astimezone(UTC)
+    tomorrow_start = datetime.combine(local_today + timedelta(days=1), time.min, zone).astimezone(UTC)
+    week_end = tomorrow_start + timedelta(days=7)
+
+    pending_count = db.session.scalar(
+        select(func.count()).select_from(Appointment).where(
+            Appointment.lecturer_id == owner,
+            Appointment.status == "Pending",
+        )
+    ) or 0
+    pending_rows = db.session.scalars(
+        _lecturer_appointment_query()
+        .where(Appointment.lecturer_id == owner, Appointment.status == "Pending")
+        .order_by(Appointment.created_at, Appointment.starts_at, Appointment.id)
+        .limit(5)
+    ).all()
+    today_rows = db.session.scalars(
+        _lecturer_appointment_query()
+        .where(
+            Appointment.lecturer_id == owner,
+            Appointment.status == "Accepted",
+            Appointment.starts_at >= today_start,
+            Appointment.starts_at < tomorrow_start,
+        )
+        .order_by(Appointment.starts_at, Appointment.id)
+        .limit(10)
+    ).all()
+    next_row = db.session.scalar(
+        _lecturer_appointment_query()
+        .where(
+            Appointment.lecturer_id == owner,
+            Appointment.status == "Accepted",
+            Appointment.starts_at >= tomorrow_start,
+        )
+        .order_by(Appointment.starts_at, Appointment.id)
+        .limit(1)
+    )
+    week_rows = db.session.scalars(
+        _lecturer_appointment_query()
+        .where(
+            Appointment.lecturer_id == owner,
+            Appointment.status == "Accepted",
+            Appointment.starts_at >= tomorrow_start,
+            Appointment.starts_at < week_end,
+        )
+        .order_by(Appointment.starts_at, Appointment.id)
+        .limit(8)
+    ).all()
+    availability_count = db.session.scalar(
+        select(func.count()).select_from(Availability).where(
+            Availability.lecturer_id == owner,
+            Availability.active.is_(True),
+            Availability.ends_at > now,
+        )
+    ) or 0
+    return render_template(
+        "lecturer_dashboard.html",
+        pending_count=pending_count,
+        pending_appointments=[_lecturer_appointment_view(row) for row in pending_rows],
+        today_appointments=[_lecturer_appointment_view(row) for row in today_rows],
+        today_total=len(today_rows),
+        next_appointment=_lecturer_appointment_view(next_row) if next_row else None,
+        upcoming_appointments=[
+            _lecturer_appointment_view(row) for row in week_rows if not next_row or row.id != next_row.id
+        ],
+        availability_count=availability_count,
+    )
+
+
+@bp.get("/lecturer/requests")
+@role_required("teacher")
+def lecturer_requests():
+    owner = int(current_user.id)
+    total = db.session.scalar(
+        select(func.count()).select_from(Appointment).where(
+            Appointment.lecturer_id == owner,
+            Appointment.status == "Pending",
+        )
+    ) or 0
+    pages = pagination(page_number(request.args.get("page")), total)
+    rows = db.session.scalars(
+        _lecturer_appointment_query()
+        .where(Appointment.lecturer_id == owner, Appointment.status == "Pending")
+        .order_by(Appointment.created_at, Appointment.starts_at, Appointment.id)
+        .limit(pages["per_page"])
+        .offset((pages["page"] - 1) * pages["per_page"])
+    ).all()
+    return render_template(
+        "lecturer_requests.html",
+        appointments=[_lecturer_appointment_view(row) for row in rows],
+        pagination=pages,
+    )
+
+
+@bp.get("/lecturer/appointments/<string:public_reference>")
+@role_required("teacher")
+def lecturer_detail(public_reference):
+    row = db.session.scalar(
+        _lecturer_appointment_query().where(
+            Appointment.public_reference == public_reference,
+            Appointment.lecturer_id == int(current_user.id),
+        )
+    )
+    if row is None:
+        abort(404)
+    return render_template(
+        "lecturer_detail.html",
+        appointment=_lecturer_appointment_view(row),
+        status_history=_lecturer_status_history(row),
     )
 
 
@@ -356,13 +550,67 @@ def booking_history():
             past_appointments=[_student_appointment_view(row) for row in past],
             pagination=pages,
         )
+    try:
+        search = validate_search(request.args.get("q", ""))
+    except InputValidationError:
+        abort(400)
+    status_filter = request.args.get("status", "").strip()
+    if status_filter and status_filter not in _LECTURER_STATUSES:
+        abort(400)
+
+    conditions = [owner == int(current_user.id)]
+    if status_filter:
+        conditions.append(Appointment.status == status_filter)
+    if search:
+        pattern = f"%{search}%"
+        conditions.append(
+            or_(
+                Appointment.student.has(User.username.ilike(pattern)),
+                Appointment.public_reference.ilike(pattern),
+                Appointment.purpose.ilike(pattern),
+            )
+        )
+    total = db.session.scalar(
+        select(func.count()).select_from(Appointment).where(*conditions)
+    ) or 0
+    pages = pagination(page_number(request.args.get("page")), total)
+    query = _lecturer_appointment_query().where(*conditions)
+    now = utc_now()
+    if status_filter == "Pending":
+        ordering = (Appointment.created_at.asc(), Appointment.id.asc())
+    elif status_filter == "Accepted":
+        upcoming = and_(Appointment.starts_at >= now)
+        ordering = (
+            case((upcoming, 0), else_=1),
+            case((upcoming, Appointment.starts_at), else_=None).asc(),
+            case((~upcoming, Appointment.starts_at), else_=None).desc(),
+            Appointment.id.desc(),
+        )
+    elif status_filter:
+        ordering = (Appointment.starts_at.desc(), Appointment.id.desc())
+    else:
+        pending = Appointment.status == "Pending"
+        upcoming_accepted = and_(Appointment.status == "Accepted", Appointment.starts_at >= now)
+        ordering = (
+            case((pending, 0), (upcoming_accepted, 1), else_=2),
+            case((pending, Appointment.created_at), else_=None).asc(),
+            case((upcoming_accepted, Appointment.starts_at), else_=None).asc(),
+            case((~pending & ~upcoming_accepted, Appointment.starts_at), else_=None).desc(),
+            Appointment.id.desc(),
+        )
     rows = db.session.scalars(
-        select(Appointment).where(owner == int(current_user.id)).order_by(Appointment.starts_at.desc())
+        query.order_by(*ordering)
+        .limit(pages["per_page"])
+        .offset((pages["page"] - 1) * pages["per_page"])
     ).all()
     return render_template(
         "booking_history.html",
-        appointments=[appointment_view(row) for row in rows],
-        display_role="lecturer" if current_user.role == "student" else "student",
+        appointments=[_lecturer_appointment_view(row) for row in rows],
+        pagination=pages,
+        search=search,
+        status_filter=status_filter,
+        statuses=_LECTURER_STATUSES,
+        display_role="student",
         role=current_user.role,
     )
 
@@ -380,6 +628,16 @@ def status_change(target):
         abort(403)
     except (BookingError, InvalidTransition, TypeError, ValueError):
         flash("That appointment status cannot be changed", "error")
+        return redirect(_lecturer_return_location() if current_user.role == "teacher" else url_for("appointments.booking_history"))
+    if current_user.role == "teacher":
+        messages = {
+            "Accepted": "Appointment accepted",
+            "Rejected": "Appointment rejected",
+            "Completed": "Appointment marked as completed",
+            "No Show": "Appointment marked as no show",
+        }
+        flash(messages.get(target, "Appointment updated"), "success")
+        return redirect(_lecturer_return_location())
     return redirect(url_for("appointments.booking_history"))
 
 

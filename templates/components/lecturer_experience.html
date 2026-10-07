@@ -1,0 +1,140 @@
+{% from "components/ui.html" import status_badge %}
+
+{% macro request_card(appointment) -%}
+<article class="lecturer-card lecturer-request-card">
+    <div class="lecturer-card-main">
+        <div class="lecturer-card-heading">
+            <div>
+                <p class="lecturer-eyebrow">Appointment request</p>
+                <h3>{{ appointment.student }}</h3>
+                <p class="lecturer-secondary">{{ appointment.student_faculty }}</p>
+            </div>
+            {{ status_badge(appointment.status) }}
+        </div>
+        <dl class="lecturer-facts">
+            <div><dt>Date</dt><dd>{{ appointment.date_display }}</dd></div>
+            <div><dt>Time</dt><dd>{{ appointment.time_display }}</dd></div>
+        </dl>
+        <p class="lecturer-purpose"><span>Purpose</span>{{ appointment.purpose_summary }}</p>
+        <p class="lecturer-reference"><span>Reference</span><code>{{ appointment.public_reference }}</code></p>
+    </div>
+    <div class="lecturer-card-actions">
+        {{ appointment_actions(appointment) }}
+        <a class="btn btn-secondary" href="{{ url_for('appointments.lecturer_detail', public_reference=appointment.public_reference) }}">View details</a>
+    </div>
+</article>
+{%- endmacro %}
+
+{% macro schedule_item(appointment) -%}
+<article class="lecturer-schedule-item">
+    <div class="lecturer-schedule-time">
+        <time datetime="{{ appointment.starts_at.isoformat() }}">{{ appointment.time_display }}</time>
+        <span>{{ appointment.duration_minutes }} min</span>
+    </div>
+    <div class="lecturer-schedule-copy">
+        <h3>{{ appointment.student }}</h3>
+        <p>{{ appointment.purpose_summary }}</p>
+    </div>
+    <div class="lecturer-schedule-action">
+        {{ status_badge(appointment.status) }}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('appointments.lecturer_detail', public_reference=appointment.public_reference) }}">View details</a>
+    </div>
+</article>
+{%- endmacro %}
+
+{% macro appointment_list_card(appointment) -%}
+<article class="lecturer-card lecturer-history-card">
+    <div class="lecturer-card-heading">
+        <div>
+            <p class="lecturer-eyebrow">{{ appointment.date_display }} · {{ appointment.time_display }}</p>
+            <h3>{{ appointment.student }}</h3>
+            <p class="lecturer-secondary">{{ appointment.student_faculty }} · {{ appointment.duration_minutes }} minutes</p>
+        </div>
+        {{ status_badge(appointment.status) }}
+    </div>
+    <p class="lecturer-purpose"><span>Purpose</span>{{ appointment.purpose_summary }}</p>
+    <div class="lecturer-card-actions">
+        <a class="btn btn-secondary" href="{{ url_for('appointments.lecturer_detail', public_reference=appointment.public_reference) }}">View details</a>
+    </div>
+</article>
+{%- endmacro %}
+
+{% macro appointment_actions(appointment) -%}
+<div class="lecturer-action-group" aria-label="Appointment actions">
+    {% if appointment.status == 'Pending' %}
+    <form method="post" action="{{ url_for('appointments.accept_booking') }}" data-submit-loading>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="id" value="{{ appointment.id }}">
+        <button class="btn btn-primary" type="submit" data-submit-label="Accepting…">Accept</button>
+    </form>
+    <button class="btn btn-danger" type="button"
+        data-lecturer-confirm
+        data-confirm-url="{{ url_for('appointments.reject_booking') }}"
+        data-confirm-id="{{ appointment.id }}"
+        data-confirm-title="Reject this request?"
+        data-confirm-message="Reject the request from {{ appointment.student }} for {{ appointment.date_display }} at {{ appointment.time_display }}?"
+        data-confirm-submit="Reject request">Reject</button>
+    {% elif appointment.status == 'Accepted' %}
+    <button class="btn btn-secondary" type="button"
+        data-lecturer-confirm
+        data-confirm-url="{{ url_for('appointments.complete_booking') }}"
+        data-confirm-id="{{ appointment.id }}"
+        data-confirm-title="Mark as completed?"
+        data-confirm-message="Mark this appointment with {{ appointment.student }} as completed?"
+        data-confirm-submit="Mark as completed" data-confirm-variant="primary">Mark as completed</button>
+    <button class="btn btn-danger" type="button"
+        data-lecturer-confirm
+        data-confirm-url="{{ url_for('appointments.no_show_booking') }}"
+        data-confirm-id="{{ appointment.id }}"
+        data-confirm-title="Mark as no show?"
+        data-confirm-message="This will record that {{ appointment.student }} did not attend. This appointment cannot be reopened."
+        data-confirm-submit="Mark as no show">Mark as no show</button>
+    {% endif %}
+</div>
+{%- endmacro %}
+
+{% macro confirmation_dialog() -%}
+<dialog class="ui-dialog lecturer-confirm-dialog" id="lecturer-confirm-dialog" aria-labelledby="lecturer-confirm-title" aria-describedby="lecturer-confirm-description">
+    <form id="lecturer-confirm-form" method="post" data-submit-loading>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="id" id="lecturer-confirm-id">
+        <h2 id="lecturer-confirm-title">Confirm appointment update</h2>
+        <p id="lecturer-confirm-description"></p>
+        <div class="form-actions">
+            <button class="btn btn-secondary" type="button" data-dialog-close>Cancel</button>
+            <button class="btn btn-danger" type="submit" id="lecturer-confirm-submit" data-submit-label="Submitting…">Confirm</button>
+        </div>
+    </form>
+</dialog>
+{%- endmacro %}
+
+{% macro availability_delete_dialog() -%}
+<dialog class="ui-dialog lecturer-confirm-dialog" id="availability-delete-dialog" aria-labelledby="availability-delete-title" aria-describedby="availability-delete-description">
+    <form id="availability-delete-form" method="post" action="{{ url_for('calendar.delete_event') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="availability_id" id="availability-delete-id">
+        <h2 id="availability-delete-title">Remove this availability?</h2>
+        <p id="availability-delete-description">This change cannot be undone.</p>
+        <div class="form-actions">
+            <button class="btn btn-secondary" type="button" data-dialog-close>Keep availability</button>
+            <button class="btn btn-danger" type="submit">Remove availability</button>
+        </div>
+    </form>
+</dialog>
+{%- endmacro %}
+
+{% macro status_timeline(events) -%}
+<ol class="lecturer-timeline">
+    {% for event in events %}
+    <li>
+        <span class="lecturer-timeline-marker" aria-hidden="true"></span>
+        <div>
+            <h3>{{ event.label }}</h3>
+            <p>{{ event.description }}</p>
+            <p class="lecturer-timeline-actor">{{ event.actor }}</p>
+            <time>{{ event.timestamp }}</time>
+        </div>
+    </li>
+    {% endfor %}
+</ol>
+{%- endmacro %}

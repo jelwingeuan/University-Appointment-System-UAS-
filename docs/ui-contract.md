@@ -5,10 +5,18 @@ The server is authoritative for identity, ownership, appointment state, availabi
 ## Roles and ownership
 
 - **Student:** browse active lecturers and their available slots; create and view their own bookings/invoices; cancel their own Pending or Accepted booking.
-- **Teacher (lecturer):** create availability and delete their own unbooked windows; view their own calendar and bookings; accept or reject their own Pending bookings; mark their own Accepted bookings Completed or No Show.
+- **Teacher (lecturer):** view a lecturer dashboard and request inbox; view only their own appointment details, calendar, availability, and history; accept or reject their own Pending bookings; mark their own Accepted bookings Completed or No Show.
 - **Admin:** inspect users and appointments; deactivate/reactivate accounts; create faculties and lecturer invitations; edit site settings; delete appointments; mark Accepted appointments Completed or No Show. Admin actions do not grant ownership of student invoices or lecturer calendars.
 
-Student navigation opens `/appointment` for a personal summary, `/appointment2` for booking, `/bookinghistory` for the student's own appointments, `/explore` for read-only faculty/active lecturer discovery, and `/profile` for account settings. Lecturer and administrator workflows remain unchanged.
+Student navigation opens `/appointment` for a personal summary, `/appointment2` for booking, `/bookinghistory` for the student's own appointments, `/explore` for read-only faculty/active lecturer discovery, and `/profile` for account settings. Lecturer navigation opens `/lecturer` (Home), `/lecturer/requests`, `/calendar`, `/bookinghistory`, and `/profile`. Successful lecturer login continues to redirect to the public home page; the Home link opens the protected lecturer dashboard.
+
+Lecturer page contracts:
+
+- `GET /lecturer` shows bounded, owner-scoped pending requests, today's Accepted appointments, the next Accepted appointment, a short upcoming-week list, and future availability count.
+- `GET /lecturer/requests` lists only the signed-in lecturer's Pending appointments, oldest request first, paginated at 25 per page.
+- `GET /lecturer/appointments/<public_reference>` displays details only when the signed-in lecturer owns the appointment; missing and non-owned references return 404. The public reference is the visible identifier.
+- Lecturer `GET /bookinghistory` accepts optional `q` (up to 100 characters), `status` (one of the six defined states), and `page`. Search matches student name, public reference, or purpose. Results use 25 rows per page; invalid search length or status returns HTTP 400. Pending requests sort oldest first, Accepted upcoming appointments soonest first, and terminal/past rows most recent first.
+- Lecturer status forms continue to post the existing appointment ID to the existing CSRF-protected action routes. The transition service remains authoritative; UI visibility does not grant permission.
 
 ## Appointment states and transitions
 
@@ -29,7 +37,8 @@ Only Pending and Accepted appointments block a slot. Rejected, Cancelled, Comple
 - `GET /check_availability?availability_id=<id>&starts_at=<ISO timestamp>` returns `{"available": boolean}` as a UX hint only.
 - `POST /create_booking` accepts `availability_id`, `slot_start` (timezone-aware ISO timestamp), and `purpose` (1-500 characters). The server derives the student from the signed-in account, lecturer from the availability record, and end time from that record's slot duration. It rejects invalid, past, misaligned, out-of-window, or conflicting slots. A conflict flashes an error and redirects to `/appointment2`; other invalid input does likewise. Do not trust submitted student, lecturer, status, or end-time fields.
 - Conflicts are checked across all availability windows for the lecturer. Adjacent back-to-back slots are allowed. The booking transaction is authoritative even when a prior availability check said the slot was free.
-- `POST /calendar_record` accepts `event_date`, `end_date`, `start_time`, `end_time`, `slot_size`, and `repeat_type` (``, `weekly`, or `monthly`). Local times are converted by the server. `GET /events` returns only the signed-in lecturer's active availability and Accepted appointments. `POST /delete_event` accepts `availability_id` and only deletes the owning lecturer's unbooked window.
+- `POST /calendar_record` accepts `event_date`, `end_date`, `start_time`, `end_time`, `slot_size`, and `repeat_type` (``, `weekly`, or `monthly`). Local times are converted by the server. A recurring form requires `end_date`; one-time availability may omit it. Recurrence remains inclusive and all-or-nothing.
+- `GET /events` returns only the signed-in lecturer's active availability and Accepted appointments. Optional `start` and `end` query parameters bound results to the visible calendar range; both must be valid timestamps and the range may not exceed 62 days. Offset-aware values are interpreted as instants; timezone-less calendar range values use `UNIVERSITY_TIMEZONE`. Omitting both retains the existing response behavior. Appointment event IDs use public references. `POST /delete_event` still accepts `availability_id` and only deletes the owning lecturer's window when no appointment references it.
 - Student booking history and invoice lookup are scoped to the signed-in student. Lecturer history is scoped to the signed-in lecturer.
 - `/explore` is student-only, read-only, and searches active lecturers by name or faculty. Results are paginated at 12 lecturers per page; booking still uses the normal server-validated `/appointment2` flow.
 

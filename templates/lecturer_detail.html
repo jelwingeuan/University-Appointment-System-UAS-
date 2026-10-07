@@ -1,0 +1,47 @@
+{% extends "app_shell.html" %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% from "components/lecturer_experience.html" import appointment_actions, confirmation_dialog, status_timeline %}
+{% from "components/ui.html" import status_badge %}
+{% block title %}Appointment Details - UAS{% endblock %}
+{% block body_class %}app-page lecturer-page{% endblock %}
+{% block content_width %}wide{% endblock %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Appointments', 'url': url_for('appointments.booking_history')}, {'label': 'Appointment details'}]) }}{% endblock %}
+{% block page_title %}Appointment details{% endblock %}
+{% block page_description %}Review the request, current status, and appointment history.{% endblock %}
+{% block page_actions %}<a class="btn btn-secondary" href="{{ url_for('appointments.booking_history') }}">All appointments</a>{% endblock %}
+{% block page_styles_after %}<link rel="stylesheet" href="{{ url_for('static', filename='css/lecturer.css') }}">{% endblock %}
+{% block content %}
+<div class="lecturer-detail-layout">
+    <section class="lecturer-detail-card" aria-labelledby="lecturer-detail-student">
+        <header class="lecturer-detail-heading">
+            <div>
+                <p class="lecturer-eyebrow">Student</p>
+                <h2 id="lecturer-detail-student">{{ appointment.student }}</h2>
+                <p class="lecturer-secondary">{{ appointment.student_faculty }}</p>
+            </div>
+            {{ status_badge(appointment.status) }}
+        </header>
+        <dl class="lecturer-detail-facts">
+            <div><dt>Date</dt><dd>{{ appointment.date_display }}</dd></div>
+            <div><dt>Time</dt><dd>{{ appointment.time_display }}</dd></div>
+            <div><dt>Duration</dt><dd>{{ appointment.duration_minutes }} minutes</dd></div>
+            <div class="lecturer-detail-purpose"><dt>Purpose</dt><dd>{{ appointment.purpose }}</dd></div>
+        </dl>
+        <div class="lecturer-reference"><span>Booking reference</span><code>{{ appointment.public_reference }}</code></div>
+        {% if appointment.status in ['Pending', 'Accepted'] %}
+        <section class="lecturer-detail-actions" aria-labelledby="lecturer-actions-heading">
+            <h3 id="lecturer-actions-heading">Next action</h3>
+            {{ appointment_actions(appointment) }}
+        </section>
+        {% else %}
+        <p class="lecturer-readonly-note">This appointment is complete and has no further actions.</p>
+        {% endif %}
+    </section>
+    <section class="lecturer-detail-card lecturer-history-timeline" aria-labelledby="lecturer-history-heading">
+        <header><p class="lecturer-eyebrow">Updates</p><h2 id="lecturer-history-heading">Appointment history</h2></header>
+        {{ status_timeline(status_history) }}
+    </section>
+</div>
+{{ confirmation_dialog() }}
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='lecturer.js') }}" defer></script>{% endblock %}
