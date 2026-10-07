@@ -1,0 +1,123 @@
+/* Public and authentication page refinements; layout remains server-rendered. */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-page #main-content {
+    flex: 1 0 auto;
+    width: 100%;
+    padding-block: clamp(1rem, 4vw, 3rem);
+}
+
+.auth-card {
+    width: min(calc(100% - 2rem), 40rem);
+    margin: 0 auto;
+    padding: clamp(1.25rem, 4vw, 2.5rem);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-text);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-md);
+}
+
+.auth-card > h1 {
+    margin: 0 0 1.5rem;
+    padding: 0 0 1rem;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-size: var(--text-h1);
+}
+
+.auth-card form { display: grid; gap: 1rem; }
+.auth-field { display: grid; gap: .4rem; min-width: 0; }
+.auth-field label, .auth-role legend { color: var(--color-text); font-weight: var(--weight-semibold); }
+.auth-field input, .auth-field select, .auth-field textarea {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: .65rem .75rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    background: var(--color-input-bg);
+    font: inherit;
+}
+.auth-field input:focus-visible, .auth-field select:focus-visible, .auth-field textarea:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+}
+.auth-role { min-width: 0; margin: 0; padding: 0; border: 0; }
+.auth-role legend { margin-bottom: .6rem; }
+.auth-role-options { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; }
+.auth-role-options label, .auth-check { display: inline-flex; min-height: 2.75rem; align-items: center; gap: .5rem; }
+.auth-role-options input, .auth-check input { width: 1.15rem; height: 1.15rem; accent-color: var(--color-primary); }
+.auth-notice { min-height: 1.25rem; margin: 0; color: var(--color-danger); }
+.auth-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.auth-card .btn, .auth-card button, .auth-card input[type="submit"] {
+    min-height: 2.75rem;
+}
+.auth-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem; margin-top: 1.25rem; }
+.auth-secondary { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--color-border); }
+.auth-footer { flex: 0 0 auto; padding: 1rem max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); }
+.auth-footer .footer-col { width: min(100%, 76rem); margin: auto; }
+.auth-footer h2 { margin-top: 0; font-size: var(--text-h4); }
+.auth-field[hidden], [hidden].auth-field { display: none !important; }
+
+.public-home .homecontent-wrapper { width: min(100%, 84rem); margin-inline: auto; padding-inline: clamp(.75rem, 3vw, 2.5rem); }
+.public-home .homecontent1 { min-height: clamp(12rem, 32vw, 28rem); height: auto; border-radius: var(--radius-lg); background-position: center; }
+.public-home .homecontent211 { width: 100%; margin: clamp(1.5rem, 4vw, 3rem) 0; line-height: var(--line-normal); }
+.public-home .homecontent211 h1 { margin: 0; color: var(--color-text); font-size: var(--text-display); line-height: var(--line-tight); overflow-wrap: anywhere; }
+.public-home .homecontent211 h2 { color: var(--color-text-secondary); font-size: var(--text-h2); }
+.public-home .homecontent2 { width: 100%; gap: clamp(1rem, 3vw, 2.5rem); margin: clamp(1.5rem, 4vw, 3rem) 0; }
+.public-home .homecontent21, .public-home .homecontent22 { min-width: 0; padding: clamp(.5rem, 2vw, 1.25rem); }
+.public-home .homecontent21 h2 { color: var(--color-text); font-size: var(--text-h2); }
+.public-home .homecontent21 p, .public-home .title p { max-width: 62ch; line-height: var(--line-relaxed); color: var(--color-text-secondary); }
+.public-home .homecontent22 img { width: 100%; min-height: 12rem; object-fit: cover; }
+.public-home .homecontent22 iframe { display: block; width: 100%; max-width: 100%; aspect-ratio: 4 / 3; height: auto; border: 0; border-radius: var(--radius-md); }
+.public-home .title { width: 100%; padding: 0; color: var(--color-text); }
+.public-home .title h2 { font-size: var(--text-h2); }
+.public-home .homecontent21 .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; }
+.public-home .slidecontainer {
+    left: auto;
+    width: min(calc(100% - 2rem), 62.5rem);
+    height: clamp(22rem, 58vw, 37.5rem);
+    margin: clamp(2rem, 6vw, 4rem) auto;
+    transform: none;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-muted);
+    box-shadow: var(--shadow-md);
+}
+.public-home .slidecontainer .slide .item { background-position: center; }
+.public-home .faculty-slide--computing { background-image: linear-gradient(90deg, rgb(0 0 0 / 62%), rgb(0 0 0 / 6%)), url("https://www.forbes.com/advisor/wp-content/uploads/2022/06/computer_programming.jpeg-900x510.jpg"); }
+.public-home .faculty-slide--creative { background-image: linear-gradient(90deg, rgb(0 0 0 / 62%), rgb(0 0 0 / 6%)), url("https://www.degreequery.com/wp-content/uploads/2020/04/What-is-the-Difference-Between-Multimedia-Design-and-Graphic-Design.jpg"); }
+.public-home .faculty-slide--cinematic { background-image: linear-gradient(90deg, rgb(0 0 0 / 62%), rgb(0 0 0 / 6%)), url("https://live.staticflickr.com/1906/44033674115_e62fb10f3d_h.jpg"); }
+.public-home .faculty-slide--management { background-image: linear-gradient(90deg, rgb(0 0 0 / 62%), rgb(0 0 0 / 6%)), url("https://media.istockphoto.com/photos/young-confident-successful-business-people-discuss-and-analyze-work-picture-id1313264835?k=20&m=1313264835&s=612x612&w=0&h=L55FyMCGTU2bHwHavfTa2tqZGwp9XqTK5tt5cy7bH4o="); }
+.public-home .faculty-slide--engineering { background-image: linear-gradient(90deg, rgb(0 0 0 / 62%), rgb(0 0 0 / 6%)), url("https://exploreengineering.ca/sites/default/files/2020-02/NEM_mechanical.jpg"); }
+.public-home .faculty-slide--communication { background-image: linear-gradient(90deg, rgb(0 0 0 / 62%), rgb(0 0 0 / 6%)), url("https://dcfwfuaf91uza.cloudfront.net/residential/wp-content/uploads/Master-of-Arts-in-Communication-2.jpg"); }
+.public-home .item .content { left: clamp(1rem, 7vw, 6rem); width: min(28rem, calc(100% - 2rem)); }
+.public-home .content .itemname { max-width: 18ch; font-size: clamp(1.5rem, 4vw, 2.5rem); line-height: var(--line-tight); }
+.public-home .content .btn { display: inline-flex; align-items: center; min-height: 2.75rem; margin-top: 1rem; }
+.public-home .slidebutton button { min-width: 2.75rem; min-height: 2.75rem; color: var(--color-text); background: var(--color-surface-raised); border-color: var(--color-border-strong); }
+.public-home .footer { padding: 1.25rem max(1rem, env(safe-area-inset-right)) max(1.25rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); }
+
+@media (max-width: 767px) {
+    .public-home .homecontent2 { flex-direction: column; align-items: stretch; }
+    .public-home .homecontent21, .public-home .homecontent22 { flex: 1 1 auto; width: 100%; }
+    .public-home .homecontent2[aria-labelledby="booking-heading"] .homecontent22 { order: 1; }
+    .public-home .homecontent2[aria-labelledby="booking-heading"] .homecontent21 { order: 2; }
+    .public-home .homecontent-wrapper { padding-inline: 1rem; }
+    .public-home .slidecontainer { width: calc(100% - 2rem); height: min(72vh, 32rem); min-height: 22rem; }
+    .public-home .slide .item:nth-child(n + 3) { left: 100%; opacity: 0; }
+    .public-home .slidebutton { bottom: max(.75rem, env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 420px) {
+    .auth-card { width: calc(100% - 1rem); padding: 1rem; }
+    .auth-links { flex-direction: column; }
+    .public-home .homecontent-wrapper { padding-inline: .75rem; }
+    .public-home .homecontent1 { min-height: 10rem; }
+    .public-home .slidecontainer { width: calc(100% - 1.5rem); }
+    .public-home .item .content { left: .75rem; width: calc(100% - 1.5rem); }
+}

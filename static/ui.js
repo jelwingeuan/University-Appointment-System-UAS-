@@ -114,22 +114,24 @@
             if (event.key === storageKey) applyTheme(event.newValue || "system");
         });
         document.addEventListener("click", (event) => {
+            const target = event.target instanceof Element ? event.target : null;
+            if (!target) return;
             const accountMenu = document.querySelector(".app-account-menu[open]");
-            if (accountMenu && !accountMenu.contains(event.target)) accountMenu.open = false;
-            if (event.target.closest(".app-account-menu a, .app-account-menu button")) {
-                event.target.closest(".app-account-menu")?.removeAttribute("open");
+            if (accountMenu && !accountMenu.contains(target)) accountMenu.open = false;
+            if (target.closest(".app-account-menu a, .app-account-menu button")) {
+                target.closest(".app-account-menu")?.removeAttribute("open");
             }
-            const opener = event.target.closest("[data-dialog-open]");
+            const opener = target.closest("[data-dialog-open]");
             if (opener) {
                 const cancelId = opener.dataset.cancelAppointment;
                 if (cancelId) document.getElementById("cancel-appointment-id").value = cancelId;
                 openDialog(opener.dataset.dialogOpen, opener);
             }
-            const closer = event.target.closest("[data-dialog-close]");
+            const closer = target.closest("[data-dialog-close]");
             if (closer) closeDialog(closer.closest("dialog"));
-            const alertCloser = event.target.closest("[data-alert-dismiss]");
+            const alertCloser = target.closest("[data-alert-dismiss]");
             if (alertCloser) alertCloser.closest("[role='alert'], [role='status']")?.remove();
-            const toastTrigger = event.target.closest("[data-toast-kind]");
+            const toastTrigger = target.closest("[data-toast-kind]");
             if (toastTrigger) {
                 toast({
                     kind: toastTrigger.dataset.toastKind,
@@ -137,7 +139,7 @@
                     message: toastTrigger.dataset.toastMessage || "",
                 });
             }
-            const copyButton = event.target.closest("[data-copy-text]");
+            const copyButton = target.closest("[data-copy-text]");
             if (copyButton) {
                 if (!navigator.clipboard?.writeText) {
                     toast({ kind: "error", message: "Copy is unavailable. Select and copy the reference instead." });

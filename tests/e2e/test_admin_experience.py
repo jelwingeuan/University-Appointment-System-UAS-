@@ -61,6 +61,11 @@ def test_admin_user_invitation_appointment_faculty_settings_and_audit_flows(
             context = browser.new_context(viewport={"width": 1280, "height": 900})
             context.grant_permissions(["clipboard-read", "clipboard-write"], origin=admin_live_server)
             page = context.new_page()
+            console_errors = []
+            local_asset_errors = []
+            page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
+            page.on("pageerror", lambda error: console_errors.append(str(error)))
+            page.on("response", lambda response: local_asset_errors.append(response.url) if response.url.startswith(admin_live_server) and response.status >= 400 else None)
             login_admin(page, admin_live_server)
 
             page.goto(f"{admin_live_server}/admin/users/{user_id}")
@@ -137,10 +142,14 @@ def test_admin_user_invitation_appointment_faculty_settings_and_audit_flows(
                 page.locator("#uas-theme").select_option(theme)
                 assert page.locator("html").get_attribute("data-theme") == theme
 
-            for width in (360, 390, 768, 1024, 1280, 1440):
+            for width in (320, 360, 390, 430, 768, 820, 1024, 1280, 1440, 1920):
                 page.set_viewport_size({"width": width, "height": 844})
                 dimensions = page.evaluate("({scroll: document.documentElement.scrollWidth, viewport: window.innerWidth})")
                 assert dimensions["scroll"] <= dimensions["viewport"], f"overflow at {width}px: {dimensions}"
+            page.set_viewport_size({"width": 844, "height": 390})
+            assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), "admin overflows in landscape"
+            assert console_errors == []
+            assert local_asset_errors == []
         finally:
             browser.close()
 
@@ -172,7 +181,7 @@ def test_admin_account_menu_keyboard_and_mobile_filters(app, admin_live_server, 
             expect(page.locator(".app-account-menu")).not_to_have_attribute("open", "")
             expect(account_summary).to_be_focused()
 
-            for width in (360, 390, 768, 1024, 1280, 1440):
+            for width in (320, 360, 390, 430, 768, 820, 1024, 1280, 1440, 1920):
                 page.set_viewport_size({"width": width, "height": 844})
                 dimensions = page.evaluate("({scroll: document.documentElement.scrollWidth, viewport: window.innerWidth})")
                 assert dimensions["scroll"] <= dimensions["viewport"], f"overflow at {width}px: {dimensions}"

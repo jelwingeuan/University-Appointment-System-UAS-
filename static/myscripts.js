@@ -5,11 +5,22 @@ document.addEventListener("DOMContentLoaded", () => {
         showPassword.addEventListener("change", () => { password.type = showPassword.checked ? "text" : "password"; });
     }
 
-    const edit = document.getElementById("editButton");
-    const cancel = document.getElementById("cancelButton");
-    const editor = document.getElementById("profileEditContainer");
-    if (edit && editor) edit.addEventListener("click", () => { editor.style.display = "block"; editor.querySelector("input")?.focus(); });
-    if (cancel && editor) cancel.addEventListener("click", () => { editor.style.display = "none"; edit?.focus(); });
+    document.querySelectorAll("dialog[data-auto-open-dialog]").forEach((dialog) => {
+        window.UASUI?.openDialog(dialog);
+        dialog.querySelector("input, select, textarea")?.focus();
+    });
+
+    const accountToken = document.getElementById("account-token");
+    if (accountToken) {
+        const fragment = new URLSearchParams(window.location.hash.slice(1));
+        const token = fragment.get("token") || "";
+        accountToken.value = token;
+        window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+        if (!token) {
+            const error = document.getElementById("token-error");
+            if (error) error.hidden = false;
+        }
+    }
 
     const next = document.querySelector(".next");
     const previous = document.querySelector(".prev");
@@ -34,13 +45,3 @@ document.addEventListener("DOMContentLoaded", () => {
     teacherRole?.addEventListener("change", setSignupRole);
     if (studentRole || teacherRole) setSignupRole();
 });
-
-function printInvoice() {
-    const content = document.getElementById("print-area");
-    if (!content) return;
-    const original = document.body.innerHTML;
-    document.body.innerHTML = content.innerHTML;
-    window.print();
-    document.body.innerHTML = original;
-    window.location.reload();
-}

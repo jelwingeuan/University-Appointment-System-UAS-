@@ -465,7 +465,7 @@ dialog:not([open]) { display: none; }
 .wrapper, .subwrapper, .profilewrapper, .profilesidebar, .profilemain, .faculty-content,
 .profilesubwrapper,
 .editor-form, .dashboard-counts > div, .chart-grid > div, .table__body, .table__header,
-.invoice, .invoice-container, .edit-container, .message-body, .homecontent1 form,
+.invoice, .invoice-container, .edit-container, .message-body,
 .calendar-container, .modal-content {
     color: var(--color-text);
     background-color: var(--color-surface-raised);

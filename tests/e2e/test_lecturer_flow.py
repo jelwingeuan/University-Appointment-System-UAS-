@@ -181,6 +181,12 @@ def test_mobile_lecturer_can_open_request_and_accept_from_detail(
             pytest.skip(f"Chromium is not installed: {exc}")
         try:
             page = browser.new_page(viewport={"width": 390, "height": 844})
+            page.add_init_script("""
+                window.__uasCspViolations = [];
+                document.addEventListener('securitypolicyviolation', (event) => {
+                    window.__uasCspViolations.push({directive: event.violatedDirective, blocked: event.blockedURI});
+                });
+            """)
             login_lecturer(page, lecturer_live_server)
             open_lecturer_home_from_public_navigation(page, lecturer_live_server)
             drawer_button = page.get_by_role("button", name="Open application navigation")
@@ -213,6 +219,16 @@ def test_lecturer_pages_fit_supported_widths_and_theme_choices(
             pytest.skip(f"Chromium is not installed: {exc}")
         try:
             page = browser.new_page(viewport={"width": 390, "height": 844})
+            console_errors = []
+            page_errors = []
+            page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
+            page.on("pageerror", lambda error: page_errors.append(str(error)))
+            page.add_init_script("""
+                window.__uasCspViolations = [];
+                document.addEventListener('securitypolicyviolation', (event) => {
+                    window.__uasCspViolations.push({directive: event.violatedDirective, blocked: event.blockedURI});
+                });
+            """)
             login_lecturer(page, lecturer_live_server)
             open_lecturer_home_from_public_navigation(page, lecturer_live_server)
             theme = page.get_by_label("Appearance")
@@ -222,16 +238,24 @@ def test_lecturer_pages_fit_supported_widths_and_theme_choices(
             page.emulate_media(reduced_motion="reduce")
             assert page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
 
-            for width in (360, 390, 768, 1024, 1280, 1440):
+            for width in (320, 360, 390, 430, 768, 820, 1024, 1280, 1440, 1920):
                 page.set_viewport_size({"width": width, "height": 900})
-                page.wait_for_timeout(100)
+                page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
                 assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), f"dashboard overflows at {width}px"
 
             page.goto(f"{lecturer_live_server}/calendar")
+            if not page.locator(".fc").count():
+                debug = page.evaluate("""() => ({
+                    fullCalendar: typeof window.FullCalendar,
+                    csp: window.__uasCspViolations,
+                    scripts: [...document.scripts].map(script => ({src: script.src, readyState: script.readyState})),
+                    body: document.body.innerText.slice(0, 400),
+                })""")
+                raise AssertionError(f"FullCalendar did not initialize: {debug}; console={console_errors}; page_errors={page_errors}")
             expect(page.locator(".fc")).to_be_visible()
-            for width in (360, 390, 768, 1024, 1280, 1440):
+            for width in (320, 360, 390, 430, 768, 820, 1024, 1280, 1440, 1920):
                 page.set_viewport_size({"width": width, "height": 900})
-                page.wait_for_timeout(100)
+                page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
                 dimensions = page.evaluate("""() => ({
                     viewport: window.innerWidth,
                     scroll: document.documentElement.scrollWidth,
@@ -246,6 +270,25 @@ def test_lecturer_pages_fit_supported_widths_and_theme_choices(
                     }).filter((element) => element.right > window.innerWidth + 1 || element.left < -1).slice(0, 12),
                 })""")
                 assert dimensions["scroll"] <= width, f"calendar overflows at {width}px: {dimensions}"
+            page.set_viewport_size({"width": 844, "height": 390})
+            page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))")
+            assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), "calendar overflows in landscape"
+            page.set_viewport_size({"width": 390, "height": 844})
+            page.goto(f"{lecturer_live_server}/profile")
+            profile_trigger = page.get_by_role("button", name="Edit profile")
+            profile_trigger.click()
+            profile_dialog = page.get_by_role("dialog", name="Edit profile")
+            expect(profile_dialog).to_be_visible()
+            page.keyboard.press("Escape")
+            expect(profile_dialog).not_to_be_visible()
+            expect(profile_trigger).to_be_focused()
+            profile_trigger.click()
+            page.get_by_role("button", name="Close profile editor").click()
+            expect(profile_dialog).not_to_be_visible()
+            expect(profile_trigger).to_be_focused()
+            assert page.evaluate("window.__uasCspViolations") == []
+            assert console_errors == []
+            assert page_errors == []
             assert page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
         finally:
             browser.close()

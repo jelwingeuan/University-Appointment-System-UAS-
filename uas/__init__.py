@@ -1,5 +1,6 @@
 import os
 import re
+import secrets
 import time
 from pathlib import Path
 from uuid import uuid4
@@ -23,6 +24,16 @@ _NON_HTML_ENDPOINTS = {
     "calendar.events",
     "calendar.delete_event",
 }
+
+_CONTENT_SECURITY_POLICY = (
+    "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; "
+    "script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdnjs.cloudflare.com 'nonce-{nonce}'; "
+    "style-src-attr 'none'; img-src 'self' https://cdn.eduadvisor.my https://www.unstudio.com "
+    "https://i0.wp.com https://www.forbes.com https://www.degreequery.com "
+    "https://live.staticflickr.com https://media.istockphoto.com https://exploreengineering.ca "
+    "https://dcfwfuaf91uza.cloudfront.net; font-src 'self' https://cdnjs.cloudflare.com data:; "
+    "connect-src 'self'; frame-src https://www.google.com; media-src 'self'; worker-src 'self'; manifest-src 'self'"
+)
 
 
 def _wants_html_error():
@@ -92,6 +103,10 @@ def create_app(test_config=None):
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            _CONTENT_SECURITY_POLICY.format(nonce=getattr(g, "csp_nonce", "")),
+        )
         if app.config["SESSION_COOKIE_SECURE"]:
             response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
         request_id = getattr(g, "request_id", None) or str(uuid4())
@@ -109,6 +124,7 @@ def create_app(test_config=None):
     @app.before_request
     def begin_request():
         g.request_id = str(uuid4())
+        g.csp_nonce = secrets.token_urlsafe(24)
         g.request_started = time.perf_counter()
 
     def image_url(filename):
@@ -137,6 +153,7 @@ def create_app(test_config=None):
             "application_brand_logo": "",
             "application_brand_initials": "MU",
             "application_home_url": url_for("public.home"),
+            "csp_nonce": getattr(g, "csp_nonce", ""),
         }
         if not current_user.is_authenticated:
             return context
@@ -164,20 +181,29 @@ def create_app(test_config=None):
             403: ("Access denied", "You are not authorized to access this page."),
             404: ("Page not found", "The page you requested could not be found."),
             409: ("Conflict", "The requested change conflicts with existing data."),
+            429: ("Too many requests", "Please wait a moment before trying again."),
             500: ("Something went wrong", "The request could not be completed."),
         }
         title, message = messages.get(error.code, (error.name, "The request could not be completed."))
+        response = error.get_response()
         if _wants_html_error():
-            return render_template("error.html", status=error.code, title=title, message=message), error.code
+            response.set_data(render_template("error.html", status=error.code, title=title, message=message))
+            response.content_type = "text/html; charset=utf-8"
+            return response
         plain_messages = {
             403: "You are not authorized to access this page",
             404: "Page not found",
             409: "The request could not be completed",
+            429: "Too many requests",
             500: "The request could not be completed",
         }
         if error.code in plain_messages:
-            return plain_messages[error.code], error.code
-        return "The request could not be completed", error.code
+            response.set_data(plain_messages[error.code])
+            response.content_type = "text/plain; charset=utf-8"
+            return response
+        response.set_data("The request could not be completed")
+        response.content_type = "text/plain; charset=utf-8"
+        return response
 
     @app.errorhandler(Exception)
     def unexpected_error(error):

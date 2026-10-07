@@ -1,0 +1,21 @@
+.design-showcase { width: min(calc(100% - 2rem), 76rem); margin: 2rem auto 4rem; }
+.design-showcase > header { display: block; width: auto; max-width: 48rem; margin-bottom: 2rem; padding: 0; border: 0; color: var(--color-text); background: transparent; }
+.design-showcase h1 { margin-bottom: .5rem; }
+.design-section { margin-block: 2.5rem; }
+.design-section > h2 { padding-bottom: .75rem; border-bottom: 1px solid var(--color-border); }
+.token-grid, .component-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: 1rem; }
+.token-swatch { display: flex; min-height: 5rem; align-items: end; padding: .75rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text); background: var(--swatch); }
+.token-swatch--page { --swatch: var(--color-bg); }
+.token-swatch--surface { --swatch: var(--color-surface-raised); }
+.token-swatch--muted-surface { --swatch: var(--color-surface-muted); }
+.token-swatch--text { --swatch: var(--color-text); }
+.token-swatch--border { --swatch: var(--color-border); }
+.token-swatch--university-blue { --swatch: var(--color-primary); }
+.token-swatch-text { color: var(--color-bg); }
+.status-list, .button-list { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.design-form { max-width: 34rem; display: grid; gap: 1rem; }
+.design-table-wrap { max-width: 100%; overflow-x: auto; }
+.design-table { width: 100%; border-collapse: collapse; }
+.design-table th, .design-table td { padding: .75rem 1rem; border-bottom: 1px solid var(--color-border); text-align: left; }
+.design-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-block: 1rem; }
+@media (max-width: 639px) { .design-showcase { width: calc(100% - 1.5rem); margin-top: 1rem; } }

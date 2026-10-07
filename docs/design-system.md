@@ -1,6 +1,6 @@
 # UAS design system
 
-This document describes the shared Jinja and CSS foundation introduced in Phase 1. It is intended to support later page work without changing route, form, or workflow contracts. The `/design-system` showcase is enabled in development and testing only.
+This document describes the shared Jinja and CSS foundation used across the Flask/Jinja portal. It is intended to support page work without changing route, form, or workflow contracts. The `/design-system` showcase is enabled in development and testing only.
 
 ## Theme and colors
 
@@ -18,7 +18,7 @@ Core tokens include:
 | Primary control, text links, and focus | `--color-primary`, `--color-link`, `--color-focus` |
 | Success, warning, danger, info | `--color-success`, `--color-warning`, `--color-danger`, `--color-info` |
 
-Spacing uses a 4px rhythm. Shared typography, radii, shadows, transition durations, z-index levels, and reading/normal/wide container widths are declared in `static/css/design-system.css`. Existing page-specific layout rules remain in `static/style.css` and each template's `page_styles` block; later redesign phases can migrate them deliberately.
+Spacing uses a 4px rhythm. Shared typography, radii, shadows, transition durations, z-index levels, and reading/normal/wide container widths are declared in `static/css/design-system.css`. Page-specific rules belong in local static CSS files loaded with the `page_styles_after` or `public_page_styles` template block. Do not add inline `<style>` elements or `style` attributes: the response CSP rejects them.
 
 ## Components
 
@@ -54,8 +54,44 @@ The sidebar is persistent at 1024px and wider. Below 1024px it becomes a native 
 
 The shared header takes its visible title from the page's existing `title` block. Templates may optionally supply `page_description`, `page_actions`, and `breadcrumbs` blocks. Breadcrumbs are for deeper routes and use a labeled navigation landmark with the current location marked by `aria-current="page"`. Set `content_width` to `normal` (default), `wide`, or `full` for content such as forms, tables, or calendars. The shell reuses `SiteSettings` branding and falls back to the existing university name when no setting or logo exists.
 
-Browser requests that accept HTML use the public base layout for 403, 404, 409, and 500 errors. JSON and calendar/availability API requests keep their non-page response behavior and HTTP status. The production `/design-system` showcase remains unavailable.
+Browser requests that accept HTML use the public base layout for 403, 404, 409, 429, and 500 errors. API/non-HTML responses retain their status, plain response behavior, and headers such as `Retry-After`. The production `/design-system` showcase remains unavailable.
 
-## Security policy note
+## JavaScript and security policy
 
-Content Security Policy remains deferred until the redesigned UI's inline scripts, external resources, and image needs are known. Do not introduce a restrictive policy that silently breaks existing workflows during this foundation phase.
+Use `static/ui.js` for shared theme, toast, dialog, copy, and account-menu behavior. Small page behaviors belong in an existing or focused local static asset, are loaded with `defer`, and must tolerate pages where their target elements are absent. Use native forms and links for primary workflows; avoid inline handlers. Keep route data in escaped `data-*` attributes and delegate interactions from the shared helper where practical. Request nonces are generated server-side for each response; do not reuse or hard-code one.
+
+Every response receives the enforced `Content-Security-Policy` below. It intentionally has no `unsafe-inline`, `unsafe-eval`, or wildcard sources. The only `data:` source is limited to fonts for FullCalendar’s bundled icon font:
+
+| Directive | Allowed sources | Reason |
+| --- | --- | --- |
+| `default-src`, `base-uri`, `form-action`, `connect-src`, `worker-src`, `manifest-src` | `'self'` | Local application assets, forms, API requests, and workers only. |
+| `script-src` | `'self'`, `https://cdn.jsdelivr.net` | Local scripts and the pinned FullCalendar 6.1.13 bundle. |
+| `style-src` | `'self'`, `https://cdnjs.cloudflare.com`, one per-response nonce | Local styles and Font Awesome 6.4 CSS. The nonce is attached only to the FullCalendar script, which FullCalendar 6.1.13 uses to authorize its generated `<style>` elements. `style-src-attr 'none'` still rejects every inline style attribute. |
+| `font-src` | `'self'`, `https://cdnjs.cloudflare.com`, `data:` | Local fonts and Font Awesome webfonts; FullCalendar 6.1.13 defines its small built-in icon font as a data URI. `data:` is limited to this directive, not images or other resources. |
+| `img-src` | `'self'`, `cdn.eduadvisor.my`, `www.unstudio.com`, `i0.wp.com`, `www.forbes.com`, `www.degreequery.com`, `live.staticflickr.com`, `media.istockphoto.com`, `exploreengineering.ca`, `dcfwfuaf91uza.cloudfront.net` | Current public-home imagery and local uploads. Remove a source only after tracing its CSS/template references. |
+| `frame-src` | `https://www.google.com` | The existing campus map embed. |
+| `object-src` | `'none'` | No plugin content is needed. |
+| `frame-ancestors` | `'self'` | Prevent third-party framing while allowing same-origin framing. |
+
+Do not add an origin just to make a browser warning disappear. Trace the requesting page and asset, then document any required source here. The policy is enforced across environments, not report-only.
+
+## Quality-check matrix
+
+The cross-role smoke matrix uses the following representative pages. Page-specific business rules remain in the UI contract and are not changed by this visual/accessibility pass.
+
+| Area | Pages and flows checked | Viewports |
+| --- | --- | --- |
+| Public and authentication | Home, sign in, registration, password reset; token completion has template/CSRF coverage | 320, 360, 390, 430, 768, 820, 1024, 1280, 1440, 1920px; portrait and landscape |
+| Student | Booking across all widths; cancellation/history and profile across all widths including landscape; long account name | Same widths; Light, Dark, System |
+| Lecturer | Dashboard and calendar across all widths; request acceptance/rejection, details, availability, and profile dialog flows | Same widths; Light, Dark, System; reduced motion; calendar text list |
+| Administrator | User list across all widths; user/detail, invitation, appointment/detail, faculties/edit, settings, and audit workflows; long account/school names | Same widths; Light, Dark, System; portrait and landscape |
+
+For each representative flow, check there is no unintended page-level horizontal scrolling, headings and landmarks are meaningful, controls are keyboard reachable with visible focus, dialogs restore focus, fields have visible labels, text remains visible in all themes, and there are no console/CSP errors. A table may have its own labeled, keyboard-focusable horizontal scroll region when its columns require it.
+
+## Frontend contribution rules
+
+- Keep the single main landmark, skip link, shell navigation, account controls, and role-specific destinations intact.
+- Reuse `.btn`, `.field`, `.ui-card`, `.ui-status`, `.ui-alert`, `.ui-empty-state`, `.ui-dialog`, and pagination components. Keep status labels visible; never rely on color alone.
+- Prefer fluid sizes, `min-width: 0`, `overflow-wrap: anywhere`, and the 640/768/1024/1280px breakpoints. Include `env(safe-area-inset-*)` where controls approach device edges. Controls should have at least a 44px target where practical.
+- Use visible associated `<label>` elements, semantic fieldsets for radio groups, descriptive iframe titles, and `aria-live` only for actual status feedback. Do not duplicate headings or invent alternate workflows.
+- Respect `prefers-reduced-motion`; motion should not be needed to discover content or controls.

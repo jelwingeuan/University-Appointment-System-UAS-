@@ -111,6 +111,15 @@ def test_security_headers_are_set(client):
     assert response.headers["X-Content-Type-Options"] == "nosniff"
     assert response.headers["X-Frame-Options"] == "SAMEORIGIN"
     assert response.headers["Referrer-Policy"] == "same-origin"
+    policy = response.headers["Content-Security-Policy"]
+    assert "default-src 'self'" in policy
+    assert "style-src-attr 'none'" in policy
+    assert re.search(r"style-src[^;]*'nonce-[A-Za-z0-9_-]+'", policy)
+    assert "https://cdn.jsdelivr.net" in policy
+    assert "https://cdnjs.cloudflare.com" in policy
+    assert "https://www.google.com" in policy
+    assert "unsafe-inline" not in policy
+    assert "unsafe-eval" not in policy
 
 
 def test_no_hardcoded_or_plaintext_secrets():

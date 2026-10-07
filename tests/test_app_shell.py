@@ -113,14 +113,24 @@ def test_shell_errors_render_html_only_when_html_is_requested(client, app):
     def failed():
         abort(500)
 
+    def rate_limited():
+        from werkzeug.exceptions import TooManyRequests
+        from werkzeug.wrappers import Response
+
+        limited_response = Response("limited", status=429)
+        limited_response.headers["Retry-After"] = "7"
+        raise TooManyRequests(response=limited_response)
+
     app.add_url_rule("/test-html-missing", endpoint="test_html_missing", view_func=missing)
     app.add_url_rule("/test-html-conflict", endpoint="test_html_conflict", view_func=conflict)
     app.add_url_rule("/test-html-failed", endpoint="test_html_failed", view_func=failed)
+    app.add_url_rule("/test-html-rate-limited", endpoint="test_html_rate_limited", view_func=rate_limited)
 
     for path, status, title in (
         ("/test-html-missing", 404, "Page not found"),
         ("/test-html-conflict", 409, "Conflict"),
         ("/test-html-failed", 500, "Something went wrong"),
+        ("/test-html-rate-limited", 429, "Too many requests"),
     ):
         response = client.get(path, headers={"Accept": "text/html"})
         assert response.status_code == status
@@ -131,6 +141,43 @@ def test_shell_errors_render_html_only_when_html_is_requested(client, app):
     assert json_response.status_code == 404
     assert "<html" not in json_response.get_data(as_text=True)
     assert json_response.get_data(as_text=True) == "Page not found"
+
+    api_rate_response = client.get("/test-html-rate-limited", headers={"Accept": "application/json"})
+    assert api_rate_response.status_code == 429
+    assert api_rate_response.mimetype == "text/plain"
+    assert api_rate_response.headers["Retry-After"] == "7"
+
+
+def test_rendered_pages_use_external_assets_without_inline_code_or_styles(client, app):
+    pages = [
+        client.get("/"),
+        client.get("/login"),
+        client.get("/signup"),
+        client.get("/password-reset"),
+        client.get("/email-verification/complete"),
+        client.get("/design-system"),
+    ]
+    login(client, "student1@student.mmu.edu.my")
+    pages.extend((client.get("/appointment2"), client.get("/bookinghistory"), client.get("/profile")))
+    client.post("/logout")
+    login(client, "lecturer1@mmu.edu.my")
+    pages.extend((client.get("/lecturer"), client.get("/lecturer/requests")))
+    calendar_response = client.get("/calendar")
+    pages.append(calendar_response)
+    nonce = re.search(r"style-src[^;]*'nonce-([^']+)'", calendar_response.headers["Content-Security-Policy"])
+    assert nonce
+    assert f'nonce="{nonce.group(1)}"' in calendar_response.get_data(as_text=True)
+    client.post("/logout")
+    login(client, "admin@mmu.edu.my")
+    pages.extend((client.get("/admin"), client.get("/usercontrol"), client.get("/appointmentcontrol")))
+
+    for response in pages:
+        assert response.status_code == 200
+        markup = response.get_data(as_text=True)
+        assert not re.search(r"<script\b(?![^>]*\bsrc\s*=)[^>]*>", markup, re.IGNORECASE)
+        assert not re.search(r"<style\b", markup, re.IGNORECASE)
+        assert not re.search(r"\sstyle\s*=", markup, re.IGNORECASE)
+        assert not re.search(r"\son[a-z]+\s*=", markup, re.IGNORECASE)
 
 
 def test_forbidden_browser_error_uses_public_base_and_preserves_status(client):

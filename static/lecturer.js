@@ -179,6 +179,8 @@
         initialDate: calendarElement.dataset.initialDate,
         initialView,
         headerToolbar: toolbar(),
+        buttonIcons: false,
+        buttonText: { prev: "Previous", next: "Next", today: "Today" },
         views: {
             dayGridMonth: { buttonText: "Month" },
             timeGridWeek: { buttonText: "Week" },

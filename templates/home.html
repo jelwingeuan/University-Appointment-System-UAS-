@@ -1,138 +1,112 @@
 {% extends "base.html" %}
-{% block title %}Home{% endblock %}
-{% block head %}
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-{% endblock %}
-{% block page_styles %}
-<style>
-    body{
-        overflow-x: hidden;
-    }
-</style>
-{% endblock %}
+{% block title %}Home - University Appointment System{% endblock %}
+{% block body_class %}public-home{% endblock %}
+{% block public_page_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/public-pages.css') }}">{% endblock %}
 {% block navigation %}
 {% include "components/public_navigation.html" %}
 {% endblock %}
 {% block content %}
 <div class="homecontent-wrapper">
-        <div class="homecontent1">
-           
-        </div>
-        <div class="homecontent211">
-            <h1>Discover our latest booking system for education organisation</h1>
-            <h2>Multimedia University</h2>
-        </div>       
+    <div class="homecontent1" aria-hidden="true"></div>
+    <header class="homecontent211">
+        <h1>University Appointment System</h1>
+        <h2>Multimedia University</h2>
+    </header>
 
-        <div class="homecontent2">
-            <div class="homecontent21">
-                <h2>Join us today</h2>
-                <p>Whether you’re here for a bite or a string of nights, join as a member to enjoy exclusive benefits and a seamless digital experience.</p>
-                <a href="/signup"><button>Join Now</button></a>
-            </div>
-            <div class="homecontent22">
-                <img src="https://www.unstudio.com/image/2023/7/3/unstudio_render_06.jpg%28mediaclass-list-image.fcd54d3441375085a87028277be316313cf123a5%29.jpg">
-            </div>
+    <section class="homecontent2" aria-labelledby="join-heading">
+        <div class="homecontent21">
+            <h2 id="join-heading">Connect with your university</h2>
+            <p>Create a student or lecturer account to manage academic appointments through one university service.</p>
+            <a class="btn btn-primary" href="{{ url_for('public.signup') }}">Create an account</a>
         </div>
-        <div class="title">
-            <h1>Our Brand</h1>
-            <p>Take your pick. Choose from more than 100 hotels and resorts across our four distinct brands - in over 22 countries, regions and 76 destinations.</p>
+        <div class="homecontent22">
+            <img src="https://www.unstudio.com/image/2023/7/3/unstudio_render_06.jpg%28mediaclass-list-image.fcd54d3441375085a87028277be316313cf123a5%29.jpg" alt="" loading="lazy" decoding="async">
         </div>
-        <div class="homecontent2">
-            <div class="homecontent22">
-                <img src="https://i0.wp.com/www.printmag.com/wp-content/uploads/2022/04/RLP-Treehouse-Urban-Garden-3.jpg?resize=1000%2C563&quality=89&ssl=1">
-            </div>
-            <div class="homecontent21">
-                <h2>Book Your Appointment</h2>
-                <p>Enjoy world-class service amidst tranquil surroundings, coupled with inspirational design and transformative experiences in some of the world's finest urban addresses and resort destinations.</p>
-                <a href="/appointment"><button>Learn More</button></a>
-            </div>
+    </section>
+
+    <header class="title">
+        <h2>Academic support</h2>
+        <p>Explore academic services and find the right lecturer for your appointment.</p>
+    </header>
+    <section class="homecontent2" aria-labelledby="booking-heading">
+        <div class="homecontent22">
+            <img src="https://i0.wp.com/www.printmag.com/wp-content/uploads/2022/04/RLP-Treehouse-Urban-Garden-3.jpg?resize=1000%2C563&amp;quality=89&amp;ssl=1" alt="" loading="lazy" decoding="async">
         </div>
-        <div class="title">
-            <h1>Our Team</h1>
+        <div class="homecontent21">
+            <h2 id="booking-heading">Book your appointment</h2>
+            <p>Choose an available time, provide a short purpose, and track your appointment from your account.</p>
+            <a class="btn btn-primary" href="{{ url_for('appointments.appointment') }}">Book an appointment</a>
         </div>
-        <div class="homecontent2">
-            <div class="homecontent21">
-                <h2>Our Professionals</h2>
-                <p>Discover the heart of our expertise: meet our professional team dedicated to crafting exceptional web experiences. With a passion for creativity and a commitment to excellence, we bring your vision to life, one pixel at a time</p>
-            </div>
-            <div class="homecontent22">
-                <img src="https://media.licdn.com/dms/image/D5612AQEmpgpLJMp7PA/article-cover_image-shrink_720_1280/0/1695142036048?e=2147483647&v=beta&t=_Q2Q2FV-ET6EutpjXJCQJ4UiXdaO5aomolxLwt9HrQk">
-            </div>
+    </section>
+
+    <header class="title"><h2>Faculties</h2></header>
+    <section class="homecontent2" aria-labelledby="lecturer-heading">
+        <div class="homecontent21">
+            <h2 id="lecturer-heading">Find a lecturer</h2>
+            <p>Browse lecturers and available appointment times relevant to your faculty.</p>
         </div>
-        <div class="homecontent2">
-            <div class="homecontent22">
-                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.610460310767!2d101.6393254744704!3d2.927776854474621!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cdb6e4a9d3b7a1%3A0xd0f74e8ad10f1129!2sMultimedia%20University%20-%20MMU%20Cyberjaya!5e0!3m2!1sen!2smy!4v1715057408735!5m2!1sen!2smy" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-            </div>
-            <div class="homecontent21">
-                <h2>Find Us</h2>
-                <p>Discover the heart of our expertise: meet our professional team dedicated to crafting exceptional web experiences. With a passion for creativity and a commitment to excellence, we bring your vision to life, one pixel at a time</p>
-            </div>
+        <div class="homecontent22">
+            <img src="https://www.forbes.com/advisor/wp-content/uploads/2022/06/computer_programming.jpeg-900x510.jpg" alt="" loading="lazy" decoding="async">
         </div>
+    </section>
+
+    <section class="homecontent2" aria-labelledby="location-heading">
+        <div class="homecontent22">
+            <iframe title="Multimedia University Cyberjaya campus map" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3984.610460310767!2d101.6393254744704!3d2.927776854474621!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cdb6e4a9d3b7a1%3A0xd0f74e8ad10f1129!2sMultimedia%20University%20-%20MMU%20Cyberjaya!5e0!3m2!1sen!2smy!4v1715057408735!5m2!1sen!2smy" width="600" height="450" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <div class="homecontent21">
+            <h2 id="location-heading">Find us</h2>
+            <p>Multimedia University’s Cyberjaya campus serves as the location for appointments managed by this service.</p>
+        </div>
+    </section>
+</div>
+
+<section class="slidecontainer" aria-label="Multimedia University faculties">
+    <div class="slide">
+        <article class="item faculty-slide faculty-slide--computing">
+            <div class="content"><div class="itemname">Faculty of Computing and Informatics</div>
+                <a class="btn btn-secondary" href="https://www.mmu.edu.my/programmes-by-campus/programmes-cyberjaya/programmes-cyberjaya-undergraduate/programmes-cyberjaya-undergraduate-information-technology/">See More</a>
+            </div>
+        </article>
+        <article class="item faculty-slide faculty-slide--creative">
+            <div class="content"><div class="itemname">Faculty of Creative Multimedia</div>
+                <a class="btn btn-secondary" href="https://creative.mmu.edu.my/">See More</a>
+            </div>
+        </article>
+        <article class="item faculty-slide faculty-slide--cinematic">
+            <div class="content"><div class="itemname">Faculty of Cinematic Arts</div>
+                <a class="btn btn-secondary" href="https://www.mmu.edu.my/programmes-by-campus/programmes-cyberjaya/programmes-cyberjaya-undergraduate/programmes-cyberjaya-undergraduate-cinematic-arts/">See More</a>
+            </div>
+        </article>
+        <article class="item faculty-slide faculty-slide--management">
+            <div class="content"><div class="itemname">Faculty of Management</div>
+                <a class="btn btn-secondary" href="https://www.mmu.edu.my/fom/">See More</a>
+            </div>
+        </article>
+        <article class="item faculty-slide faculty-slide--engineering">
+            <div class="content"><div class="itemname">Faculty of Engineering</div>
+                <a class="btn btn-secondary" href="https://www.mmu.edu.my/programmes-by-faculty-all/programmes-by-faculty-foe/">See More</a>
+            </div>
+        </article>
+        <article class="item faculty-slide faculty-slide--communication">
+            <div class="content"><div class="itemname">Faculty of Applied Communication</div>
+                <a class="btn btn-secondary" href="https://www.mmu.edu.my/programmes-by-faculty-all/programmes-by-faculty-fac/">See More</a>
+            </div>
+        </article>
     </div>
-    <div class="slidecontainer">
-        <div class="slide">
-            <div class="item" style="background-image: url(https://www.forbes.com/advisor/wp-content/uploads/2022/06/computer_programming.jpeg-900x510.jpg);">
-                <div class="content">
-                    <div class="itemname">Faculty of Computing and Informatic</div>
-                    
-                    <button><a href="https://www.mmu.edu.my/programmes-by-campus/programmes-cyberjaya/programmes-cyberjaya-undergraduate/programmes-cyberjaya-undergraduate-information-technology/">See More</a></button>
-
-                </div>
-            </div>
-            <div class="item" style="background-image: url(https://www.degreequery.com/wp-content/uploads/2020/04/What-is-the-Difference-Between-Multimedia-Design-and-Graphic-Design.jpg);">
-                <div class="content">
-                    <div class="itemname">Faculty of Creative Multimedia</div>
-                    
-                    <button><a href="https://creative.mmu.edu.my/">See More</a></button>
-
-                </div>
-            </div>
-            <div class="item" style="background-image: url(https://live.staticflickr.com/1906/44033674115_e62fb10f3d_h.jpg);">
-                <div class="content">
-                    <div class="itemname">Faculty of Cinematic Art</div>
-                    
-                    <button><a href="https://www.mmu.edu.my/programmes-by-campus/programmes-cyberjaya/programmes-cyberjaya-undergraduate/programmes-cyberjaya-undergraduate-cinematic-arts/">See More</a></button>
-
-                </div>
-            </div>
-            <div class="item" style="background-image: url(https://media.istockphoto.com/photos/young-confident-successful-business-people-discuss-and-analyze-work-picture-id1313264835?k=20&m=1313264835&s=612x612&w=0&h=L55FyMCGTU2bHwHavfTa2tqZGwp9XqTK5tt5cy7bH4o=);">
-                <div class="content">
-                    <div class="itemname">Faculty of Management</div>
-                    
-                    <button><a href="https://www.mmu.edu.my/fom/">See More</a></button>
-
-                </div>
-            </div>
-            <div class="item" style="background-image: url(https://exploreengineering.ca/sites/default/files/2020-02/NEM_mechanical.jpg);">
-                <div class="content">
-                    <div class="itemname">Faculty of Engineering</div>
-                    
-                    <button><a href="https://www.mmu.edu.my/programmes-by-faculty-all/programmes-by-faculty-foe/">See More</a></button>
-
-                </div>
-            </div>
-            <div class="item" style="background-image: url(https://dcfwfuaf91uza.cloudfront.net/residential/wp-content/uploads/Master-of-Arts-in-Communication-2.jpg);">
-                <div class="content">
-                    <div class="itemname">Faculty of Applied Communication</div>
-                    
-                    <button><a href="https://www.mmu.edu.my/programmes-by-faculty-all/programmes-by-faculty-fac/">See More</a></button>
-
-                </div>
-            </div>
-        </div>
-        <div class="slidebutton">
-            <button class="prev"><i class="fa-solid fa-arrow-left"></i></button>
-            <button class="next"><i class="fa-solid fa-arrow-right"></i></button>
-        </div>
+    <div class="slidebutton">
+        <button class="prev" type="button" aria-label="Previous faculty"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i></button>
+        <button class="next" type="button" aria-label="Next faculty"><i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
     </div>
-    <footer class="footer">
-        <div class="footer-col">
-            <h4>Universal Appointment Booking System</h4>
-            <ul>
-                <li><a href="/appointment">Book Now</a></li>
-                <li><a href="/signup">Join Now</a></li>
-            </ul>
-        </div>
-    </footer>
+</section>
+
+<footer class="footer">
+    <div class="footer-col">
+        <h2>University Appointment System</h2>
+        <ul>
+            <li><a href="{{ url_for('appointments.appointment') }}">Book an appointment</a></li>
+            <li><a href="{{ url_for('public.signup') }}">Create an account</a></li>
+        </ul>
+    </div>
+</footer>
 {% endblock %}

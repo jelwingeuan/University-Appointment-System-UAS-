@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <title>{% block title %}University Appointment System{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script src="{{ url_for('static', filename='ui.js') }}"></script>
     {% block shell_head %}{% endblock %}
     {% block head %}{% endblock %}
@@ -12,6 +13,7 @@
     {% block page_styles %}{% endblock %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/design-system.css') }}">
     {% block page_styles_after %}{% endblock %}
+    {% block public_page_styles %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <a class="skip-link" href="#main-content">Skip to main content</a>

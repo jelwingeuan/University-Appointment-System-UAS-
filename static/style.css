@@ -184,98 +184,13 @@ nav .dropbtn:not(:hover) i {
 /* Home content section 1 */
 .homecontent1 {
     background-image: url('https://cdn.eduadvisor.my/institution/mmu/inst-profile-header-mmu.jpg');
-    background-repeat: none;
+    background-repeat: no-repeat;
     background-size: cover;
     width: 100%;
     height: 450px;
     text-align: center;
     position: relative;
     
-}
-
-/* Home content section 1 form */
-.homecontent1 form {
-    transform: translateX(-50%);
-    background-color: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    width: 900px;
-    bottom: -30px;
-    position:absolute;
-    left: 50%;
-    padding: 10px;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-}
-
-/* Home content section 1 form heading */
-.homecontent1 h4 {
-    margin-top: 0;
-    text-align: left;
-    padding-left: 10px;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-/* Home content section 1 form inputs and button */
-.homecontent1 button {
-    margin: 5px;
-    margin-right: 50px;
-    padding: 10px 20px;
-    border: none;
-    
-    
-}
-
-.homecontent1 input[type="search"],
-.homecontent1 input[type="date"],
-.homecontent1 input[type="time"] {
-    border-top: none; 
-    border-left: none;
-    border-bottom: none; 
-    border-right: 2px solid black;
-    padding-right: 20px;
-    margin: 5px;
-    margin-right: 50px;
-    padding: 10px;
-    
-}
-
-/* Remove default icon for date input */
-.homecontent1 input[type="date"]::-webkit-calendar-picker-indicator {
-    display: none;
-}
-
-/* Remove default icon for search input */
-.homecontent1 input[type="search"]::-webkit-search-cancel-button {
-    display: none;
-}
-
-.homecontent1 .bxs-calendar{
-    margin-top: 10px;
-    margin-right: 10px;
-}
-
-.homecontent1 .bx-search-alt-2{
-    position: absolute;
-    left: 25%;
-    top: 35%;
-}
-
-
-
-
-
-/* Home content section 1 button */
-.homecontent1 button {
-    background-color: #007bff;
-    color: #fff;
-    cursor: pointer;
-}
-
-/* Home content section 1 button hover effect */
-.homecontent1 button:hover {
-    background-color: #0056b3;
 }
 
 .homecontent211 {
@@ -744,58 +659,6 @@ nav .dropbtn:not(:hover) i {
     color: #fff;
     font-size: 1.4em;
 }
-.appointmentcontainer {
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-image: url("https://www.thoughtco.com/thmb/cqcpzy04apxiYEwaE5UnvI3eFBU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/158313114-56a449703df78cf772819700.jpg");
-    background-size: cover; /* Cover the entire container without affecting the image resolution */
-    background-position: center; /* Center the background image */
-    background-repeat: no-repeat; /* Prevent the background image from repeating */
-}
-
-
-.appointmentcontainer button {
-    background-color: rgba(245, 245, 245,0.8);
-    -webkit-backdrop-filter: blur(5px);
-    backdrop-filter: blur(4px);
-    border: 2px solid #000;
-    text-transform: uppercase;
-    padding: 30px 40px; /* Increased padding for larger size */
-    font-size: 15px;
-    font-weight: 500;
-    margin: 10px;
-   
-}
-
-
-/* Appointment container button hover effect */
-.appointmentcontainer button:hover {
-    color: #fff;
-}
-
-/* Appointment container button pseudo-element */
-.appointmentcontainer button::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 100%;
-    background: #000;
-    z-index: -1;
-    transition: width 0.5s;
-    transition-timing-function: cubic-bezier(0.5, 1.6, 0.4, 0.7);
-}
-
-/* Appointment container button hover pseudo-element */
-.appointmentcontainer button:hover::before {
-    width: 100%;
-}
-
 .appointmentwrapper{
     display: flex;
     justify-content: center;

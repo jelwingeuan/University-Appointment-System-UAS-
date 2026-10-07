@@ -3,13 +3,7 @@
 {% block body_class %}app-page{% if role == 'student' %} student-page{% endif %}{% endblock %}
 {% block page_title %}Profile{% endblock %}
 {% block page_description %}Manage your contact details and sign-in security.{% endblock %}
-{% block page_styles %}
-{% if role != 'student' %}
-<style>
-    .edit-container { position: absolute; top: 59%; left: 57.5%; transform: translate(-50%, -50%); z-index: 30; display: none; width: min(700px, calc(100vw - 2rem)); padding: 1.25rem; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-raised); box-shadow: var(--shadow-md); }
-</style>
-{% endif %}
-{% endblock %}
+{% block page_styles_after %}<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">{% endblock %}
 {% block content %}
 {% if role == 'student' %}
 {% from "components/forms.html" import field_error %}
@@ -79,20 +73,29 @@
                 </div>
             </div>
         </div>
-        <div class="profilefooter"><button id="cancelButton" type="button">Cancel</button><button id="editButton" type="button">Edit</button></div>
+        <div class="profilefooter"><button class="btn btn-secondary" id="editButton" type="button" data-dialog-open="profileEditContainer" aria-haspopup="dialog" aria-controls="profileEditContainer">Edit profile</button></div>
     </div>
 </div>
-<div id="profileEditContainer" class="edit-container" style="display: {{ 'block' if form_errors else 'none' }};">
-    <form id="updateForm" method="post" action="{{ url_for('profile.update_user') }}">
+<dialog id="profileEditContainer" class="ui-dialog edit-container profile-edit-dialog" aria-labelledby="profile-edit-heading"{% if form_errors %} data-auto-open-dialog{% endif %}>
+    <div class="ui-dialog-header">
+        <h2 id="profile-edit-heading">Edit profile</h2>
+        <button class="icon-button" type="button" data-dialog-close aria-label="Close profile editor">×</button>
+    </div>
+    <div class="ui-dialog-body">
+    <form id="updateForm" class="profile-edit-form" method="post" action="{{ url_for('profile.update_user') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label for="username">Username</label><input type="text" id="username" name="username" maxlength="100" value="{{ form_values.get('username', username) }}" aria-describedby="username-error">
+        <div class="field"><label for="username">Name</label><input type="text" id="username" name="username" maxlength="100" value="{{ form_values.get('username', username) }}"{% if form_errors.get('username') %} aria-invalid="true" aria-describedby="username-error"{% endif %}>
         {{ field_error(form_errors, 'username') }}
-        <label for="email">Email</label><input type="email" id="email" name="email" maxlength="254" value="{{ form_values.get('email', email) }}" aria-describedby="email-error">
+        </div>
+        <div class="field"><label for="email">Email</label><input type="email" id="email" name="email" maxlength="254" value="{{ form_values.get('email', email) }}"{% if form_errors.get('email') %} aria-invalid="true" aria-describedby="email-error"{% endif %}>
         {{ field_error(form_errors, 'email') }}
-        <label for="phone_number">Phone number</label><input type="tel" id="phone_number" name="phone_number" maxlength="20" value="{{ form_values.get('phone_number', phone_number) }}" aria-describedby="phone_number-error">
+        </div>
+        <div class="field"><label for="phone_number">Phone number</label><input type="tel" id="phone_number" name="phone_number" maxlength="20" value="{{ form_values.get('phone_number', phone_number) }}"{% if form_errors.get('phone_number') %} aria-invalid="true" aria-describedby="phone_number-error"{% endif %}>
         {{ field_error(form_errors, 'phone_number') }}
-        <div class="profilefooter"><button id="updateButton" type="submit">Update</button></div>
+        </div>
+        <div class="profilefooter"><button class="btn btn-primary" id="updateButton" type="submit">Save changes</button></div>
     </form>
-</div>
+    </div>
+</dialog>
 {% endif %}
 {% endblock %}

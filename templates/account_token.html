@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block public_page_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/public-pages.css') }}">{% endblock %}
 {% block content %}
-<section class="wrapper">
-        <h1>{{ title }}</h1>
+<section class="auth-card" aria-labelledby="token-heading">
+        <h1 id="token-heading">{{ title }}</h1>
         {% if 'Reset' in title %}
         <form action="{{ url_for(endpoint) }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -24,13 +26,4 @@
         <p id="token-error" role="alert" hidden>This link is incomplete. Open the original email link again.</p>
         <a href="{{ url_for('auth.login') }}">Return to sign in</a>
     </section>
-{% endblock %}
-{% block scripts %}
-<script>
-        const fragment = new URLSearchParams(location.hash.slice(1));
-        const token = fragment.get("token") || "";
-        document.getElementById("account-token").value = token;
-        history.replaceState(null, "", location.pathname);
-        if (!token) document.getElementById("token-error").hidden = false;
-    </script>
 {% endblock %}

@@ -1,140 +1,77 @@
 {% extends "base.html" %}
-{% block title %}Sign Up{% endblock %}
-{% block page_styles %}
-<style>
-        button {
-        padding: 10px 20px;
-        margin: 5px;
-        border: none;
-        border-radius: 5px;
-        font-size: 16px;
-        cursor: pointer;
-        }
-
-        button:focus {
-        outline: none;
-        }
-
-        button[type="button"] {
-        background-color: #007BFF;
-        color: white;
-        transition: background-color 0.3s ease;
-        }
-
-        button[type="button"]:hover {
-        background-color: #0056b3;
-        }
-
-        button[type="button"]:active {
-        background-color: #004085;
-        }
-
-        button[type="button"]:nth-of-type(2) {
-        background-color: #DC3545;
-        }
-
-        button[type="button"]:nth-of-type(2):hover {
-        background-color: #c82333;
-        }
-
-        button[type="button"]:nth-of-type(2):active {
-        background-color: #bd2130;
-        }
-
-        .subwrapper {
-        width: 600px;
-        height: 700px;
-        background: white;
-        border: 1px solid grey;
-        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
-        margin: auto;
-
-        }
-
-    </style>
-{% endblock %}
-{% block navigation %}
-{% include "components/public_navigation.html" %}
-{% endblock %}
-{% block content %}
 {% from "components/forms.html" import field_error %}
-
-    <div class="wrapper" style="width: 600px; height:800px ;position: absolute; left: 30%; margin-top: 20px;" >
-        <div class="subwrapper" >
-            <h1>Sign Up</h1>
-            <!-- Notice for incorrect email format -->
-            <p id="emailFormatNotice" style="color: red;"></p>
-            <p id="emailNotice" style="color: red;"></p>
-            <form method="post" action="/signup">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="role">
-                    <label>Choose your role</label>
-                    <div class="role-options">
-                        <input type="radio" name="role" value="student" id="studentRole" {% if form_values.get('role') == 'student' %}checked{% endif %}>
-                        <label for="studentRole">Student</label>
-                        <input type="radio" name="role" value="teacher" id="teacherRole" {% if form_values.get('role') == 'teacher' %}checked{% endif %}>
-                        <label for="teacherRole">Teacher</label>
-                    </div>
-                    {{ field_error(form_errors, 'role') }}
-                </div>
-                <div id="pinInput" {% if form_values.get('role') != 'teacher' %}hidden{% endif %} style="margin-bottom: 20px;">
-                    <label for="invitation">Lecturer invitation</label>
-                    <input type="password" name="invitation" id="invitation" autocomplete="off">
-                    {{ field_error(form_errors, 'invitation') }}
-                </div>
-                <div id="signupDetails" {% if not form_values.get('role') %}hidden{% endif %}>
-                    <div class="profileinput">
-                        <label for="faculty">Faculty</label>
-                        <select class="profileinputdetails" name="faculty" required>
-                            {% for faculty in faculties %}
-                                <option value="{{ faculty['faculty_name'] }}" {% if faculty == form_values.get('faculty') %}selected{% endif %}>{{ faculty }}</option>
-                            {% endfor %}
-                        </select>
-                        {{ field_error(form_errors, 'faculty') }}
-                    </div>
-                    <div class="input_box">
-                        <input type="text" name="username" maxlength="100" value="{{ form_values.get('username', '') }}" required aria-describedby="username-error">
-                        <span></span>
-                        <label>Full Name</label>
-                        {{ field_error(form_errors, 'username') }}
-                    </div>
-                    <div class="input_box">
-                        <input type="email" name="email" maxlength="254" value="{{ form_values.get('email', '') }}" required aria-describedby="email-error">
-                        <span></span>
-                        <label>Email</label>
-                        {{ field_error(form_errors, 'email') }}
-                    </div>
-                    <div class="input_box">
-                        <input type="tel" name="phone_number" maxlength="20" value="{{ form_values.get('phone_number', '') }}" required aria-describedby="phone_number-error">
-                        <span></span>
-                        <label>Phone Number</label>
-                        {{ field_error(form_errors, 'phone_number') }}
-                    </div>
-                    <div class="input_box">
-                        <input type="password" name="password" id="passwordField" minlength="12" maxlength="72" required>
-                        <span></span>
-                        <label for="passwordField">Password</label>
-                    </div>
-                    <div class="input_box">
-                        <input type="password" name="confirm_password" id="confirmPasswordField" minlength="12" maxlength="72" required>
-                        <span></span>
-                        <label for="confirmPasswordField">Confirm your password</label>
-                    </div>
-                    {{ field_error(form_errors, 'password') }}
-                    <input type="submit" value="Sign Up" style="margin-bottom: 40px;">
-                </div>
+{% block title %}Create an account - University Appointment System{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block public_page_styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/public-pages.css') }}">{% endblock %}
+{% block navigation %}{% include "components/public_navigation.html" %}{% endblock %}
+{% block content %}
+<section class="auth-card" aria-labelledby="signup-heading">
+    <h1 id="signup-heading">Create an account</h1>
+    <p id="emailFormatNotice" class="auth-notice" role="status" aria-live="polite"></p>
+    <form method="post" action="{{ url_for('public.signup') }}" autocomplete="on">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <fieldset class="auth-role">
+            <legend>Choose your role</legend>
+            <div class="auth-role-options">
+                <label for="studentRole"><input type="radio" name="role" value="student" id="studentRole" {% if form_values.get('role') == 'student' %}checked{% endif %}> Student</label>
+                <label for="teacherRole"><input type="radio" name="role" value="teacher" id="teacherRole" {% if form_values.get('role') == 'teacher' %}checked{% endif %}> Lecturer</label>
             </div>
-        </form>
-    </div>
-    <div class="footer-wrapper">
-        <footer class="footer" style="position: fixed; bottom: 0;">
-            <div class="footer-col">
-                <h4>Universal Appointment Booking System</h4>
-                <ul>
-                    <li><a href="/appointment">Book Now</a></li>
-                    <li><a href="/signup">Join Now</a></li>
-                </ul>
+            {{ field_error(form_errors, 'role') }}
+        </fieldset>
+        <div id="pinInput" class="auth-field" {% if form_values.get('role') != 'teacher' %}hidden{% endif %}>
+            <label for="invitation">Lecturer invitation</label>
+            <input type="password" name="invitation" id="invitation" autocomplete="off"{% if form_errors.get('invitation') %} aria-invalid="true" aria-describedby="invitation-error"{% endif %}>
+            {{ field_error(form_errors, 'invitation') }}
+        </div>
+        <div id="signupDetails" {% if not form_values.get('role') %}hidden{% endif %}>
+            <div class="auth-field">
+                <label for="faculty">Faculty</label>
+                <select id="faculty" name="faculty" autocomplete="organization" required{% if form_errors.get('faculty') %} aria-invalid="true" aria-describedby="faculty-error"{% endif %}>
+                    <option value="" disabled {% if not form_values.get('faculty') %}selected{% endif %}>Choose a faculty</option>
+                    {% for faculty in faculties %}
+                        <option value="{{ faculty }}" {% if faculty == form_values.get('faculty') %}selected{% endif %}>{{ faculty }}</option>
+                    {% endfor %}
+                </select>
+                {{ field_error(form_errors, 'faculty') }}
             </div>
-        </footer>
+            <div class="auth-field">
+                <label for="signup-username">Full name</label>
+                <input id="signup-username" type="text" name="username" maxlength="100" autocomplete="name" value="{{ form_values.get('username', '') }}" required{% if form_errors.get('username') %} aria-invalid="true" aria-describedby="username-error"{% endif %}>
+                {{ field_error(form_errors, 'username') }}
+            </div>
+            <div class="auth-field">
+                <label for="signup-email">University email</label>
+                <input id="signup-email" type="email" name="email" maxlength="254" autocomplete="email" value="{{ form_values.get('email', '') }}" required{% if form_errors.get('email') %} aria-invalid="true" aria-describedby="email-error"{% endif %}>
+                {{ field_error(form_errors, 'email') }}
+            </div>
+            <div class="auth-field">
+                <label for="signup-phone">Phone number</label>
+                <input id="signup-phone" type="tel" name="phone_number" maxlength="20" autocomplete="tel" value="{{ form_values.get('phone_number', '') }}" required{% if form_errors.get('phone_number') %} aria-invalid="true" aria-describedby="phone_number-error"{% endif %}>
+                {{ field_error(form_errors, 'phone_number') }}
+            </div>
+            <div class="auth-field">
+                <label for="passwordField">Password</label>
+                <input type="password" name="password" id="passwordField" minlength="12" maxlength="72" autocomplete="new-password" required{% if form_errors.get('password') %} aria-invalid="true" aria-describedby="password-error"{% endif %}>
+            </div>
+            <div class="auth-field">
+                <label for="confirmPasswordField">Confirm password</label>
+                <input type="password" name="confirm_password" id="confirmPasswordField" minlength="12" maxlength="72" autocomplete="new-password" required>
+            </div>
+            {{ field_error(form_errors, 'password') }}
+            <button class="btn btn-primary" type="submit">Create account</button>
+        </div>
+    </form>
+    <div class="auth-links"><span>Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a></span></div>
+</section>
+{% endblock %}
+{% block after_main %}
+<footer class="footer auth-footer">
+    <div class="footer-col">
+        <h2>University Appointment System</h2>
+        <ul>
+            <li><a href="{{ url_for('appointments.appointment') }}">Book an appointment</a></li>
+            <li><a href="{{ url_for('public.signup') }}">Create an account</a></li>
+        </ul>
     </div>
+</footer>
 {% endblock %}
