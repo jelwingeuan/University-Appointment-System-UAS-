@@ -18,9 +18,10 @@ _ROLE_LINKS = {
     ),
     "admin": (
         ("Dashboard", "admin.admin_dashboard", "fa-chart-line", ("admin.admin_dashboard",)),
-        ("Users", "admin.usercontrol", "fa-users", ("admin.usercontrol", "admin.create_lecturer_invitation", "admin.revoke_lecturer_invitation_route")),
-        ("Appointments", "admin.appointmentcontrol", "fa-calendar-check", ("admin.appointmentcontrol", "admin.delete_booking", "admin.admin_appointment_status")),
-        ("Faculties", "faculty.faculty", "fa-building-columns", ("faculty.faculty", "faculty.create_faculty_hub")),
+        ("Users", "admin.usercontrol", "fa-users", ("admin.usercontrol", "admin.user_detail", "admin.create_lecturer_invitation", "admin.revoke_lecturer_invitation_route", "admin.delete_user_route", "admin.activate_user_route")),
+        ("Appointments", "admin.appointmentcontrol", "fa-calendar-check", ("admin.appointmentcontrol", "admin.appointment_detail", "admin.delete_booking", "admin.admin_appointment_status")),
+        ("Faculties", "faculty.faculty", "fa-building-columns", ("faculty.faculty", "faculty.create_faculty_hub", "faculty.edit_faculty")),
+        ("Audit Log", "admin.audit_log", "fa-clipboard-list", ("admin.audit_log",)),
         ("Site Settings", "admin.admin_page_editor", "fa-sliders", ("admin.admin_page_editor",)),
         ("Profile", "profile.profile", "fa-user", ("profile.profile", "profile.change_password", "profile.changepassword")),
     ),

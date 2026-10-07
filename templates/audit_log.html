@@ -1,0 +1,42 @@
+{% extends "admin_base.html" %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% from "components/ui.html" import filtered_pagination %}
+{% block title %}Audit Log - UAS{% endblock %}
+{% block page_title %}Audit Log{% endblock %}
+{% block page_description %}<p>Recorded administrative and account changes. Sensitive metadata is not shown.</p>{% endblock %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Audit Log'}]) }}{% endblock %}
+{% block content_width %}wide{% endblock %}
+{% block content %}
+<div class="admin-content">
+    <section class="admin-section" aria-labelledby="audit-entries-heading">
+        <div class="admin-section-heading"><div><h2 id="audit-entries-heading">Recorded activity</h2></div><p class="admin-result-count">{{ pagination.total }} entr{{ 'y' if pagination.total == 1 else 'ies' }}</p></div>
+        <form class="admin-toolbar" method="get" action="{{ url_for('admin.audit_log') }}" role="search">
+            <div class="admin-filter-grid admin-filter-grid--audit">
+                <div class="field"><label for="audit-actor">Actor</label><input id="audit-actor" type="search" name="actor" maxlength="100" value="{{ filters.actor }}" autocomplete="off"></div>
+                <div class="field"><label for="audit-action">Action</label><select id="audit-action" name="action"><option value="">All actions</option>{% for action in actions %}<option value="{{ action }}"{% if filters.action == action %} selected{% endif %}>{{ action_labels[action] }}</option>{% endfor %}</select></div>
+                <div class="field"><label for="audit-target">Record type</label><select id="audit-target" name="target_type"><option value="">All record types</option>{% for target_type in target_types %}<option value="{{ target_type }}"{% if filters.target_type == target_type %} selected{% endif %}>{{ {'User': 'Account', 'Appointment': 'Appointment', 'Faculty': 'Faculty', 'SiteSettings': 'Institution settings', 'LecturerInvitation': 'Lecturer invitation'}[target_type] }}</option>{% endfor %}</select></div>
+                <div class="field"><label for="audit-date-from">Date from</label><input id="audit-date-from" type="date" name="date_from" value="{{ filters.date_from }}"></div>
+                <div class="field"><label for="audit-date-to">Date to</label><input id="audit-date-to" type="date" name="date_to" value="{{ filters.date_to }}"></div>
+            </div>
+            <div class="admin-toolbar-actions"><button class="btn btn-primary" type="submit">Apply filters</button><a class="btn btn-ghost" href="{{ url_for('admin.audit_log') }}">Clear</a></div>
+        </form>
+        <div class="admin-table-wrap admin-table-wrap--stack">
+            <table class="admin-table admin-table--stack">
+                <thead><tr><th scope="col">When</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Record</th><th scope="col">Details</th></tr></thead>
+                <tbody>
+                {% for item in activity %}{% set entry = item.row %}
+                    <tr>
+                        <td data-label="When"><time datetime="{{ entry.created_at.isoformat() }}">{{ item.created_at.strftime('%d %b %Y, %H:%M') }}</time></td>
+                        <td data-label="Actor">{{ entry.actor.username }}</td>
+                        <td data-label="Action">{{ item.action_label }}</td>
+                        <td data-label="Record">{{ item.target_label }}</td>
+                        <td data-label="Details">{{ item.detail or 'No additional safe details' }}</td>
+                    </tr>
+                {% else %}<tr><td colspan="5" class="admin-empty-state">No audit entries match these filters.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {{ filtered_pagination(pagination, 'admin.audit_log', filters) }}
+    </section>
+</div>
+{% endblock %}

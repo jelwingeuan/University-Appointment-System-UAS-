@@ -60,3 +60,19 @@
     {% if image %}<img src="{{ image }}" alt="{{ label }}">{% else %}<span aria-hidden="true">{{ initials }}</span>{% endif %}
 </span>
 {%- endmacro %}
+
+{% macro filtered_pagination(pagination, endpoint, filters, page_key='page') -%}
+    {% if pagination.pages > 1 %}
+    <nav class="pagination admin-pagination" aria-label="Pagination">
+        {% if pagination.page > 1 %}
+            {% set query = {page_key: pagination.page - 1} %}{% set _ = query.update(filters) %}
+            <a href="{{ url_for(endpoint, **query) }}">Previous</a>
+        {% endif %}
+        <span aria-current="page">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+        {% if pagination.page < pagination.pages %}
+            {% set query = {page_key: pagination.page + 1} %}{% set _ = query.update(filters) %}
+            <a href="{{ url_for(endpoint, **query) }}">Next</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+{%- endmacro %}

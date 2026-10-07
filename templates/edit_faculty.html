@@ -1,0 +1,29 @@
+{% extends "admin_base.html" %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% from "components/forms.html" import field_error %}
+{% block title %}Edit Faculty - UAS{% endblock %}
+{% block page_title %}Edit faculty{% endblock %}
+{% block page_description %}<p>Update the faculty name or replace its image.</p>{% endblock %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Faculties', 'url': url_for('faculty.faculty')}, {'label': faculty.faculty_name}]) }}{% endblock %}
+{% block content %}
+<div class="admin-content">
+    <section class="admin-section" aria-labelledby="edit-faculty-heading">
+        <h2 id="edit-faculty-heading">Faculty details</h2>
+        <form class="editor-form" action="{{ url_for('faculty.edit_faculty', faculty_id=faculty.id) }}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="field"><label for="faculty_name">Faculty name</label><input id="faculty_name" name="faculty_name" value="{{ form_values.get('faculty_name', faculty.faculty_name) }}" maxlength="255" required aria-describedby="faculty_name-hint{% if form_errors.get('faculty_name') %} faculty_name-error{% endif %}"><p class="field-hint" id="faculty_name-hint">Choose a unique faculty name.</p>{{ field_error(form_errors, 'faculty_name') }}</div>
+            <div class="field">
+                <label for="faculty_image">Faculty image</label>
+                <input id="faculty_image" type="file" name="faculty_image" accept="image/jpeg,image/png,image/webp" data-image-preview-input="faculty-image-preview">
+                <p class="field-hint">Optional. JPEG, PNG, or WebP, up to 5 MB. Existing image remains if no new file is selected.</p>
+                {{ field_error(form_errors, 'faculty_image') }}
+            </div>
+            <div class="admin-image-preview">
+                {% if faculty.faculty_image %}<img id="faculty-image-preview" src="{{ image_url(faculty.faculty_image) }}" alt="Current image for {{ faculty.faculty_name }}" loading="lazy">
+                {% else %}<img id="faculty-image-preview" src="" alt="Selected faculty image preview" hidden>{% endif %}
+            </div>
+            <div class="admin-actions"><a class="btn btn-ghost" href="{{ url_for('faculty.faculty', faculty_id=faculty.id) }}">Cancel</a><button class="btn btn-primary" type="submit" data-submit-loading>Save faculty</button></div>
+        </form>
+    </section>
+</div>
+{% endblock %}

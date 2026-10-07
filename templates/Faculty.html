@@ -1,28 +1,49 @@
 {% extends "admin_base.html" %}
-{% from "components/pagination.html" import pagination_nav %}
-{% block title %}Faculty Directory{% endblock %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% from "components/ui.html" import filtered_pagination %}
+{% block title %}Faculties - UAS{% endblock %}
+{% block page_title %}Faculties{% endblock %}
+{% block page_description %}<p>Browse faculty membership and edit faculty details.</p>{% endblock %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Faculties'}]) }}{% endblock %}
+{% block page_actions %}<a class="btn btn-primary" href="{{ url_for('faculty.create_faculty_hub') }}">Create faculty</a>{% endblock %}
 {% block content_width %}wide{% endblock %}
-{% block page_description %}<p>Browse lecturers and students by faculty.</p>{% endblock %}
-{% block page_actions %}<a class="button" href="{{ url_for('faculty.create_faculty_hub') }}">Add Faculty</a>{% endblock %}
 {% block content %}
-<section class="admin-content">
-    {% if faculties %}
-    <form class="search-form faculty-picker" method="get" action="{{ url_for('faculty.faculty') }}">
-        <label for="facultySelect">Select faculty</label>
-        <select id="facultySelect" name="faculty_id" onchange="this.form.submit()">
-            {% for faculty in faculties %}<option value="{{ faculty.id }}" {% if faculty.id == selected_faculty.id %}selected{% endif %}>{{ faculty.faculty_name }}</option>{% endfor %}
-        </select>
-    </form>
-    <section class="faculty-content" aria-labelledby="selected-faculty">
-        {% if selected_faculty.faculty_image %}<img class="faculty-image" src="{{ image_url(selected_faculty.faculty_image) }}" alt="{{ selected_faculty.faculty_name }}">{% endif %}
-        <h2 id="selected-faculty">{{ selected_faculty.faculty_name }}</h2>
-        <p>Showing {{ (pagination.page - 1) * pagination.per_page + 1 if pagination.total else 0 }}-{{ [pagination.page * pagination.per_page, pagination.total]|min }} of {{ pagination.total }} members.</p>
-        <div class="directory-columns">
-            <section><h3>Lecturers</h3><ul>{% for lecturer in lecturers %}<li>{{ lecturer.username }} <span>{{ lecturer.email }}</span></li>{% else %}<li class="empty-state">No lecturers on this page.</li>{% endfor %}</ul></section>
-            <section><h3>Students</h3><ul>{% for student in students %}<li>{{ student.username }} <span>{{ student.email }}</span></li>{% else %}<li class="empty-state">No students on this page.</li>{% endfor %}</ul></section>
-        </div>
-        {{ pagination_nav(pagination, 'faculty.faculty', '', selected_faculty.id) }}
+<div class="admin-content">
+    <section class="admin-section" aria-labelledby="faculty-search-heading">
+        <div class="admin-section-heading"><div><h2 id="faculty-search-heading">Faculty directory</h2><p>Search by faculty name. Select one to view its members.</p></div></div>
+        <form class="admin-toolbar" method="get" action="{{ url_for('faculty.faculty') }}" role="search">
+            <div class="field"><label for="faculty-search">Search faculties</label><input id="faculty-search" type="search" name="q" value="{{ search }}" maxlength="100" autocomplete="off"></div>
+            <div class="admin-toolbar-actions"><button class="btn btn-primary" type="submit">Search</button><a class="btn btn-ghost" href="{{ url_for('faculty.faculty') }}">Clear</a></div>
+        </form>
+        {% if faculties %}
+        <ul class="admin-faculty-list">
+            {% for faculty in faculties %}
+            <li class="admin-faculty-row"{% if selected_faculty and selected_faculty.id == faculty.id %} aria-current="true"{% endif %}>
+                <span class="admin-faculty-name">
+                    {% if faculty.faculty_image %}<img src="{{ image_url(faculty.faculty_image) }}" alt="" loading="lazy">{% endif %}
+                    <a href="{{ url_for('faculty.faculty', faculty_id=faculty.id, q=search) }}">{{ faculty.faculty_name }}</a>
+                </span>
+                <span>{{ faculty_counts.get(faculty.id, 0) }} member{{ '' if faculty_counts.get(faculty.id, 0) == 1 else 's' }}</span>
+                <a class="btn btn-secondary btn-sm" href="{{ url_for('faculty.edit_faculty', faculty_id=faculty.id) }}">Edit</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}<p class="admin-empty-state">No faculties match this search.</p>{% endif %}
     </section>
-    {% else %}<p class="empty-state">No faculties have been created.</p>{% endif %}
-</section>
+
+    {% if selected_faculty %}
+    <section class="admin-section" aria-labelledby="selected-faculty-heading">
+        <div class="admin-section-heading">
+            <div><h2 id="selected-faculty-heading">{{ selected_faculty.faculty_name }}</h2><p>{{ pagination.total }} member{{ '' if pagination.total == 1 else 's' }}</p></div>
+            <a class="btn btn-secondary" href="{{ url_for('admin.usercontrol', faculty_id=selected_faculty.id) }}">View accounts</a>
+        </div>
+        {% if selected_faculty.faculty_image %}<div class="admin-image-preview"><img src="{{ image_url(selected_faculty.faculty_image) }}" alt="{{ selected_faculty.faculty_name }}" loading="lazy"></div>{% endif %}
+        <div class="directory-columns">
+            <section><h3>Lecturers</h3><ul>{% for lecturer in lecturers %}<li>{{ lecturer.username }} <span>{{ lecturer.email }}</span></li>{% else %}<li class="admin-muted">No lecturers on this page.</li>{% endfor %}</ul></section>
+            <section><h3>Students</h3><ul>{% for student in students %}<li>{{ student.username }} <span>{{ student.email }}</span></li>{% else %}<li class="admin-muted">No students on this page.</li>{% endfor %}</ul></section>
+        </div>
+        {{ filtered_pagination(pagination, 'faculty.faculty', {'faculty_id': selected_faculty.id, 'q': search}) }}
+    </section>
+    {% endif %}
+</div>
 {% endblock %}

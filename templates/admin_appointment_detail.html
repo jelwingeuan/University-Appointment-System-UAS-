@@ -1,0 +1,74 @@
+{% extends "admin_base.html" %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% from "components/ui.html" import status_badge %}
+{% block title %}Appointment {{ appointment.public_reference }} - UAS{% endblock %}
+{% block page_title %}Appointment details{% endblock %}
+{% block page_description %}<p>Review the booking record and its status history.</p>{% endblock %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Appointments', 'url': url_for('admin.appointmentcontrol')}, {'label': 'Details'}]) }}{% endblock %}
+{% block content %}
+<div class="admin-detail">
+    <section class="admin-section" aria-labelledby="appointment-heading">
+        <div class="admin-section-heading"><div><h2 id="appointment-heading">{{ status_badge(appointment.status) }}</h2><p>Reference <code>{{ appointment.public_reference }}</code></p></div><a class="btn btn-secondary" href="{{ url_for('admin.appointmentcontrol') }}">Back to appointments</a></div>
+        <dl class="admin-detail-facts">
+            <div><dt>Student</dt><dd>{{ appointment.student.username }}<br><span class="admin-muted">{{ appointment.student.email }}</span></dd></div>
+            <div><dt>Student faculty</dt><dd>{{ appointment.student.faculty }}</dd></div>
+            <div><dt>Lecturer</dt><dd>{{ appointment.lecturer.username }}<br><span class="admin-muted">{{ appointment.lecturer.email }}</span></dd></div>
+            <div><dt>Lecturer faculty</dt><dd>{{ appointment.lecturer.faculty }}</dd></div>
+            <div><dt>Date</dt><dd>{{ appointment_date }}</dd></div>
+            <div><dt>Time</dt><dd>{{ appointment_time }}</dd></div>
+            <div><dt>Purpose</dt><dd>{{ appointment.purpose }}</dd></div>
+            <div><dt>Created</dt><dd><time datetime="{{ appointment.created_at.isoformat() }}">{{ created_at.strftime('%d %b %Y, %H:%M') }}</time></dd></div>
+        </dl>
+    </section>
+
+    {% if appointment.status == 'Accepted' %}
+    <section class="admin-section" aria-labelledby="status-actions-heading">
+        <div class="admin-section-heading"><div><h2 id="status-actions-heading">Status actions</h2><p>Only accepted appointments can be marked as completed or no show.</p></div></div>
+        <div class="admin-actions">
+            {% for status in ['Completed', 'No Show'] %}
+            <button class="btn {{ 'btn-danger' if status == 'No Show' else 'btn-primary' }}" type="button" data-dialog-open="appointment-status-{{ loop.index }}">Mark {{ status }}</button>
+            <dialog class="admin-dialog" id="appointment-status-{{ loop.index }}" aria-labelledby="appointment-status-title-{{ loop.index }}">
+                <form class="admin-dialog-body" method="post" action="{{ url_for('admin.admin_appointment_status') }}" data-submit-loading>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment.id }}"><input type="hidden" name="status" value="{{ status }}">
+                    <h2 id="appointment-status-title-{{ loop.index }}">Mark as {{ status|lower }}?</h2>
+                    {% if status == 'No Show' %}<p>This records that the student did not attend. The appointment cannot be reopened.</p>{% else %}<p>This records that the appointment took place and closes the booking.</p>{% endif %}
+                    <div class="admin-actions"><button class="btn btn-secondary" type="button" data-dialog-close>Cancel</button><button class="btn {{ 'btn-danger' if status == 'No Show' else 'btn-primary' }}" type="submit" data-submit-label="Saving…">Confirm {{ status }}</button></div>
+                </form>
+            </dialog>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="admin-section" aria-labelledby="history-heading">
+        <div class="admin-section-heading"><div><h2 id="history-heading">Status history</h2></div></div>
+        {% if history %}
+        <ol class="admin-activity-list">
+            {% for item in history %}{% set event = item.row %}
+            <li class="admin-activity-item">
+                <span><strong>{{ event.from_status }} to {{ event.to_status }}</strong>{% if event.reason %}<br><span class="admin-muted">{{ event.reason }}</span>{% endif %}</span>
+                <span>{{ event.actor.username }}</span>
+                <time datetime="{{ event.created_at.isoformat() }}">{{ item.created_at.strftime('%d %b %Y, %H:%M') }}</time>
+            </li>
+            {% endfor %}
+        </ol>
+        {% else %}<p class="admin-empty-state">No status changes have been recorded.</p>{% endif %}
+    </section>
+
+    <section class="admin-section admin-danger-zone" aria-labelledby="delete-heading">
+        <div class="admin-section-heading"><div><h2 id="delete-heading">Delete appointment</h2></div></div>
+        {% if can_delete %}
+        <p>Deletion is permanent. This appointment has no status history.</p>
+        <button class="btn btn-danger" type="button" data-dialog-open="delete-appointment">Delete appointment</button>
+        <dialog class="admin-dialog" id="delete-appointment" aria-labelledby="delete-appointment-title">
+            <form class="admin-dialog-body" method="post" action="{{ url_for('admin.delete_booking') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment.id }}">
+                <h2 id="delete-appointment-title">Delete this appointment?</h2>
+                <p>This permanently removes the booking record. Status history cannot be recovered.</p>
+                <div class="admin-actions"><button class="btn btn-secondary" type="button" data-dialog-close>Keep appointment</button><button class="btn btn-danger" type="submit">Delete appointment</button></div>
+            </form>
+        </dialog>
+        {% else %}<p>This appointment has status history and cannot be deleted. Keep it for the audit trail.</p>{% endif %}
+    </section>
+</div>
+{% endblock %}

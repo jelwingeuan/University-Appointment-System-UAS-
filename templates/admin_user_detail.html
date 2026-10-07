@@ -1,0 +1,51 @@
+{% extends "admin_base.html" %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% block title %}{{ user.username }} - User details{% endblock %}
+{% block page_title %}User details{% endblock %}
+{% block page_description %}<p>Account access and verification are managed separately.</p>{% endblock %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Users', 'url': url_for('admin.usercontrol')}, {'label': user.username}]) }}{% endblock %}
+{% block content %}
+<div class="admin-detail">
+    <section class="admin-section" aria-labelledby="account-heading">
+        <div class="admin-section-heading"><div><h2 id="account-heading">{{ user.username }}</h2><p>{{ {'student': 'Student', 'teacher': 'Lecturer', 'admin': 'Administrator'}[user.role] }}</p></div><a class="btn btn-secondary" href="{{ url_for('admin.usercontrol') }}">Back to users</a></div>
+        <dl class="admin-detail-facts">
+            <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+            <div><dt>Phone</dt><dd>{{ user.phone_number }}</dd></div>
+            <div><dt>Faculty</dt><dd>{{ user.faculty }}</dd></div>
+            <div><dt>Account status</dt><dd><span class="admin-account-status admin-account-status--{{ 'active' if user.active else 'inactive' }}">{{ 'Active' if user.active else 'Inactive' }}</span></dd></div>
+            <div><dt>Email verification</dt><dd><span class="admin-account-status admin-account-status--{{ 'verified' if user.email_verified_at else 'unverified' }}">{{ 'Verified' if user.email_verified_at else 'Unverified' }}</span></dd></div>
+            <div><dt>Created</dt><dd><time datetime="{{ user.created_at.isoformat() }}">{{ created_at.strftime('%d %b %Y, %H:%M') }}</time></dd></div>
+            <div><dt>Last sign-in</dt><dd>{% if last_login_at %}<time datetime="{{ user.last_login_at.isoformat() }}">{{ last_login_at.strftime('%d %b %Y, %H:%M') }}</time>{% else %}Never{% endif %}</dd></div>
+        </dl>
+    </section>
+
+    <section class="admin-section admin-danger-zone" aria-labelledby="access-heading">
+        <div class="admin-section-heading"><div><h2 id="access-heading">Account access</h2></div></div>
+        {% if user.active %}
+            {% if user.can_deactivate %}
+            <p>Deactivation prevents sign-in and invalidates existing sessions. Lecturer availability is disabled. Appointment and account history are retained.</p>
+            <button class="btn btn-danger" type="button" data-dialog-open="deactivate-user">Deactivate account</button>
+            <dialog class="admin-dialog" id="deactivate-user" aria-labelledby="deactivate-user-title">
+                <form class="admin-dialog-body" method="post" action="{{ url_for('admin.delete_user_route') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ user.id }}">
+                    <h2 id="deactivate-user-title">Deactivate {{ user.username }}?</h2>
+                    <p>The account cannot sign in again until reactivated. Existing sessions end immediately{% if user.role == 'teacher' %}, and current availability is disabled{% endif %}. Existing records remain available to administrators.</p>
+                    <div class="admin-actions"><button class="btn btn-secondary" type="button" data-dialog-close>Keep active</button><button class="btn btn-danger" type="submit">Deactivate account</button></div>
+                </form>
+            </dialog>
+            {% else %}<p>{% if user.id == current_user.id %}You cannot deactivate your own administrator account.{% else %}The final active administrator account cannot be deactivated.{% endif %}</p>{% endif %}
+        {% else %}
+            <p>Reactivation allows sign-in again. If this is a lecturer account, availability remains disabled until the lecturer enables it again.</p>
+            <button class="btn btn-primary" type="button" data-dialog-open="reactivate-user">Reactivate account</button>
+            <dialog class="admin-dialog" id="reactivate-user" aria-labelledby="reactivate-user-title">
+                <form class="admin-dialog-body" method="post" action="{{ url_for('admin.activate_user_route') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ user.id }}">
+                    <h2 id="reactivate-user-title">Reactivate {{ user.username }}?</h2>
+                    <p>Sign-in will be restored. Existing lecturer availability will not be re-enabled.</p>
+                    <div class="admin-actions"><button class="btn btn-secondary" type="button" data-dialog-close>Cancel</button><button class="btn btn-primary" type="submit">Reactivate account</button></div>
+                </form>
+            </dialog>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

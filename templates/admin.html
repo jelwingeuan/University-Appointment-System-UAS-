@@ -1,46 +1,56 @@
 {% extends "admin_base.html" %}
-{% from "components/pagination.html" import pagination_nav %}
-{% block title %}Administration Dashboard{% endblock %}
-{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>{% endblock %}
+{% from "components/ui.html" import status_badge %}
+{% block title %}Admin Dashboard - UAS{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block page_description %}<p>System activity and the work that needs attention.</p>{% endblock %}
 {% block content_width %}wide{% endblock %}
 {% block content %}
-<section class="admin-content">
-    <dl class="dashboard-counts">
-        <div><dt>Students</dt><dd id="num_students">{{ num_students }}</dd></div>
-        <div><dt>Lecturers</dt><dd id="num_teachers">{{ num_teachers }}</dd></div>
-        <div><dt>Appointments</dt><dd id="num_appointments">{{ num_appointments }}</dd></div>
-        <div><dt>Users</dt><dd id="num_users">{{ num_users }}</dd></div>
-    </dl>
-    <div class="chart-grid" aria-label="Account and appointment counts">
-        <div><h2>People</h2><canvas id="peopleChart" aria-label="Student and lecturer counts" role="img"></canvas></div>
-        <div><h2>Records</h2><canvas id="recordChart" aria-label="Appointment and user counts" role="img"></canvas></div>
-    </div>
-    <div class="page-heading">
-        <h2>Appointments</h2>
-        <form method="get" action="{{ url_for('admin.admin_dashboard') }}" role="search" class="search-form">
-            <label for="search-appointments">Search appointments</label>
-            <input id="search-appointments" type="search" name="search" value="{{ search }}" maxlength="100">
-            <button type="submit">Search</button>
-        </form>
-    </div>
-    <div class="table-scroll" role="region" aria-label="Appointments" tabindex="0">
-        <table class="data-table">
-            <thead><tr><th scope="col">Reference</th><th scope="col">Student</th><th scope="col">Lecturer</th><th scope="col">Date</th><th scope="col">Time</th><th scope="col">Purpose</th><th scope="col">Status</th></tr></thead>
-            <tbody>{% for appointment in appointments %}
-                <tr><td>{{ appointment[6] }}</td><td>{{ appointment[1] }}</td><td>{{ appointment[0] }}</td><td>{{ appointment[2] }}</td><td>{{ appointment[5] }}</td><td>{{ appointment[3] }}</td><td><span class="status-badge status-{{ appointment[4]|lower|replace(' ', '-') }}">{{ appointment[4] }}</span></td></tr>
-            {% else %}<tr><td class="empty-state" colspan="7">No appointments match this search.</td></tr>{% endfor %}</tbody>
-        </table>
-    </div>
-    {{ pagination_nav(pagination, 'admin.admin_dashboard', search) }}
-</section>
-{% endblock %}
-{% block scripts %}
-<script defer>
-document.addEventListener("DOMContentLoaded", () => {
-    if (typeof Chart === "undefined") return;
-    const read = (id) => Number(document.getElementById(id).textContent);
-    new Chart(document.getElementById("peopleChart"), {type: "bar", data: {labels: ["Students", "Lecturers"], datasets: [{data: [read("num_students"), read("num_teachers"),], backgroundColor: ["#4d7792", "#76a08d"]}]}, options: {plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true}}}});
-    new Chart(document.getElementById("recordChart"), {type: "doughnut", data: {labels: ["Appointments", "Users"], datasets: [{data: [read("num_appointments"), read("num_users"),], backgroundColor: ["#4d7792", "#76a08d"]}]}, options: {plugins: {legend: {position: "bottom"}}}});
-});
-</script>
+<div class="admin-dashboard">
+    <section class="admin-section" aria-labelledby="people-heading">
+        <div class="admin-section-heading"><div><h2 id="people-heading">People</h2><p>Current account totals.</p></div></div>
+        <dl class="admin-metric-grid">
+            <div class="admin-metric"><dt>Active users</dt><dd>{{ metrics.active_users }}</dd></div>
+            <div class="admin-metric"><dt>Students</dt><dd>{{ metrics.students }}</dd></div>
+            <div class="admin-metric"><dt>Lecturers</dt><dd>{{ metrics.lecturers }}</dd></div>
+            <div class="admin-metric"><dt>Total users</dt><dd>{{ metrics.users }}</dd></div>
+        </dl>
+    </section>
+
+    <section class="admin-section" aria-labelledby="appointments-heading">
+        <div class="admin-section-heading">
+            <div><h2 id="appointments-heading">Appointment workload</h2><p>Counts by current status.</p></div>
+            <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.appointmentcontrol') }}">Review appointments</a>
+        </div>
+        <dl class="admin-status-summary">
+            {% for status, count in metrics.appointment_statuses.items() %}
+            <div><dt>{{ status_badge(status) }}</dt><dd><a href="{{ url_for('admin.appointmentcontrol', status=status) }}">{{ count }}</a></dd></div>
+            {% endfor %}
+        </dl>
+    </section>
+
+    <section class="admin-section" aria-labelledby="activity-heading">
+        <div class="admin-section-heading"><div><h2 id="activity-heading">Recent administrative activity</h2><p>Latest recorded changes.</p></div><a class="btn btn-secondary btn-sm" href="{{ url_for('admin.audit_log') }}">Open audit log</a></div>
+        {% if recent_activity %}
+        <ul class="admin-activity-list">
+            {% for item in recent_activity %}
+            <li class="admin-activity-item">
+                <span><strong>{{ item.action_label }}</strong><br><span class="admin-muted">{{ item.row.actor.username }}</span></span>
+                <span>{{ item.target_label }}{% if item.detail %}<br><span class="admin-audit-detail">{{ item.detail }}</span>{% endif %}</span>
+                <time datetime="{{ item.row.created_at.isoformat() }}">{{ item.created_at.strftime('%d %b %Y, %H:%M') }}</time>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}<p class="admin-empty-state">No administrative activity has been recorded yet.</p>{% endif %}
+    </section>
+
+    <section class="admin-section" aria-labelledby="quick-actions-heading">
+        <div class="admin-section-heading"><div><h2 id="quick-actions-heading">Admin tasks</h2></div></div>
+        <div class="admin-quick-actions">
+            <a class="btn btn-primary" href="{{ url_for('admin.usercontrol') }}#invite-lecturer">Invite lecturer</a>
+            <a class="btn btn-secondary" href="{{ url_for('faculty.create_faculty_hub') }}">Create faculty</a>
+            <a class="btn btn-secondary" href="{{ url_for('admin.usercontrol') }}">Manage users</a>
+            <a class="btn btn-secondary" href="{{ url_for('admin.admin_page_editor') }}">Edit site settings</a>
+        </div>
+    </section>
+</div>
 {% endblock %}

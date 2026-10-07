@@ -1,42 +1,43 @@
 {% extends "admin_base.html" %}
-{% from "components/pagination.html" import pagination_nav %}
-{% block title %}Booking Control{% endblock %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% from "components/ui.html" import filtered_pagination, status_badge %}
+{% block title %}Appointments - UAS{% endblock %}
+{% block page_title %}Appointments{% endblock %}
+{% block page_description %}<p>Search appointments by participant, status, faculty, or local appointment date.</p>{% endblock %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Appointments'}]) }}{% endblock %}
 {% block content_width %}wide{% endblock %}
 {% block content %}
-<section class="admin-content">
-    <div class="page-heading">
-        <form method="get" action="{{ url_for('admin.appointmentcontrol') }}" role="search" class="search-form">
-            <label for="search-appointments">Search bookings</label>
-            <input id="search-appointments" type="search" name="search" value="{{ search }}" maxlength="100">
-            <button type="submit">Search</button>
+<div class="admin-content">
+    <section class="admin-section" aria-labelledby="appointment-list-heading">
+        <div class="admin-section-heading"><div><h2 id="appointment-list-heading">Appointment records</h2></div><p class="admin-result-count">{{ pagination.total }} record{{ '' if pagination.total == 1 else 's' }}</p></div>
+        <form class="admin-toolbar" method="get" action="{{ url_for('admin.appointmentcontrol') }}" role="search">
+            <div class="admin-filter-grid admin-filter-grid--appointments">
+                <div class="field"><label for="appointment-search">Search</label><input id="appointment-search" type="search" name="search" value="{{ search }}" maxlength="100" autocomplete="off"></div>
+                <div class="field"><label for="appointment-status">Status</label><select id="appointment-status" name="status"><option value="">All statuses</option>{% for status in ['Pending', 'Accepted', 'Rejected', 'Cancelled', 'Completed', 'No Show'] %}<option value="{{ status }}"{% if status_filter == status %} selected{% endif %}>{{ status }}</option>{% endfor %}</select></div>
+                <div class="field"><label for="appointment-faculty">Lecturer faculty</label><select id="appointment-faculty" name="faculty_id"><option value="">All faculties</option>{% for faculty in faculties %}<option value="{{ faculty.id }}"{% if faculty_id == faculty.id %} selected{% endif %}>{{ faculty.faculty_name }}</option>{% endfor %}</select></div>
+                <div class="field"><label for="appointment-date-from">Date from</label><input id="appointment-date-from" type="date" name="date_from" value="{{ date_from }}"></div>
+                <div class="field"><label for="appointment-date-to">Date to</label><input id="appointment-date-to" type="date" name="date_to" value="{{ date_to }}"></div>
+            </div>
+            <div class="admin-toolbar-actions"><button class="btn btn-primary" type="submit">Apply filters</button><a class="btn btn-ghost" href="{{ url_for('admin.appointmentcontrol') }}">Clear</a></div>
         </form>
-    </div>
-    <div class="table-scroll" role="region" aria-label="Bookings" tabindex="0">
-        <table class="data-table">
-            <thead><tr><th scope="col">No.</th><th scope="col">Lecturer</th><th scope="col">Date</th><th scope="col">Time</th><th scope="col">Purpose</th><th scope="col">Status</th><th scope="col">Action</th></tr></thead>
-            <tbody>
-            {% for appointment in appointments %}
-                <tr>
-                    <td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td>
-                    <td>{{ appointment[1] }}</td><td>{{ appointment[3] }}</td><td>{{ appointment[6] }}</td><td>{{ appointment[4] }}</td>
-                    <td><span class="status-badge status-{{ appointment[5]|lower|replace(' ', '-') }}">{{ appointment[5] }}</span></td>
-                    <td><form method="post" action="{{ url_for('admin.delete_booking') }}" onsubmit="return confirm('Delete this appointment?')">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment[0] }}">
-                        <button class="button button-danger" type="submit" aria-label="Delete appointment {{ appointment[0] }}">Delete</button>
-                    </form>
-                    {% if appointment[5] == 'Accepted' %}
-                    {% for status in ['Completed', 'No Show'] %}
-                    <form method="post" action="{{ url_for('admin.admin_appointment_status') }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ appointment[0] }}">
-                        <input type="hidden" name="status" value="{{ status }}"><button type="submit">Mark {{ status }}</button>
-                    </form>
-                    {% endfor %}
-                    {% endif %}</td>
-                </tr>
-            {% else %}<tr><td colspan="7" class="empty-state">No appointments match this search.</td></tr>{% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {{ pagination_nav(pagination, 'admin.appointmentcontrol', search) }}
-</section>
+        <div class="admin-table-wrap admin-table-wrap--stack">
+            <table class="admin-table admin-table--stack">
+                <thead><tr><th scope="col">Reference</th><th scope="col">Student</th><th scope="col">Lecturer</th><th scope="col">Faculty</th><th scope="col">Appointment</th><th scope="col">Status</th></tr></thead>
+                <tbody>
+                {% for item in appointments %}{% set appointment = item.row %}
+                    <tr>
+                        <td data-label="Reference"><a href="{{ url_for('admin.appointment_detail', public_reference=appointment.public_reference) }}"><code>{{ appointment.public_reference }}</code></a></td>
+                        <td data-label="Student">{{ appointment.student.username }}<br><span class="admin-muted">{{ appointment.student.email }}</span></td>
+                        <td data-label="Lecturer">{{ appointment.lecturer.username }}<br><span class="admin-muted">{{ appointment.lecturer.email }}</span></td>
+                        <td data-label="Faculty">{{ appointment.lecturer.faculty }}</td>
+                        <td data-label="Appointment">{{ item.date }}<br><span class="admin-muted">{{ item.time }}</span></td>
+                        <td data-label="Status">{{ status_badge(appointment.status) }}</td>
+                    </tr>
+                {% else %}<tr><td colspan="6" class="admin-empty-state">No appointments match these filters.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {{ filtered_pagination(pagination, 'admin.appointmentcontrol', {'search': search, 'status': status_filter, 'faculty_id': faculty_id or '', 'date_from': date_from, 'date_to': date_to}) }}
+    </section>
+</div>
 {% endblock %}

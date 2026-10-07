@@ -1,18 +1,34 @@
 {% extends "admin_base.html" %}
-{% from "components/forms.html" import field_error %}
-{% block title %}Page Editor{% endblock %}
 {% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% from "components/forms.html" import field_error %}
+{% block title %}Site Settings - UAS{% endblock %}
+{% block page_title %}Site Settings{% endblock %}
+{% block page_description %}<p>Manage institution details, branding, and homepage content.</p>{% endblock %}
 {% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Site Settings'}]) }}{% endblock %}
 {% block content %}
-<section class="admin-content">
-    <form class="editor-form" action="{{ url_for('admin.admin_page_editor') }}" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div><label for="home_content">Home page content</label><textarea id="home_content" name="home_content" rows="4" maxlength="5000">{{ form_values.get('home_content', home_content) }}</textarea>{{ field_error(form_errors, 'home_content') }}</div>
-        <div><label for="school_logo">School logo</label><input id="school_logo" type="file" name="school_logo" accept="image/jpeg,image/png,image/webp">{{ field_error(form_errors, 'school_logo') }}</div>
-        <div><label for="school_name">School name</label><input id="school_name" name="school_name" maxlength="200" value="{{ form_values.get('school_name', school_name) }}">{{ field_error(form_errors, 'school_name') }}</div>
-        <div><label for="school_tel">School contact</label><input id="school_tel" type="tel" name="school_tel" maxlength="35" value="{{ form_values.get('school_tel', school_tel) }}">{{ field_error(form_errors, 'school_tel') }}</div>
-        <div><label for="school_email">School email</label><input id="school_email" type="email" name="school_email" maxlength="254" value="{{ form_values.get('school_email', school_email) }}">{{ field_error(form_errors, 'school_email') }}</div>
-        <button class="button" type="submit">Save Changes</button>
-    </form>
-</section>
+<div class="admin-content">
+    <section class="admin-section" aria-labelledby="settings-heading">
+        <h2 id="settings-heading">Portal settings</h2>
+        <form class="editor-form" action="{{ url_for('admin.admin_page_editor') }}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <section class="admin-settings-group" aria-labelledby="institution-details-heading">
+                <h2 id="institution-details-heading">Institution details</h2>
+                <div class="field"><label for="school_name">School name</label><input id="school_name" name="school_name" maxlength="200" value="{{ form_values.get('school_name', school_name) }}">{{ field_error(form_errors, 'school_name') }}</div>
+                <div class="field"><label for="school_tel">School contact</label><input id="school_tel" type="tel" name="school_tel" maxlength="35" value="{{ form_values.get('school_tel', school_tel) }}">{{ field_error(form_errors, 'school_tel') }}</div>
+                <div class="field"><label for="school_email">School email</label><input id="school_email" type="email" name="school_email" maxlength="254" value="{{ form_values.get('school_email', school_email) }}">{{ field_error(form_errors, 'school_email') }}</div>
+            </section>
+            <section class="admin-settings-group" aria-labelledby="branding-heading">
+                <h2 id="branding-heading">Branding</h2>
+                <div class="field"><label for="school_logo">School logo</label><input id="school_logo" type="file" name="school_logo" accept="image/jpeg,image/png,image/webp" data-image-preview-input="school-logo-preview"><p class="field-hint">Optional. JPEG, PNG, or WebP, up to 5 MB.</p>{{ field_error(form_errors, 'school_logo') }}</div>
+                {% if school_logo %}<div class="admin-image-preview"><img id="school-logo-preview" src="{{ image_url(school_logo) }}" alt="Current school logo" loading="lazy"></div>
+                {% else %}<div class="admin-image-preview"><img id="school-logo-preview" src="" alt="Selected school logo preview" hidden></div>{% endif %}
+            </section>
+            <section class="admin-settings-group" aria-labelledby="homepage-content-heading">
+                <h2 id="homepage-content-heading">Homepage content</h2>
+                <div class="field"><label for="home_content">Homepage text</label><textarea id="home_content" name="home_content" rows="7" maxlength="5000">{{ form_values.get('home_content', home_content) }}</textarea><p class="field-hint">Plain text only. Line breaks are retained.</p>{{ field_error(form_errors, 'home_content') }}</div>
+            </section>
+            <div class="admin-actions"><button class="btn btn-primary" type="submit" data-submit-loading>Save settings</button></div>
+        </form>
+    </section>
+</div>
 {% endblock %}

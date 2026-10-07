@@ -1,53 +1,92 @@
 {% extends "admin_base.html" %}
-{% from "components/pagination.html" import pagination_nav %}
-{% block title %}User Control{% endblock %}
+{% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% from "components/ui.html" import filtered_pagination %}
+{% block title %}Users - UAS{% endblock %}
+{% block page_title %}Users{% endblock %}
+{% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Users'}]) }}{% endblock %}
 {% block content_width %}wide{% endblock %}
 {% block content %}
-<section class="admin-content">
-    <div class="page-heading">
-        <form method="get" action="{{ url_for('admin.usercontrol') }}" role="search" class="search-form">
-            <label for="search-users">Search users</label>
-            <input id="search-users" type="search" name="search" value="{{ search }}" maxlength="100">
-            <button type="submit">Search</button>
+<div class="admin-content">
+    <section class="admin-section" aria-labelledby="directory-heading">
+        <div class="admin-section-heading">
+            <div><h2 id="directory-heading">Accounts</h2><p>Search and filter account access and verification separately.</p></div>
+            <p class="admin-result-count">{{ pagination.total }} account{{ '' if pagination.total == 1 else 's' }}</p>
+        </div>
+        <form class="admin-toolbar" method="get" action="{{ url_for('admin.usercontrol') }}" role="search">
+            <div class="admin-filter-grid">
+                <div class="field"><label for="user-search">Search</label><input id="user-search" type="search" name="search" maxlength="100" value="{{ search }}" autocomplete="off"></div>
+                <div class="field"><label for="user-role">Role</label><select id="user-role" name="role"><option value="">All roles</option>{% for value, label in [('student', 'Student'), ('teacher', 'Lecturer'), ('admin', 'Administrator')] %}<option value="{{ value }}"{% if role_filter == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+                <div class="field"><label for="user-active">Account status</label><select id="user-active" name="active"><option value="">All accounts</option><option value="active"{% if active_filter == 'active' %} selected{% endif %}>Active</option><option value="inactive"{% if active_filter == 'inactive' %} selected{% endif %}>Inactive</option></select></div>
+                <div class="field"><label for="user-verification">Email verification</label><select id="user-verification" name="verification"><option value="">All states</option><option value="verified"{% if verification_filter == 'verified' %} selected{% endif %}>Verified</option><option value="unverified"{% if verification_filter == 'unverified' %} selected{% endif %}>Unverified</option></select></div>
+                <div class="field"><label for="user-faculty">Faculty</label><select id="user-faculty" name="faculty_id"><option value="">All faculties</option>{% for faculty in faculties %}<option value="{{ faculty.id }}"{% if faculty_filter == faculty.id %} selected{% endif %}>{{ faculty.faculty_name }}</option>{% endfor %}</select></div>
+            </div>
+            <div class="admin-toolbar-actions"><button class="btn btn-primary" type="submit">Apply filters</button><a class="btn btn-ghost" href="{{ url_for('admin.usercontrol') }}">Clear</a></div>
         </form>
-    </div>
-    <div class="table-scroll" role="region" aria-label="Users" tabindex="0">
-        <table class="data-table">
-            <thead><tr><th scope="col">No.</th><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Faculty</th><th scope="col">Phone</th><th scope="col">Account</th><th scope="col">Action</th></tr></thead>
-            <tbody>
-            {% for user in users %}
-                <tr>
-                    <td>{{ (pagination.page - 1) * pagination.per_page + loop.index }}</td><td>{{ user.username }}</td><td>{{ user.role|title }}</td><td>{{ user.faculty }}</td><td>{{ user.phone_number }}</td>
-                    <td>{{ 'Active' if user.active else 'Inactive' }}</td>
-                    <td><form method="post" action="{{ url_for('admin.activate_user_route') if not user.active else url_for('admin.delete_user_route') }}" onsubmit="return confirm('{{ 'Reactivate' if not user.active else 'Deactivate' }} this account?')">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ user.id }}">
-                        <button class="button {{ 'button-primary' if not user.active else 'button-danger' }}" type="submit" aria-label="{{ 'Reactivate' if not user.active else 'Deactivate' }} {{ user.username }}">{{ 'Reactivate' if not user.active else 'Deactivate' }}</button>
-                    </form></td>
-                </tr>
-            {% else %}<tr><td colspan="7" class="empty-state">No users match this search.</td></tr>{% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {{ pagination_nav(pagination, 'admin.usercontrol', search) }}
-    <form method="post" action="{{ url_for('admin.create_lecturer_invitation') }}" class="search-form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <label for="invitation-email">Create lecturer invitation, optionally for one email</label>
-        <input id="invitation-email" type="email" name="email" maxlength="254">
-        <button type="submit">Create invitation</button>
-    </form>
-    {% if invitations %}
-    <h2>Open lecturer invitations</h2>
-    <ul>
-        {% for invitation in invitations %}
-        <li>
-            {{ invitation.email or 'Any institutional email' }}
-            <form method="post" action="{{ url_for('admin.revoke_lecturer_invitation_route', invitation_id=invitation.id) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit">Revoke invitation</button>
-            </form>
-        </li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-</section>
+
+        <div class="admin-table-wrap admin-table-wrap--stack">
+            <table class="admin-table admin-table--stack">
+                <thead><tr><th scope="col">Account</th><th scope="col">Role</th><th scope="col">Faculty</th><th scope="col">Account status</th><th scope="col">Verification</th><th scope="col">Created</th><th scope="col">Last sign-in</th></tr></thead>
+                <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td data-label="Account"><div class="admin-user-identity"><span><a href="{{ url_for('admin.user_detail', user_id=user.id) }}">{{ user.username }}</a><small>{{ user.email }}</small></span></div></td>
+                        <td data-label="Role"><span class="admin-role-badge admin-role-badge--{{ user.role }}">{{ {'student': 'Student', 'teacher': 'Lecturer', 'admin': 'Administrator'}[user.role] }}</span></td>
+                        <td data-label="Faculty">{{ user.faculty }}</td>
+                        <td data-label="Account status"><span class="admin-account-status admin-account-status--{{ 'active' if user.active else 'inactive' }}">{{ 'Active' if user.active else 'Inactive' }}</span></td>
+                        <td data-label="Verification"><span class="admin-account-status admin-account-status--{{ 'verified' if user.email_verified_at else 'unverified' }}">{{ 'Verified' if user.email_verified_at else 'Unverified' }}</span></td>
+                        <td data-label="Created"><time datetime="{{ user.created_at.isoformat() }}">{{ user.created_at.astimezone(display_zone).strftime('%d %b %Y') }}</time></td>
+                        <td data-label="Last sign-in">{% if user.last_login_at %}<time datetime="{{ user.last_login_at.isoformat() }}">{{ user.last_login_at.astimezone(display_zone).strftime('%d %b %Y, %H:%M') }}</time>{% else %}<span class="admin-muted">Never</span>{% endif %}</td>
+                    </tr>
+                {% else %}<tr><td colspan="7" class="admin-empty-state">No accounts match these filters.</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {{ filtered_pagination(pagination, 'admin.usercontrol', filter_params) }}
+    </section>
+
+    <section class="admin-section" id="invite-lecturer" aria-labelledby="invitation-heading">
+        <div class="admin-section-heading"><div><h2 id="invitation-heading">Lecturer invitations</h2><p>Tokens are shown once when created. Only their status and expiry are stored here.</p></div></div>
+        <form method="post" action="{{ url_for('admin.create_lecturer_invitation') }}" class="admin-invitation-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="field"><label for="invitation-email">Institutional email, optional</label><input id="invitation-email" type="email" name="email" maxlength="254" autocomplete="email"></div>
+            <button class="btn btn-primary" type="submit">Create invitation</button>
+        </form>
+
+        <form class="admin-toolbar" method="get" action="{{ url_for('admin.usercontrol') }}">
+            {% for key, value in filter_params.items() %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+            <div class="field"><label for="invitation-status">Invitation status</label><select id="invitation-status" name="invitation_status"><option value="">All invitations</option>{% for value, label in [('active', 'Active'), ('used', 'Used'), ('expired', 'Expired'), ('revoked', 'Revoked')] %}<option value="{{ value }}"{% if invitation_status_filter == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+            <div class="admin-toolbar-actions"><button class="btn btn-secondary" type="submit">Filter invitations</button></div>
+        </form>
+        {% if invitations %}
+        <div class="admin-table-wrap admin-table-wrap--stack">
+            <table class="admin-table admin-table--stack">
+                <thead><tr><th scope="col">Invitee</th><th scope="col">Status</th><th scope="col">Created by</th><th scope="col">Created</th><th scope="col">Expires</th><th scope="col">Action</th></tr></thead>
+                <tbody>
+                {% for item in invitations %}{% set invitation = item.row %}
+                    <tr>
+                        <td data-label="Invitee">{{ invitation.email or 'Any institutional email' }}</td>
+                        <td data-label="Status"><span class="admin-account-status admin-account-status--{{ item.status|lower }}">{{ item.status }}</span></td>
+                        <td data-label="Created by">{{ invitation.creator.username }}</td>
+                        <td data-label="Created"><time datetime="{{ invitation.created_at.isoformat() }}">{{ item.created_at.strftime('%d %b %Y, %H:%M') }}</time></td>
+                        <td data-label="Expires"><time datetime="{{ invitation.expires_at.isoformat() }}">{{ item.expires_at.strftime('%d %b %Y, %H:%M') }}</time></td>
+                        <td class="actions" data-label="Action">{% if item.status == 'Active' %}<button class="btn btn-danger btn-sm" type="button" data-dialog-open="revoke-invitation-{{ invitation.id }}">Revoke</button>{% else %}<span class="admin-muted">No action</span>{% endif %}</td>
+                    </tr>
+                    {% if item.status == 'Active' %}
+                    <dialog class="admin-dialog" id="revoke-invitation-{{ invitation.id }}" aria-labelledby="revoke-invitation-title-{{ invitation.id }}">
+                        <form class="admin-dialog-body" method="post" action="{{ url_for('admin.revoke_lecturer_invitation_route', invitation_id=invitation.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <h2 id="revoke-invitation-title-{{ invitation.id }}">Revoke invitation?</h2>
+                            <p>This invitation will no longer be accepted. A new invitation can be created if needed.</p>
+                            <div class="admin-actions"><button class="btn btn-secondary" type="button" data-dialog-close>Keep invitation</button><button class="btn btn-danger" type="submit">Revoke invitation</button></div>
+                        </form>
+                    </dialog>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}<p class="admin-empty-state">No invitations match this status.</p>{% endif %}
+        {{ filtered_pagination(invitation_pagination, 'admin.usercontrol', invitation_filter_params, 'invitation_page') }}
+    </section>
+</div>
 {% endblock %}

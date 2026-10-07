@@ -1,12 +1,16 @@
 {% extends "admin_base.html" %}
-{% block title %}Lecturer Invitation{% endblock %}
 {% from "components/breadcrumbs.html" import render_breadcrumbs %}
+{% block title %}Lecturer Invitation - UAS{% endblock %}
+{% block page_title %}Lecturer invitation created{% endblock %}
+{% block page_description %}<p>Copy the invitation token now. It will not be shown again.</p>{% endblock %}
 {% block breadcrumbs %}{{ render_breadcrumbs([{'label': 'Dashboard', 'url': url_for('admin.admin_dashboard')}, {'label': 'Users', 'url': url_for('admin.usercontrol')}, {'label': 'Lecturer Invitation'}]) }}{% endblock %}
 {% block content %}
-<section class="admin-content">
-    <p>Copy this token now. It is shown only once and expires in seven days.</p>
-    <p><code>{{ token }}</code></p>
-    <p>Enter it in the lecturer invitation field during registration.</p>
-    <a href="{{ url_for('admin.usercontrol') }}">Return to user control</a>
-</section>
+<div class="admin-content">
+    <section class="admin-section" aria-labelledby="invitation-token-heading">
+        <h2 id="invitation-token-heading">One-time token</h2>
+        <p>This invitation expires in seven days. Share the token with the lecturer using a secure channel.</p>
+        <div class="admin-invitation-token"><code><span id="invitation-token">{{ token }}</span></code><button class="btn btn-secondary" type="button" data-copy-invitation="invitation-token">Copy token</button></div>
+        <div class="admin-actions"><a class="btn btn-primary" href="{{ url_for('admin.usercontrol') }}#invite-lecturer">Return to users</a></div>
+    </section>
+</div>
 {% endblock %}

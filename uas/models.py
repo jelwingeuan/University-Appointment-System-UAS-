@@ -201,6 +201,7 @@ class LecturerInvitation(db.Model):
     used_at = db.Column(UTCDateTime())
     revoked_at = db.Column(UTCDateTime())
     created_by_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    creator = db.relationship("User", foreign_keys=[created_by_id])
     __table_args__ = (Index("ix_lecturer_invitations_email_expires", "email", "expires_at"),)
 
     @staticmethod
@@ -236,4 +237,7 @@ class AuditLog(db.Model):
     created_at = db.Column(UTCDateTime(), nullable=False, default=_utc_now, server_default=func.now())
     metadata_json = db.Column(JSON, nullable=False, default=dict)
     actor = db.relationship("User")
-    __table_args__ = (Index("ix_audit_logs_target", "target_type", "target_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_audit_logs_target", "target_type", "target_id", "created_at"),
+        Index("ix_audit_logs_created_id", "created_at", "id"),
+    )
